@@ -6,3 +6,245 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+}
+
+enum GroupMemberRole {
+  ADMIN
+  MEMBER
+}
+
+enum SplitMethod {
+  EQUAL
+  PERCENT
+  EXACT
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum WalletReferenceType {
+  PAYMENT
+  EXPENSE
+  SETTLEMENT
+  WITHDRAWAL
+}
+
+enum SettlementStatus {
+  PENDING
+  COMPLETED
+}
+
+enum PaymentOrderStatus {
+  CREATED
+  PAID
+  FAILED
+}
+
+enum PaymentTransactionStatus {
+  SUCCESS
+  FAILED
+}
+
+
+// ============================================================
+// MODELS
+// ============================================================
+
+// Stores user account information.
+model User {
+  id               Int        @id @default(autoincrement())
+  name             String
+  email            String     @unique
+  mobile           String     @unique
+  passwordHash     String     @map("password_hash")
+  profilePicture   String?    @map("profile_picture")
+  emailVerified    Boolean    @default(false) @map("email_verified")
+  status           UserStatus @default(PENDING_VERIFICATION)
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  wallet           Wallet?
+  createdGroups    Group[]    @relation("GroupCreator")
+  groupMemberships GroupMember[]
+  paidExpenses     Expense[]
+  expenseSplits    ExpenseSplit[]
+
+  settlementsFrom  Settlement[] @relation("SettlementFromUser")
+  settlementsTo    Settlement[] @relation("SettlementToUser")
+
+  paymentOrders    PaymentOrder[]
+}
+
+
+// Stores wallet balance for each user.
+model Wallet {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique @map("user_id")
+  balance      Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions WalletTransaction[]
+  paymentOrders PaymentOrder[]
+}
+
+
+// Records all credit and debit activities in wallet.
+model WalletTransaction {
+  id            Int                    @id @default(autoincrement())
+  walletId      Int                    @map("wallet_id")
+  type          WalletTransactionType
+  amount        Decimal                @db.Decimal(12, 2)
+  description   String?
+  referenceType WalletReferenceType    @map("reference_type")
+  referenceId   Int?                   @map("reference_id")
+  createdAt     DateTime               @default(now()) @map("created_at")
+
+  wallet        Wallet                 @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([referenceType, referenceId])
+}
+
+
+// Represents a group created by a user.
+model Group {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  createdBy   Int          @map("created_by")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  creator     User         @relation("GroupCreator", fields: [createdBy], references: [id])
+
+  members     GroupMember[]
+  expenses    Expense[]
+}
+
+
+// Maps users to groups with their roles.
+model GroupMember {
+  id        Int             @id @default(autoincrement())
+  groupId   Int             @map("group_id")
+  userId    Int             @map("user_id")
+  role      GroupMemberRole @default(MEMBER)
+  joinedAt  DateTime        @default(now()) @map("joined_at")
+
+  group     Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([userId])
+}
+
+
+// Stores expense details within a group.
+model Expense {
+  id          Int         @id @default(autoincrement())
+  groupId     Int         @map("group_id")
+  paidBy      Int         @map("paid_by")
+  description String
+  totalAmount Decimal     @map("total_amount") @db.Decimal(12, 2)
+  splitMethod SplitMethod @map("split_method")
+  expenseDate DateTime    @map("expense_date")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  group       Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  payer       User        @relation(fields: [paidBy], references: [id])
+
+  splits      ExpenseSplit[]
+  settlements Settlement[]
+
+  @@index([groupId])
+  @@index([paidBy])
+}
+
+
+// Stores each user's individual share of an expense.
+model ExpenseSplit {
+  id         Int       @id @default(autoincrement())
+  expenseId  Int       @map("expense_id")
+  userId     Int       @map("user_id")
+  amount     Decimal   @db.Decimal(12, 2)
+  percentage Decimal?  @db.Decimal(5, 2)
+
+  expense    Expense   @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id])
+
+  @@index([expenseId])
+  @@index([userId])
+}
+
+
+// Tracks settlements between users.
+model Settlement {
+  id         Int              @id @default(autoincrement())
+  fromUserId Int              @map("from_user_id")
+  toUserId   Int              @map("to_user_id")
+  expenseId  Int?             @map("expense_id")
+  amount     Decimal          @db.Decimal(12, 2)
+  status     SettlementStatus @default(PENDING)
+  settledAt  DateTime?        @map("settled_at")
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  fromUser   User             @relation("SettlementFromUser", fields: [fromUserId], references: [id])
+  toUser     User             @relation("SettlementToUser", fields: [toUserId], references: [id])
+  expense    Expense?         @relation(fields: [expenseId], references: [id])
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([expenseId])
+}
+
+
+// Stores Razorpay orders created for adding money.
+model PaymentOrder {
+  id              Int                @id @default(autoincrement())
+  userId          Int                @map("user_id")
+  walletId        Int                @map("wallet_id")
+  amount          Decimal            @db.Decimal(12, 2)
+  currency        String             @default("INR")
+  razorpayOrderId String             @unique @map("razorpay_order_id")
+  status          PaymentOrderStatus @default(CREATED)
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  user            User               @relation(fields: [userId], references: [id])
+  wallet          Wallet             @relation(fields: [walletId], references: [id])
+
+  transactions    PaymentTransaction[]
+
+  @@index([userId])
+  @@index([walletId])
+}
+
+
+// Stores Razorpay payment responses.
+model PaymentTransaction {
+  id                 Int                      @id @default(autoincrement())
+  paymentOrderId     Int                      @map("payment_order_id")
+  razorpayPaymentId  String                   @unique @map("razorpay_payment_id")
+  signature          String
+  status             PaymentTransactionStatus
+  paidAt             DateTime?                @map("paid_at")
+  createdAt          DateTime                 @default(now()) @map("created_at")
+
+  paymentOrder       PaymentOrder             @relation(fields: [paymentOrderId], references: [id], onDelete: Cascade)
+
+  @@index([paymentOrderId])
+}
