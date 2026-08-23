@@ -148,6 +148,8 @@ model GroupMember {
 
   @@index([groupId])
   @@index([userId])
+  // Prevents the same user from being added to the same group more than once.
+  @@unique([groupId, userId])
 }
 
 
