@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet — Dashboard</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <style>
+    /* ===== CSS VARIABLES ===== */
+    :root {
+      --bg-0: #0e0716;
+      --bg-1: #170a24;
+      --stroke: rgba(168, 120, 255, 0.16);
+      --stroke-strong: rgba(168, 120, 255, 0.28);
+      --violet-1: #7c3aed;
+      --magenta: #e63cc2;
+      --text-hi: #f3eefc;
+      --text-mid: #b7a9cf;
+      --text-low: #8779a3;
+      --gold: #f0b84f;
+      --field-bg: #150a20;
+      --success: #5eea9a;
+      --danger: #f77b7b;
+      --sidebar-width: 260px;
+    }
+
+    /* ===== RESET & BASE ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 900px 500px at 12% 8%, rgba(124, 58, 237, 0.25), transparent 60%),
+        radial-gradient(ellipse 700px 600px at 85% 90%, rgba(230, 60, 194, 0.14), transparent 55%),
+        linear-gradient(160deg, var(--bg-0), #170a24 60%, #0c0512);
+      font-family: 'Inter', sans-serif;
+      color: var(--text-hi);
+      display: flex;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--stroke-strong); border-radius: 4px; }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-height: 100vh;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+      border-right: 1px solid var(--stroke);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.06em;
+      color: var(--text-hi);
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--stroke);
+      margin-bottom: 24px;
+      text-decoration: none;
+    }
+
+    .sidebar-brand .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px -4px rgba(192, 38, 211, 0.6);
+      flex-shrink: 0;
+      font-size: 18px;
+      color: #fff;
+    }
+
+    /* ===== SIDEBAR NAVIGATION ===== */
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .sidebar-nav .nav-label {
+      font-size: 11px;
+      color: var(--text-low);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 12px 12px 6px;
+      font-weight: 600;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 12px;
+      color: var(--text-mid);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .sidebar-nav a:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-hi);
+    }
+
+    .sidebar-nav a.active {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(230, 60, 194, 0.1));
+      color: var(--text-hi);
+      border: 1px solid var(--stroke-strong);
+    }
+
+    .sidebar-nav a.active::before {
+      content: '';
+      position: absolute;
+      left: -1px;
+      top: 20%;
+      height: 60%;
+      width: 3px;
+      background: linear-gradient(180deg, var(--violet-1), var(--magenta));
+      border-radius: 0 4px 4px 0;
+    }
+
+    .sidebar-nav a i {
+      font-size: 20px;
+      width: 24px;
+      text-align: center;
+      color: var(--text-low);
+    }
+
+    .sidebar-nav a.active i {
+      color: var(--magenta);
+    }
+
+    .sidebar-nav a .badge {
+      margin-left: auto;
+      background: rgba(230, 60, 194, 0.2);
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      color: var(--magenta);
+      font-weight: 600;
+    }
+
+    /* ===== SIDEBAR FOOTER ===== */
+    .sidebar-footer {
+      border-top: 1px solid var(--stroke);
+      padding-top: 16px;
+      margin-top: auto;
+    }
+
+    .sidebar-footer .user-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--stroke);
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .sidebar-footer .user-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .sidebar-footer .user-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      flex-shrink: 0;
+      color: #fff;
+    }
+
+    .sidebar-footer .user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar-footer .user-info .name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-hi);
+    }
+
+    .sidebar-footer .user-info .email {
+      font-size: 11px;
+      color: var(--text-low);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-footer .user-card .logout-btn {
+      color: var(--text-low);
+      font-size: 18px;
+      transition: 0.15s;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .sidebar-footer .user-card .logout-btn:hover {
+      color: var(--danger);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      padding: 24px 32px 32px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== TOP BAR ===== */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--stroke);
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .top-bar .page-title h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .top-bar .page-title p {
+      font-size: 13px;
+      color: var(--text-low);
+      margin-top: 2px;
+    }
+
+    .top-bar .actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .top-bar .actions .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--field-bg);
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 8px 14px;
+      gap: 10px;
+    }
+
+    .top-bar .actions .search-box i {
+      color: var(--text-low);
+      font-size: 16px;
+    }
+
+    .top-bar .actions .search-box input {
+      background: none;
+      border: none;
+      color: var(--text-hi);
+      font-size: 13px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      width: 160px;
+    }
+
+    .top-bar .actions .search-box input::placeholder {
+      color: var(--text-low);
+    }
+
+    .top-bar .actions .notification-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-mid);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.15s;
+      position: relative;
+    }
+
+    .top-bar .actions .notification-btn:hover {
+      border-color: var(--stroke-strong);
+      color: var(--text-hi);
+    }
+
+    .top-bar .actions .notification-btn .dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--magenta);
+    }
+
+    /* ===== WELCOME BANNER ===== */
+    .welcome-banner {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(230, 60, 194, 0.08));
+      border: 1px solid var(--stroke-strong);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .welcome-banner .text h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .welcome-banner .text p {
+      color: var(--text-mid);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .welcome-banner .action-btns {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--violet-1), var(--magenta));
+      color: #fff;
+      box-shadow: 0 8px 24px -8px rgba(192, 38, 211, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px -8px rgba(192, 38, 211, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-hi);
+      border: 1px solid var(--stroke);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--stroke-strong);
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .empty-state i {
+      font-size: 56px;
+      color: var(--text-low);
+      opacity: 0.3;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .empty-state p {
+      color: var(--text-low);
+      font-size: 13px;
+      max-width: 320px;
+      margin: 0 auto 18px;
+    }
+
+    /* ===== DASHBOARD GRID ===== */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 22px;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--stroke-strong);
+      border-radius: 16px;
+      padding: 20px 22px;
+      box-shadow: 0 20px 50px -20px rgba(70, 10, 120, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(168, 120, 255, 0.35);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .card-header h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-mid);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-header h3 i {
+      font-size: 18px;
+      color: var(--text-low);
+    }
+
+    .card-header .link {
+      font-size: 12px;
+      color: var(--text-low);
+      text-decoration: none;
+      transition: 0.15s;
+    }
+
+    .card-header .link:hover {
+      color: var(--magenta);
+    }
+
+    /* ===== QUICK ACTIONS ===== */
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .quick-action-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--stroke);
+      cursor: pointer;
+      transition: 0.15s;
+      text-decoration: none;
+      color: var(--text-mid);
+    }
+
+    .quick-action-item:hover {
+      border-color: var(--stroke-strong);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-hi);
+      transform: translateY(-2px);
+    }
+
+    .quick-action-item .icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-action-item .icon-wrap.purple { background: rgba(124, 58, 237, 0.15); }
+    .quick-action-item .icon-wrap.green { background: rgba(16, 185, 129, 0.15); }
+    .quick-action-item .icon-wrap.pink { background: rgba(230, 60, 194, 0.15); }
+    .quick-action-item .icon-wrap.gold { background: rgba(240, 184, 79, 0.15); }
+
+    .quick-action-item .icon-wrap i {
+      font-size: 20px;
+      color: var(--text-hi);
+    }
+
+    .quick-action-item span {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* ===== RECENT ACTIVITY ===== */
+    .activity-empty {
+      text-align: center;
+      padding: 30px 10px;
+    }
+
+    .activity-empty i {
+      font-size: 40px;
+      color: var(--text-low);
+      opacity: 0.2;
+      margin-bottom: 10px;
+    }
+
+    .activity-empty p {
+      color: var(--text-low);
+      font-size: 13px;
+    }
+
+    /* ===== STATS LIST ===== */
+    .stats-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+    }
+
+    .stat-item .label {
+      font-size: 13px;
+      color: var(--text-mid);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-item .label i {
+      font-size: 16px;
+      color: var(--text-low);
+    }
+
+    .stat-item .value {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .stat-item .value.empty {
+      color: var(--text-low);
+      font-weight: 400;
+      font-size: 12px;
+    }
+
+    /* ===== TIPS ===== */
+    .tip-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+      border-left: 2px solid var(--violet-1);
+      margin-bottom: 10px;
+    }
+
+    .tip-item:last-child { margin-bottom: 0; }
+
+    .tip-item .tip-icon {
+      font-size: 18px;
+      margin-top: 2px;
+    }
+
+    .tip-item .tip-content .tip-title {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .tip-item .tip-content .tip-desc {
+      font-size: 12px;
+      color: var(--text-low);
+    }
+
+    .tip-item.gold { border-left-color: var(--gold); }
+    .tip-item.green { border-left-color: var(--success); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 72px;
+        padding: 16px 10px;
+      }
+      
+      .sidebar-brand span,
+      .sidebar-nav a span,
+      .sidebar-nav .nav-label,
+      .sidebar-footer .user-info,
+      .sidebar-footer .logout-btn {
+        display: none;
+      }
+      
+      .sidebar-brand { justify-content: center; padding-bottom: 16px; margin-bottom: 16px; }
+      .sidebar-nav a { justify-content: center; padding: 10px; }
+      .sidebar-nav a i { font-size: 22px; margin: 0; }
+      .sidebar-footer .user-card { justify-content: center; padding: 8px; }
+      .sidebar-footer .user-avatar { width: 32px; height: 32px; font-size: 12px; }
+      
+      .main-content { padding: 16px; }
+      .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
+      .top-bar .actions .search-box input { width: 100px; }
+    }
+
+    @media (max-width: 480px) {
+      .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
+      .welcome-banner { flex-direction: column; text-align: center; }
+      .welcome-banner .action-btns { width: 100%; justify-content: center; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+  <!-- Brand -->
+  <a href="#" class="sidebar-brand">
+    <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+    <span>DIGITAL WALLET</span>
+  </a>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+    
+    <a href="#" class="active">
+      <i class="bi bi-grid-1x2-fill"></i>
+      <span>Dashboard</span>
+    </a>
+    
+    <a href="#">
+      <i class="bi bi-wallet2"></i>
+      <span>Wallet Groups</span>
+      <span class="badge">0</span>
+    </a>
+    
+    <a href="#">
+      <i class="bi bi-clock-history"></i>
+      <span>Transactions</span>
+    </a>
+    
+    <a href="#">
+      <i class="bi bi-person"></i>
+      <span>My Account</span>
+    </a>
+    
+    <a href="#">
+      <i class="bi bi-gear"></i>
+      <span>Settings</span>
+    </a>
+
+    <div class="nav-label" style="margin-top: 12px;">Quick Links</div>
+    
+    <a href="#">
+      <i class="bi bi-send"></i>
+      <span>Send Money</span>
+    </a>
+    
+    <a href="#">
+      <i class="bi bi-arrow-down-circle"></i>
+      <span>Receive Money</span>
+    </a>
+    
+    <a href="#">
+      <i class="bi bi-graph-up-arrow"></i>
+      <span>Analytics</span>
+    </a>
+    
+    <a href="#">
+      <i class="bi bi-trophy"></i>
+      <span>Goals</span>
+    </a>
+  </nav>
+
+  <!-- User Footer -->
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">JD</div>
+      <div class="user-info">
+        <div class="name">John Doe</div>
+        <div class="email">john@example.com</div>
+      </div>
+      <button class="logout-btn" title="Logout">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main-content">
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="page-title">
+      <h1>Dashboard</h1>
+      <p>Welcome to your Digital Wallet</p>
+    </div>
+    <div class="actions">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Search..." />
+      </div>
+      <button class="notification-btn">
+        <i class="bi bi-bell"></i>
+        <span class="dot"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <div class="text">
+      <h2>👋 Welcome, John!</h2>
+      <p>Your account is ready. Add money to start using your wallet.</p>
+    </div>
+    <div class="action-btns">
+      <button class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add Money
+      </button>
+      <button class="btn btn-secondary">
+        <i class="bi bi-arrow-repeat"></i> Get Started
+      </button>
+    </div>
+  </div>
+
+  <!-- Dashboard Grid -->
+  <div class="dashboard-grid">
+
+    <!-- LEFT COLUMN -->
+    <div>
+
+      <!-- Quick Actions -->
+      <div class="card" style="margin-bottom: 22px;">
+        <div class="card-header">
+          <h3><i class="bi bi-lightning-fill"></i> Quick Actions</h3>
+          <a href="#" class="link">View All</a>
+        </div>
+        <div class="quick-actions-grid">
+          <a href="#" class="quick-action-item">
+            <div class="icon-wrap purple">
+              <i class="bi bi-send"></i>
+            </div>
+            <span>Send</span>
+          </a>
+          <a href="#" class="quick-action-item">
+            <div class="icon-wrap green">
+              <i class="bi bi-arrow-down-circle"></i>
+            </div>
+            <span>Receive</span>
+          </a>
+          <a href="#" class="quick-action-item">
+            <div class="icon-wrap pink">
+              <i class="bi bi-plus-circle"></i>
+            </div>
+            <span>Add Money</span>
+          </a>
+          <a href="#" class="quick-action-item">
+            <div class="icon-wrap gold">
+              <i class="bi bi-wallet2"></i>
+            </div>
+            <span>Groups</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="bi bi-clock-history"></i> Recent Activity</h3>
+          <a href="#" class="link">View All</a>
+        </div>
+        <div class="activity-empty">
+          <i class="bi bi-inbox"></i>
+          <p>No transactions yet.<br>Your first transaction will appear here.</p>
+          <button class="btn btn-primary" style="margin-top: 12px; padding: 8px 20px; font-size: 12px;">
+            <i class="bi bi-plus-circle"></i> Make your first transaction
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN - Stats -->
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="bi bi-pie-chart-fill"></i> Wallet Overview</h3>
+        </div>
+        <div class="stats-list">
+          <div class="stat-item">
+            <span class="label"><i class="bi bi-wallet2"></i> Total Balance</span>
+            <span class="value empty">$0.00</span>
+          </div>
+          <div class="stat-item">
+            <span class="label"><i class="bi bi-currency-dollar"></i> Available</span>
+            <span class="value empty">$0.00</span>
+          </div>
+          <div class="stat-item">
+            <span class="label"><i class="bi bi-lock-fill"></i> Locked</span>
+            <span class="value empty">$0.00</span>
+          </div>
+          <div class="stat-item">
+            <span class="label"><i class="bi bi-files"></i> Wallet Groups</span>
+            <span class="value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="label"><i class="bi bi-arrow-left-right"></i> Transactions</span>
+            <span class="value">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Tips -->
+      <div class="card" style="margin-top: 22px;">
+        <div class="card-header">
+          <h3><i class="bi bi-lightbulb-fill"></i> Quick Tips</h3>
+        </div>
+        <div>
+          <div class="tip-item">
+            <i class="bi bi-info-circle tip-icon" style="color: var(--violet-1);"></i>
+            <div class="tip-content">
+              <div class="tip-title">Add Money</div>
+              <div class="tip-desc">Add funds to start using your wallet</div>
+            </div>
+          </div>
+          <div class="tip-item gold">
+            <i class="bi bi-arrow-repeat tip-icon" style="color: var(--gold);"></i>
+            <div class="tip-content">
+              <div class="tip-title">Create Groups</div>
+              <div class="tip-desc">Organize your wallets into groups</div>
+            </div>
+          </div>
+          <div class="tip-item green">
+            <i class="bi bi-shield-check tip-icon" style="color: var(--success);"></i>
+            <div class="tip-content">
+              <div class="tip-title">Secure</div>
+              <div class="tip-desc">Your funds are protected with encryption</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+</body>
+</html>

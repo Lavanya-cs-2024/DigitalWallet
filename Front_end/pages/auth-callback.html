@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authenticating with Google...</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      min-height: 100vh;
+      background: radial-gradient(ellipse 900px 500px at 12% 8%, rgba(124, 58, 237, 0.25), transparent 60%),
+                  radial-gradient(ellipse 700px 600px at 85% 90%, rgba(230, 60, 194, 0.14), transparent 55%),
+                  linear-gradient(160deg, #0e0716, #170a24 60%, #0c0512);
+      font-family: 'Inter', sans-serif;
+      color: #f3eefc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      text-align: center;
+      padding: 40px;
+      max-width: 440px;
+    }
+
+    .spinner {
+      font-size: 56px;
+      color: #e63cc2;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .message {
+      color: #b7a9cf;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .status-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .success { color: #5eea9a; }
+    .error { color: #f77b7b; }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+
+    .progress-bar .progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #7c3aed, #e63cc2);
+      border-radius: 4px;
+      transition: width 0.3s;
+      animation: progress 3s ease-in-out infinite;
+    }
+
+    @keyframes progress {
+      0% { width: 0%; }
+      50% { width: 70%; }
+      100% { width: 100%; }
+    }
+
+    .retry-btn {
+      margin-top: 20px;
+      padding: 10px 24px;
+      background: linear-gradient(90deg, #7c3aed, #e63cc2);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.15s;
+      display: none;
+    }
+
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -8px rgba(192, 38, 211, 0.5);
+    }
+
+    .retry-btn.show {
+      display: inline-flex;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="authContainer">
+  <!-- Spinner while loading -->
+  <div id="loadingState">
+    <div class="spinner"><i class="bi bi-arrow-repeat"></i></div>
+    <h2>Authenticating with Google</h2>
+    <div class="message">Please wait while we verify your account...</div>
+    <div class="progress-bar"><div class="progress"></div></div>
+  </div>
+
+  <!-- Success State (hidden initially) -->
+  <div id="successState" style="display: none;">
+    <div class="status-icon success"><i class="bi bi-check-circle-fill"></i></div>
+    <h2 style="color: #5eea9a;">Authentication Successful!</h2>
+    <div class="message">You've been successfully authenticated with Google.</div>
+    <div class="message" style="font-size: 12px; color: #8779a3;">Redirecting to dashboard...</div>
+  </div>
+
+  <!-- Error State (hidden initially) -->
+  <div id="errorState" style="display: none;">
+    <div class="status-icon error"><i class="bi bi-x-circle-fill"></i></div>
+    <h2 style="color: #f77b7b;">Authentication Failed</h2>
+    <div class="message" id="errorMessage">Something went wrong. Please try again.</div>
+    <button class="retry-btn" id="retryBtn">
+      <i class="bi bi-arrow-repeat"></i> Try Again
+    </button>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const loadingState = document.getElementById('loadingState');
+    const successState = document.getElementById('successState');
+    const errorState = document.getElementById('errorState');
+    const errorMessage = document.getElementById('errorMessage');
+    const retryBtn = document.getElementById('retryBtn');
+
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const error = urlParams.get('error');
+
+    // Get stored redirect URL
+    const redirectUrl = localStorage.getItem('auth_redirect') || 'dashboard.html';
+
+    // ===== HANDLE SUCCESS =====
+    if (status === 'success') {
+      // Show success
+      loadingState.style.display = 'none';
+      successState.style.display = 'block';
+
+      // Store auth info
+      localStorage.setItem('auth_token', 'google_auth_' + Date.now());
+      localStorage.setItem('auth_provider', 'google');
+      
+      // Simulate user data from backend (replace with actual API call)
+      fetchUserData();
+
+    // ===== HANDLE ERROR =====
+    } else if (error) {
+      loadingState.style.display = 'none';
+      errorState.style.display = 'block';
+      
+      const errorMessages = {
+        'google_failed': 'Google authentication failed. Please try again.',
+        'access_denied': 'You denied access to your Google account.',
+        'server_error': 'Server error. Please try again later.'
+      };
+      
+      errorMessage.textContent = errorMessages[error] || errorMessages.google_failed;
+      retryBtn.classList.add('show');
+
+    // ===== CHECK EXISTING SESSION =====
+    } else {
+      // Check if user is already logged in
+      checkExistingSession();
+    }
+
+    // ===== FUNCTIONS =====
+
+    async function fetchUserData() {
+      try {
+        // In production, call your backend API
+        // const response = await fetch('http://localhost:5000/api/me', {
+        //   credentials: 'include'
+        // });
+        // const data = await response.json();
+        
+        // Mock data for demo
+        const mockUser = {
+          id: 'google_' + Date.now(),
+          name: 'Google User',
+          email: 'user@gmail.com',
+          picture: 'https://ui-avatars.com/api/?name=Google+User&background=7c3aed&color=fff'
+        };
+
+        localStorage.setItem('user_data', JSON.stringify(mockUser));
+
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 2000);
+
+      } catch (err) {
+        loadingState.style.display = 'none';
+        errorState.style.display = 'block';
+        errorMessage.textContent = 'Failed to fetch user data. Please try again.';
+        retryBtn.classList.add('show');
+      }
+    }
+
+    async function checkExistingSession() {
+      try {
+        // In production, check with backend
+        // const response = await fetch('http://localhost:5000/api/me', {
+        //   credentials: 'include'
+        // });
+        // const data = await response.json();
+
+        // Check if we have stored user data
+        const userData = localStorage.getItem('user_data');
+        const authToken = localStorage.getItem('auth_token');
+
+        if (userData && authToken) {
+          // Already authenticated
+          loadingState.style.display = 'none';
+          successState.style.display = 'block';
+          
+          setTimeout(() => {
+            window.location.href = redirectUrl;
+          }, 1500);
+        } else {
+          // Not authenticated - redirect to login
+          loadingState.style.display = 'none';
+          errorState.style.display = 'block';
+          errorMessage.textContent = 'No active session found. Please login again.';
+          retryBtn.classList.add('show');
+        }
+
+      } catch (err) {
+        loadingState.style.display = 'none';
+        errorState.style.display = 'block';
+        errorMessage.textContent = 'Error connecting to server. Please try again.';
+        retryBtn.classList.add('show');
+      }
+    }
+
+    // ===== RETRY BUTTON =====
+    retryBtn.addEventListener('click', function() {
+      // Go back to login page
+      window.location.href = 'login.html';
+    });
+
+  })();
+</script>
+
+</body>
+</html>

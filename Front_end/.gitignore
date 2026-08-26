@@ -1,0 +1,64 @@
+﻿# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build
+dist/
+build/
+*.min.js
+*.min.css
+*.bundle.js
+*.chunk.js
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Testing
+coverage/
+.nyc_output/
+*.test.js
+*.spec.js
+
+# Misc
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.bak
+*.backup

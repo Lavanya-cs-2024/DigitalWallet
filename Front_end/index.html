@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SplitWise — Group Expense Sharing</title>
+  
+  <!-- ====== FONTS & ICONS ====== -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <style>
+    /* ========================================
+       CSS VARIABLES
+    ======================================== */
+    :root {
+      /* Colors */
+      --bg-0: #0e0716;
+      --bg-1: #170a24;
+      --stroke: rgba(168, 120, 255, 0.16);
+      --stroke-strong: rgba(168, 120, 255, 0.28);
+      --violet-1: #7c3aed;
+      --violet-2: #c026d3;
+      --magenta: #e63cc2;
+      --text-hi: #f3eefc;
+      --text-mid: #b7a9cf;
+      --text-low: #8779a3;
+      --gold: #f0b84f;
+      --success: #5eea9a;
+      --danger: #f77b7b;
+      --field-bg: #150a20;
+    }
+
+    /* ========================================
+       RESET & BASE
+    ======================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse 900px 500px at 12% 8%, rgba(124, 58, 237, 0.25), transparent 60%),
+        radial-gradient(ellipse 700px 600px at 85% 90%, rgba(230, 60, 194, 0.14), transparent 55%),
+        linear-gradient(160deg, var(--bg-0), var(--bg-1) 60%, #0c0512);
+      font-family: 'Inter', sans-serif;
+      color: var(--text-hi);
+    }
+
+    /* ========================================
+       LAYOUT CONTAINER
+    ======================================== */
+    .frame {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 32px;
+      min-height: 100vh;
+    }
+
+    /* ========================================
+       TOPBAR / HEADER
+    ======================================== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0 24px 0;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      border-bottom: 1px solid var(--stroke);
+    }
+
+    /* ---- Brand / Logo ---- */
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      font-size: 18px;
+      color: var(--text-hi);
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px -4px rgba(192, 38, 211, 0.6);
+      font-size: 20px;
+      color: #fff;
+    }
+
+    .brand .brand-sub {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-low);
+      letter-spacing: 0.04em;
+      display: block;
+      margin-top: -2px;
+    }
+
+    /* ---- Topbar Actions ---- */
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .top-actions a {
+      color: var(--text-mid);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: color 0.2s;
+      padding: 8px 16px;
+      border-radius: 10px;
+    }
+
+    .top-actions a:hover {
+      color: var(--text-hi);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* ========================================
+       BUTTONS
+    ======================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--violet-1), var(--magenta));
+      color: #fff;
+      box-shadow: 0 8px 24px -8px rgba(192, 38, 211, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px -8px rgba(192, 38, 211, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-hi);
+      border: 1px solid var(--stroke);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--stroke-strong);
+    }
+
+    /* ========================================
+       HERO SECTION
+    ======================================== */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+      align-items: center;
+      padding: 40px 0 20px;
+      min-height: 60vh;
+      text-align: center;
+    }
+
+    .hero-content h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 48px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      font-weight: 800;
+    }
+
+    .hero-content h1 .highlight {
+      background: linear-gradient(90deg, var(--violet-1), var(--magenta), var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-content .subtitle {
+      color: var(--text-mid);
+      font-size: 16px;
+      line-height: 1.7;
+      max-width: 580px;
+      margin: 0 auto 28px;
+    }
+
+    .hero-content .subtitle i {
+      color: var(--magenta);
+      margin-right: 4px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    /* ========================================
+       FEATURES SECTION
+    ======================================== */
+    .features-section {
+      padding: 60px 0 40px;
+      border-top: 1px solid var(--stroke);
+      margin-top: 20px;
+    }
+
+    .features-section .section-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .features-section .section-header h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .features-section .section-header p {
+      color: var(--text-mid);
+      font-size: 15px;
+      margin-top: 6px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .feature-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      padding: 24px 22px;
+      transition: all 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--stroke-strong);
+      transform: translateY(-4px);
+    }
+
+    .feature-card .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .feature-card .icon.purple { background: rgba(124, 58, 237, 0.15); color: var(--violet-1); }
+    .feature-card .icon.green  { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .feature-card .icon.gold   { background: rgba(240, 184, 79, 0.15); color: var(--gold); }
+    .feature-card .icon.pink   { background: rgba(230, 60, 194, 0.15); color: var(--magenta); }
+    .feature-card .icon.blue   { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
+    .feature-card h4 {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .feature-card p {
+      font-size: 13px;
+      color: var(--text-low);
+      line-height: 1.6;
+    }
+
+    /* ========================================
+       HOW IT WORKS SECTION
+    ======================================== */
+    .how-it-works {
+      padding: 40px 0;
+      border-top: 1px solid var(--stroke);
+    }
+
+    .how-it-works .section-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .how-it-works .section-header h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .step {
+      text-align: center;
+    }
+
+    .step .step-number {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      margin: 0 auto 14px;
+      box-shadow: 0 8px 24px -8px rgba(192, 38, 211, 0.4);
+    }
+
+    .step h4 {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .step p {
+      font-size: 13px;
+      color: var(--text-low);
+      line-height: 1.6;
+    }
+
+    /* ========================================
+       CTA SECTION
+    ======================================== */
+    .cta-section {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(230, 60, 194, 0.05));
+      border: 1px solid var(--stroke-strong);
+      border-radius: 20px;
+      padding: 48px 40px;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .cta-section h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .cta-section p {
+      color: var(--text-mid);
+      font-size: 15px;
+      max-width: 500px;
+      margin: 0 auto 24px;
+    }
+
+    .cta-section .cta-buttons {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ========================================
+       FOOTER
+    ======================================== */
+    .footer {
+      padding-top: 32px;
+      margin-top: 32px;
+      border-top: 1px solid var(--stroke);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-low);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* ========================================
+       RESPONSIVE
+    ======================================== */
+
+    /* ---- Tablet (≤1024px) ---- */
+    @media (max-width: 1024px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* ---- Mobile (≤768px) ---- */
+    @media (max-width: 768px) {
+      .frame {
+        padding: 16px;
+      }
+
+      .hero-content h1 {
+        font-size: 32px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .cta-section {
+        padding: 32px 20px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .top-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+    }
+
+    /* ---- Small Mobile (≤480px) ---- */
+    @media (max-width: 480px) {
+      .hero-content h1 {
+        font-size: 26px;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .hero-buttons .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================
+       MAIN FRAME
+  ======================================== -->
+  <div class="frame">
+
+    <!-- ========================================
+           HEADER / TOPBAR
+    ======================================== -->
+    <header class="topbar">
+
+      <!-- Brand -->
+      <a href="#" class="brand">
+        <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+        <div>
+          SplitWise
+          <span class="brand-sub">Group Expense Sharing</span>
+        </div>
+      </a>
+
+      <!-- Navigation -->
+      <div class="top-actions">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="pages/login.html" class="btn btn-secondary">
+          <i class="bi bi-box-arrow-in-right"></i> Log In
+        </a>
+        <a href="pages/register.html" class="btn btn-primary">
+          <i class="bi bi-person-plus"></i> Get Started
+        </a>
+      </div>
+
+    </header>
+
+    <!-- ========================================
+           HERO SECTION
+    ======================================== -->
+    <section class="hero">
+
+      <div class="hero-content">
+        <h1>
+          Split Expenses<br>
+          <span class="highlight">Effortlessly Together</span>
+        </h1>
+
+        <p class="subtitle">
+          <i class="bi bi-check-circle-fill"></i> Create groups with friends, family, or colleagues.<br>
+          <i class="bi bi-check-circle-fill"></i> Add expenses and split them instantly.<br>
+          <i class="bi bi-check-circle-fill"></i> Track who owes whom and settle up easily.
+        </p>
+
+        <div class="hero-buttons">
+          <a href="pages/register.html" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Create Account
+          </a>
+          <a href="pages/login.html" class="btn btn-secondary">
+            <i class="bi bi-box-arrow-in-right"></i> Log In
+          </a>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================
+           FEATURES SECTION
+    ======================================== -->
+    <section class="features-section" id="features">
+
+      <div class="section-header">
+        <h2>Everything You Need to <span style="color: var(--magenta);">Split Expenses</span></h2>
+        <p>Simple, transparent, and fair expense sharing for any group</p>
+      </div>
+
+      <div class="features-grid">
+
+        <!-- Feature 1: Create Groups -->
+        <div class="feature-card">
+          <div class="icon purple"><i class="bi bi-people-fill"></i></div>
+          <h4>Create Groups</h4>
+          <p>Create groups for trips, roommates, colleagues, or any event. Invite members and start splitting.</p>
+        </div>
+
+        <!-- Feature 2: Add Expenses -->
+        <div class="feature-card">
+          <div class="icon green"><i class="bi bi-plus-circle"></i></div>
+          <h4>Add Expenses</h4>
+          <p>Add expenses with amount, category, and participants. Split equally or customize the distribution.</p>
+        </div>
+
+        <!-- Feature 3: Auto Calculations -->
+        <div class="feature-card">
+          <div class="icon gold"><i class="bi bi-calculator-fill"></i></div>
+          <h4>Auto Calculations</h4>
+          <p>Automatically calculate who owes whom. No more manual math — everything is tracked for you.</p>
+        </div>
+
+        <!-- Feature 4: Transfer & Settle -->
+        <div class="feature-card">
+          <div class="icon pink"><i class="bi bi-arrow-left-right"></i></div>
+          <h4>Transfer & Settle</h4>
+          <p>Transfer money from your wallet to settle debts. Support for same-group and cross-group transfers.</p>
+        </div>
+
+        <!-- Feature 5: Spending Analytics -->
+        <div class="feature-card">
+          <div class="icon blue"><i class="bi bi-graph-up-arrow"></i></div>
+          <h4>Spending Analytics</h4>
+          <p>Visualize your spending patterns, category breakdowns, and see where your money goes.</p>
+        </div>
+
+        <!-- Feature 6: Digital Wallet -->
+        <div class="feature-card">
+          <div class="icon green"><i class="bi bi-wallet2"></i></div>
+          <h4>Digital Wallet</h4>
+          <p>Transfer money from your bank to your digital wallet. Use it to pay and settle debts instantly.</p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================
+           HOW IT WORKS SECTION
+    ======================================== -->
+    <section class="how-it-works" id="how-it-works">
+
+      <div class="section-header">
+        <h2>How <span style="color: var(--gold);">It Works</span></h2>
+        <p>Get started in 3 simple steps</p>
+      </div>
+
+      <div class="steps">
+
+        <!-- Step 1 -->
+        <div class="step">
+          <div class="step-number">1</div>
+          <h4>Create or Join a Group</h4>
+          <p>Create a new group for your event or join an existing one. Add members and start splitting.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step">
+          <div class="step-number">2</div>
+          <h4>Add Expenses</h4>
+          <p>Enter the expense details — amount, category, and who participated. The system auto-calculates shares.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step">
+          <div class="step-number">3</div>
+          <h4>Transfer & Settle</h4>
+          <p>Transfer money from your digital wallet to settle debts. Track payments and keep everything balanced.</p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================
+           CTA SECTION
+    ======================================== -->
+    <section class="cta-section">
+
+      <h2>Ready to <span style="color: var(--gold);">Split Expenses</span> with Your Group?</h2>
+      <p>Join thousands of users who are simplifying group expenses with SplitWise.</p>
+
+      <div class="cta-buttons">
+        <a href="pages/register.html" class="btn btn-primary">
+          <i class="bi bi-person-plus"></i> Create Free Account
+        </a>
+        <a href="pages/login.html" class="btn btn-secondary">
+          <i class="bi bi-box-arrow-in-right"></i> Log In
+        </a>
+      </div>
+
+    </section>
+
+    <!-- ========================================
+           FOOTER
+    ======================================== -->
+    <footer class="footer">
+      <div>© 2026 SplitWise. All rights reserved.</div>
+    </footer>
+
+  </div>
+  <!-- END: .frame -->
+
+</body>
+</html>
