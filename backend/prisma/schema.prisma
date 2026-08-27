@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL") 
 }
 
 // ============================================================
@@ -83,7 +83,124 @@ model User {
   settlementsTo    Settlement[] @relation("SettlementToUser")
 
   paymentOrders    PaymentOrder[]
+
+
+  // ============================================
+  // NEW AUTH FIELDS (Add these)
+  // ============================================
+  loginCount       Int        @default(0) @map("login_count")  // Track logins for 2FA prompt
+  
+  // ============================================
+  // NEW AUTH RELATIONSHIPS (Add these)
+  // ============================================
+  otps             OTP[]                                      // User's OTP records
+  twoFA            TwoFA?                                     // User's 2FA settings
+  twoFAAttempts    TwoFAAttempt[]                             // User's 2FA attempt logs
+  sessions         Session[]                                  // User's active sessions
 }
+
+// ============================================================
+// AUTH MODELS 
+// ============================================================
+
+// ============================================================
+// AUTH MODELS - Add these after your existing models
+// ============================================================
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum OTPType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+// ============================================================
+// OTP MODEL
+// ============================================================
+
+// Stores OTP codes for email verification and password reset
+model OTP {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  code         String                            // 6-digit OTP
+  type         OTPType                           // EMAIL_VERIFICATION or PASSWORD_RESET
+  expiresAt    DateTime @map("expires_at")       // Valid for 2 minutes
+  used         Boolean  @default(false)          // Used OTP cannot be reused
+  attempts     Int      @default(0)              // Track verification attempts (max 5)
+  resendCount  Int      @default(0)              // Track resend attempts (max 3 per 10 min)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@index([expiresAt])
+}
+
+// ============================================================
+// TWO FACTOR AUTHENTICATION MODEL
+// ============================================================
+
+// Stores 2FA secrets and settings for each user
+model TwoFA {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @unique @map("user_id")
+  secret          String?                             // 2FA secret key (speakeasy)
+  isEnabled       Boolean   @default(false) @map("is_enabled")
+  verifiedAt      DateTime? @map("verified_at")       // When 2FA was first verified
+  failedAttempts  Int       @default(0) @map("failed_attempts")  // Max 5 attempts
+  lockedUntil     DateTime? @map("locked_until")      // Lock for 10 minutes after 5 failures
+  lastVerifiedAt  DateTime? @map("last_verified_at")  // Last successful verification
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================
+// 2FA ATTEMPT LOG MODEL
+// ============================================================
+
+// Tracks 2FA verification attempts for rate limiting and audit
+model TwoFAAttempt {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  success     Boolean                            // Was the attempt successful?
+  ipAddress   String?   @map("ip_address")       // For audit purposes
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ============================================================
+// SESSION MODEL
+// ============================================================
+
+// Tracks user sessions for logout and security
+model Session {
+  id          String    @id @default(uuid())
+  userId      Int       @map("user_id")
+  refreshToken String   @unique @map("refresh_token")
+  expiresAt   DateTime  @map("expires_at")
+  ipAddress   String?   @map("ip_address")
+  userAgent   String?   @map("user_agent")
+  isValid     Boolean   @default(true) @map("is_valid")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+}
+
+
 
 
 // Stores wallet balance for each user.
