@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SplitWise — Login</title>
+  <title>SplitWise — Verify Email</title>
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -200,46 +200,26 @@
       box-shadow: 0 0 0 3px rgba(230, 60, 194, 0.15);
     }
 
-    .input-wrap .toggle-eye {
-      position: absolute;
-      right: 13px;
-      width: 16px;
-      height: 16px;
-      color: var(--text-low);
-      cursor: pointer;
-      background: none;
-      border: none;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      transition: color 0.15s;
-    }
-
-    .input-wrap .toggle-eye:hover {
+    .input-wrap input:read-only {
+      background: rgba(255, 255, 255, 0.04);
       color: var(--text-mid);
+      cursor: not-allowed;
     }
 
     /* ========================================
-       FORGOT PASSWORD LINK
+       OTP INPUT - Center the OTP
     ======================================== */
-    .forgot-link {
-      text-align: right;
-      margin-top: -4px;
-      margin-bottom: 4px;
+    #otp {
+      text-align: center;
+      font-size: 24px;
+      letter-spacing: 12px;
+      font-weight: 700;
+      padding: 12px 14px 12px 14px;
     }
 
-    .forgot-link a {
-      color: var(--magenta);
-      text-decoration: none;
-      font-size: 12px;
-      font-weight: 600;
-      transition: 0.15s;
-    }
-
-    .forgot-link a:hover {
-      text-decoration: underline;
+    #otp::placeholder {
+      font-size: 14px;
+      letter-spacing: 2px;
     }
 
     /* ========================================
@@ -268,99 +248,47 @@
       box-shadow: 0 14px 30px -10px rgba(192, 38, 211, 0.55);
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 18px 34px -8px rgba(192, 38, 211, 0.65);
     }
 
-    /* ========================================
-       DIVIDER
-    ======================================== */
-    .auth-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 22px 0 18px;
-      font-size: 11.5px;
-      color: var(--text-low);
-    }
-
-    .auth-divider::before,
-    .auth-divider::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: var(--stroke);
-    }
-
-    /* ========================================
-       SOCIAL ROW - GOOGLE ONLY
-    ======================================== */
-    .social-row {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    .social-btn {
-      flex: 1;
-      max-width: 280px;
-      height: 48px;
-      border-radius: 11px;
-      border: 1px solid var(--stroke);
-      background: rgba(255, 255, 255, 0.03);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-mid);
-      padding: 0 20px;
-    }
-
-    .social-btn:hover {
-      border-color: rgba(168, 120, 255, 0.5);
+    .btn-secondary {
       background: rgba(255, 255, 255, 0.06);
-      color: var(--text-hi);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 20px -8px rgba(124, 58, 237, 0.3);
-    }
-
-    .social-btn:active {
-      transform: translateY(0);
-    }
-
-    .social-btn svg {
-      width: 24px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-
-    .social-btn span {
       color: var(--text-mid);
-      font-weight: 500;
-      font-size: 13px;
-      letter-spacing: 0.01em;
+      border: 1px solid var(--stroke);
     }
 
-    .social-btn:hover span {
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
       color: var(--text-hi);
     }
 
-    /* Google button specific */
-    .social-btn.google-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border-color: var(--stroke-strong);
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
     }
 
-    .social-btn.google-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(168, 120, 255, 0.6);
-      box-shadow: 0 4px 24px -8px rgba(124, 58, 237, 0.4);
+    /* ========================================
+       RESEND LINK
+    ======================================== */
+    .resend-link {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-mid);
+      margin-top: 8px;
+    }
+
+    .resend-link a {
+      color: var(--magenta);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .resend-link a:hover {
+      text-decoration: underline;
     }
 
     /* ========================================
@@ -438,16 +366,6 @@
         padding: 24px 18px 20px;
       }
 
-      .social-row {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .social-btn {
-        max-width: 100%;
-        width: 100%;
-      }
-
       .auth-header h1 {
         font-size: 20px;
       }
@@ -456,8 +374,9 @@
         font-size: 16px;
       }
 
-      .forgot-link {
-        text-align: left;
+      #otp {
+        font-size: 20px;
+        letter-spacing: 8px;
       }
     }
   </style>
@@ -477,69 +396,50 @@
 
     <!-- ===== HEADER ===== -->
     <div class="auth-header">
-      <div class="icon-badge"><i class="bi bi-box-arrow-in-right"></i></div>
-      <h1>Welcome Back</h1>
-      <p>Log in to your SplitWise account</p>
+      <div class="icon-badge"><i class="bi bi-envelope-check"></i></div>
+      <h1>Verify Your Email</h1>
+      <p>Enter the 6-digit OTP sent to your email</p>
     </div>
 
     <!-- ===== ALERT CONTAINER ===== -->
     <div id="alert-container"></div>
 
     <!-- ===== FORM ===== -->
-    <form id="loginForm" class="auth-form">
+    <form id="verifyForm" class="auth-form">
 
-      <!-- Email -->
+      <!-- Email (readonly) -->
       <div class="field">
         <label for="email">Email Address</label>
         <div class="input-wrap">
           <i class="bi bi-envelope leading"></i>
-          <input type="email" id="email" placeholder="Enter your email" autocomplete="email" required />
+          <input type="email" id="email" placeholder="Your email" readonly />
         </div>
       </div>
 
-      <!-- Password -->
+      <!-- OTP -->
       <div class="field">
-        <label for="password">Password</label>
+        <label for="otp">Enter OTP</label>
         <div class="input-wrap">
-          <i class="bi bi-lock leading"></i>
-          <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" required />
-          <button type="button" class="toggle-eye" data-target="password" aria-label="Show password">
-            <i class="bi bi-eye"></i>
-          </button>
+          <i class="bi bi-key leading"></i>
+          <input type="text" id="otp" placeholder="6-digit OTP" maxlength="6" required autofocus />
         </div>
-      </div>
-
-      <!-- Forgot Password Link -->
-      <div class="forgot-link">
-        <a href="forgot-password.html">Forgot password?</a>
       </div>
 
       <!-- Submit Button -->
-      <button type="submit" class="btn btn-primary spacer-8">
-        <i class="bi bi-box-arrow-in-right"></i> Log In
+      <button type="submit" class="btn btn-primary spacer-8" id="verifyBtn">
+        <i class="bi bi-check-circle"></i> Verify Email
       </button>
+
+      <!-- Resend Link -->
+      <div class="resend-link">
+        Didn't receive OTP? <a id="resendOtpLink">Resend OTP</a>
+      </div>
 
     </form>
 
-    <!-- ===== DIVIDER ===== -->
-    <div class="auth-divider">or continue with</div>
-
-    <!-- ===== SOCIAL LOGIN - GOOGLE ONLY ===== -->
-    <div class="social-row">
-      <button class="social-btn google-btn" id="googleLoginBtn" aria-label="Continue with Google">
-        <svg viewBox="0 0 48 48" width="24" height="24">
-          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
-          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/>
-          <path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.6 34.8 26.9 36 24 36c-5.2 0-9.6-3.1-11.3-7.9l-6.6 5.1C9.5 39.6 16.2 44 24 44z"/>
-          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.6 5.6C40.9 36.5 44 30.9 44 24c0-1.3-.1-2.7-.4-3.5z"/>
-        </svg>
-        <span>Continue with Google</span>
-      </button>
-    </div>
-
     <!-- ===== FOOTER ===== -->
     <div class="auth-footer">
-      Don't have an account? <a href="register.html">Create one now</a>
+      <a href="login.html">Back to Login</a>
     </div>
 
   </div>
@@ -549,69 +449,135 @@
    SCRIPTS
 ======================================== -->
 <script>
-  // ========================================
-  // GOOGLE LOGIN
-  // ========================================
-  document.getElementById('googleLoginBtn').addEventListener('click', function() {
-    // Store redirect info
-    localStorage.setItem('auth_redirect', window.location.pathname);
-    
-    // In production, redirect to backend
-    // window.location.href = 'http://localhost:5000/auth/google';
-    
-    // For demo: Show info message
-    showAlert('🚀 Google login coming soon! (Backend integration needed)', 'info');
+  // ============================================
+  // LOAD EMAIL FROM LOCALSTORAGE
+  // ============================================
+  const pendingEmail = localStorage.getItem('pendingEmail');
+
+  if (pendingEmail) {
+    document.getElementById('email').value = pendingEmail;
+  } else {
+    // No pending email, redirect to register
+    showAlert('❌ No pending registration found. Please register first.', 'error');
+    setTimeout(() => {
+      window.location.href = 'register.html';
+    }, 2000);
+  }
+
+  // ============================================
+  // AUTO-FOCUS OTP FIELD
+  // ============================================
+  document.getElementById('otp').focus();
+
+  // ============================================
+  // AUTO-SUBMIT ON 6 DIGITS
+  // ============================================
+  document.getElementById('otp').addEventListener('input', function() {
+    if (this.value.length === 6) {
+      document.getElementById('verifyForm').dispatchEvent(new Event('submit'));
+    }
   });
 
- // ========================================
-// PASSWORD TOGGLE - FIXED
-// ========================================
-document.querySelectorAll('.toggle-eye').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const input = document.getElementById(this.dataset.target);
-        const icon = this.querySelector('i');
-        if (input) {
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.className = 'bi bi-eye';        // ✅ Show eye when visible
-            } else {
-                input.type = 'password';
-                icon.className = 'bi bi-eye-slash';   // ✅ Show eye-slash when hidden
-            }
-        }
-    });
-});
-
-  // ========================================
-  // FORM SUBMIT
-  // ========================================
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
+  // ============================================
+  // FORM SUBMIT - VERIFY OTP
+  // ============================================
+  document.getElementById('verifyForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value;
+    const otp = document.getElementById('otp').value.trim();
 
-    // Validation
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showAlert('Please enter a valid email address', 'error');
+    if (!otp || otp.length !== 6) {
+      showAlert('Please enter a valid 6-digit OTP', 'error');
       return;
     }
 
-    if (!password || password.length < 6) {
-      showAlert('Please enter your password (min 6 characters)', 'error');
-      return;
-    }
+    const verifyBtn = document.getElementById('verifyBtn');
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verifying...';
 
-    // Success
-    showAlert('✅ Login successful! Redirecting...', 'success');
-    setTimeout(() => {
-      window.location.href = 'dashboard.html';
-    }, 1500);
+    fetch('http://localhost:5000/api/auth/verify-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, otp })
+    })
+    .then(response => response.json())
+    .then(data => {
+      verifyBtn.disabled = false;
+      verifyBtn.innerHTML = '<i class="bi bi-check-circle"></i> Verify Email';
+
+      if (data.success) {
+        showAlert('✅ ' + (data.message || 'Email verified successfully!'), 'success');
+        localStorage.removeItem('pendingEmail');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+      } else {
+        // Handle specific error codes
+        if (data.code === 'OTP_EXPIRED') {
+          showAlert('❌ OTP has expired. Please request a new one.', 'error');
+        } else if (data.code === 'MAX_ATTEMPTS_REACHED') {
+          showAlert('❌ Maximum attempts reached. Please request a new OTP.', 'error');
+        } else if (data.message && data.message.includes('Invalid OTP')) {
+          showAlert('❌ ' + data.message, 'error');
+        } else {
+          showAlert('❌ ' + (data.message || 'Verification failed.'), 'error');
+        }
+      }
+    })
+    .catch(error => {
+      verifyBtn.disabled = false;
+      verifyBtn.innerHTML = '<i class="bi bi-check-circle"></i> Verify Email';
+      showAlert('❌ Network error. Please check if backend is running.', 'error');
+      console.error('Verification error:', error);
+    });
   });
 
-  // ========================================
+  // ============================================
+  // RESEND OTP
+  // ============================================
+  document.getElementById('resendOtpLink').addEventListener('click', function() {
+    const email = document.getElementById('email').value;
+    const link = this;
+    link.style.pointerEvents = 'none';
+    link.textContent = 'Sending...';
+
+    fetch('http://localhost:5000/api/auth/resend-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+    .then(response => response.json())
+    .then(data => {
+      link.style.pointerEvents = 'auto';
+      link.textContent = 'Resend OTP';
+
+      if (data.success) {
+        showAlert('✅ New OTP sent to your email. Valid for 2 minutes.', 'success');
+        document.getElementById('otp').value = '';
+        document.getElementById('otp').focus();
+      } else {
+        // Handle rate limiting errors
+        if (data.code === 'COOLDOWN_ACTIVE') {
+          showAlert('⏳ ' + (data.message || 'Please wait before requesting again.'), 'info');
+        } else if (data.code === 'RESEND_LIMIT_EXCEEDED') {
+          showAlert('⏳ ' + (data.message || 'Too many requests. Please wait 10 minutes.'), 'info');
+        } else {
+          showAlert('❌ ' + (data.message || 'Failed to resend OTP.'), 'error');
+        }
+      }
+    })
+    .catch(error => {
+      link.style.pointerEvents = 'auto';
+      link.textContent = 'Resend OTP';
+      showAlert('❌ Network error. Please try again.', 'error');
+      console.error('Resend error:', error);
+    });
+  });
+
+  // ============================================
   // ALERT HELPER
-  // ========================================
+  // ============================================
   function showAlert(message, type = 'info') {
     const container = document.getElementById('alert-container');
     container.innerHTML = '';
@@ -620,6 +586,7 @@ document.querySelectorAll('.toggle-eye').forEach(btn => {
     alert.textContent = message;
     container.appendChild(alert);
 
+    // Auto dismiss after 5 seconds
     setTimeout(() => {
       alert.style.opacity = '0';
       alert.style.transition = 'opacity 0.3s';
@@ -627,23 +594,14 @@ document.querySelectorAll('.toggle-eye').forEach(btn => {
     }, 5000);
   }
 
-  // ========================================
-  // CHECK FOR REDIRECT FROM GOOGLE
-  // ========================================
-  (function checkGoogleRedirect() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('auth');
-    const error = urlParams.get('error');
-
-    if (status === 'success') {
-      showAlert('✅ Google authentication successful!', 'success');
-      setTimeout(() => {
-        window.location.href = 'dashboard.html';
-      }, 1500);
-    } else if (error === 'google_failed') {
-      showAlert('❌ Google authentication failed. Please try again.', 'error');
+  // ============================================
+  // ENTER KEY SUPPORT FOR OTP
+  // ============================================
+  document.getElementById('otp').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      document.getElementById('verifyForm').dispatchEvent(new Event('submit'));
     }
-  })();
+  });
 </script>
 
 </body>

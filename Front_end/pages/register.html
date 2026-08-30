@@ -610,22 +610,24 @@
   // ========================================
   // PASSWORD TOGGLE
   // ========================================
-  document.querySelectorAll('.toggle-eye').forEach(btn => {
+  // ========================================
+// PASSWORD TOGGLE - FIXED
+// ========================================
+document.querySelectorAll('.toggle-eye').forEach(btn => {
     btn.addEventListener('click', function() {
-      const input = document.getElementById(this.dataset.target);
-      const icon = this.querySelector('i');
-      if (input) {
-        if (input.type === 'password') {
-          input.type = 'text';
-          icon.className = 'bi bi-eye-slash';
-        } else {
-          input.type = 'password';
-          icon.className = 'bi bi-eye';
+        const input = document.getElementById(this.dataset.target);
+        const icon = this.querySelector('i');
+        if (input) {
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye';        // ✅ Show eye when visible
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye-slash';   // ✅ Show eye-slash when hidden
+            }
         }
-      }
     });
-  });
-
+});
   // ========================================
   // PASSWORD STRENGTH
   // ========================================
@@ -668,11 +670,10 @@
 
   pwInput.addEventListener('input', checkMatch);
   confirmInput.addEventListener('input', checkMatch);
-
-  // ========================================
-  // FORM SUBMIT
-  // ========================================
-  document.getElementById('registerForm').addEventListener('submit', function(e) {
+// ========================================
+// FORM SUBMIT - WITH COMPLETE VALIDATION
+// ========================================
+document.getElementById('registerForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
     const fullName = document.getElementById('fullName').value.trim();
@@ -680,33 +681,120 @@
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
 
-    // Validation
+    // ============================================
+    // 1. NAME VALIDATION
+    // ============================================
     if (!fullName || fullName.length < 2) {
-      showAlert('Please enter your full name', 'error');
-      return;
+        showAlert('Please enter your full name (minimum 2 characters)', 'error');
+        return;
+    }
+    if (fullName.length > 50) {
+        showAlert('Name must be less than 50 characters', 'error');
+        return;
+    }
+    if (!/^[a-zA-Z\s]+$/.test(fullName)) {
+        showAlert('Name can only contain letters and spaces', 'error');
+        return;
     }
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      showAlert('Please enter a valid email address', 'error');
-      return;
+    // ============================================
+    // 2. EMAIL VALIDATION - WITH LENGTH CHECK
+    // ============================================
+    if (!email) {
+        showAlert('Please enter your email address', 'error');
+        return;
+    }
+    if (email.length > 100) {
+        showAlert('Email must be less than 100 characters', 'error');
+        return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showAlert('Please enter a valid email address', 'error');
+        return;
     }
 
+    // ============================================
+    // 3. MOBILE VALIDATION - WITH LENGTH CHECK
+    // ============================================
+    const mobile = document.getElementById('mobile').value.trim();
+    if (!mobile) {
+        showAlert('Mobile number is required', 'error');
+        return;
+    }
+    if (mobile.length !== 10) {
+        showAlert('Mobile number must be exactly 10 digits', 'error');
+        return;
+    }
+    if (!/^[6-9][0-9]{9}$/.test(mobile)) {
+        showAlert('Please enter a valid Indian mobile number (starting with 6,7,8, or 9)', 'error');
+        return;
+    }
+
+    // ============================================
+    // 4. PASSWORD VALIDATION
+    // ============================================
     if (password.length < 6) {
-      showAlert('Password must be at least 6 characters', 'error');
-      return;
+        showAlert('Password must be at least 6 characters', 'error');
+        return;
     }
 
+    // ============================================
+    // 5. CONFIRM PASSWORD
+    // ============================================
     if (password !== confirmPassword) {
-      showAlert('Passwords do not match', 'error');
-      return;
+        showAlert('Passwords do not match', 'error');
+        return;
     }
 
-    // Success
-    showAlert('✅ Account created successfully! Redirecting...', 'success');
-    setTimeout(() => {
-      window.location.href = 'dashboard.html';
-    }, 1500);
-  });
+    // ============================================
+    // 6. 🔥 SEND TO BACKEND API
+    // ============================================
+    const registerBtn = this.querySelector('button[type="submit"]');
+    registerBtn.disabled = true;
+    registerBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating...';
+
+    fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: fullName,
+            email: email,
+            mobile: mobile,
+            password: password,
+            confirmPassword: confirmPassword
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = '<i class="bi bi-person-plus"></i> Create Account';
+
+        if (data.success) {
+            // ✅ Store email for verification page
+            localStorage.setItem('pendingEmail', email);
+            
+            showAlert('✅ ' + (data.message || 'Account created! Please check your email for OTP.'), 'success');
+            setTimeout(() => {
+                window.location.href = 'verify.html';
+            }, 1500);
+        } else {
+            // Handle specific errors
+            if (data.code === 'EMAIL_EXISTS') {
+                showAlert('❌ Email already exists. Please use another email.', 'error');
+            } else if (data.code === 'MOBILE_EXISTS') {
+                showAlert('❌ Mobile number already registered.', 'error');
+            } else {
+                showAlert('❌ ' + (data.message || 'Registration failed.'), 'error');
+            }
+        }
+    })
+    .catch(error => {
+        registerBtn.disabled = false;
+        registerBtn.innerHTML = '<i class="bi bi-person-plus"></i> Create Account';
+        showAlert('❌ Network error. Please check if backend is running.', 'error');
+        console.error('Registration error:', error);
+    });
+});
 
   // ========================================
   // ALERT HELPER
@@ -725,6 +813,75 @@
       setTimeout(() => alert.remove(), 300);
     }, 5000);
   }
+
+  // ========================================
+// REAL-TIME VALIDATION (As User Types)
+// ========================================
+
+// Name - real-time validation
+document.getElementById('fullName').addEventListener('input', function() {
+    const val = this.value.trim();
+    if (val.length > 0 && val.length < 2) {
+        this.style.borderColor = 'var(--danger)';
+    } else if (val.length > 50) {
+        this.style.borderColor = 'var(--danger)';
+    } else if (!/^[a-zA-Z\s]*$/.test(val)) {
+        this.style.borderColor = 'var(--danger)';
+    } else {
+        this.style.borderColor = 'var(--success)';
+    }
+});
+
+// Email - real-time validation
+document.getElementById('email').addEventListener('input', function() {
+    const val = this.value.trim();
+    if (val.length > 100) {
+        this.style.borderColor = 'var(--danger)';
+    } else if (val.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+        this.style.borderColor = 'var(--danger)';
+    } else {
+        this.style.borderColor = 'var(--success)';
+    }
+});
+
+// Mobile - real-time validation
+document.getElementById('mobile').addEventListener('input', function() {
+    const val = this.value.trim();
+    if (val.length > 0 && val.length !== 10) {
+        this.style.borderColor = 'var(--danger)';
+    } else if (val.length === 10 && !/^[6-9][0-9]{9}$/.test(val)) {
+        this.style.borderColor = 'var(--danger)';
+    } else if (val.length === 10) {
+        this.style.borderColor = 'var(--success)';
+    } else {
+        this.style.borderColor = '';
+    }
+});
+
+// Password - real-time validation (already has strength)
+document.getElementById('password').addEventListener('input', function() {
+    const val = this.value;
+    if (val.length > 0 && val.length < 6) {
+        this.style.borderColor = 'var(--danger)';
+    } else if (val.length >= 6) {
+        this.style.borderColor = 'var(--success)';
+    } else {
+        this.style.borderColor = '';
+    }
+});
+
+// Confirm Password - real-time validation
+document.getElementById('confirmPassword').addEventListener('input', function() {
+    const pw = document.getElementById('password').value;
+    const val = this.value;
+    if (val.length > 0 && val !== pw) {
+        this.style.borderColor = 'var(--danger)';
+    } else if (val.length > 0 && val === pw) {
+        this.style.borderColor = 'var(--success)';
+    } else {
+        this.style.borderColor = '';
+    }
+});
 </script>
 
 </body>
