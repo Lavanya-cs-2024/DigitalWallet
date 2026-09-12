@@ -22,18 +22,32 @@ const rateLimiter = (options = {}) => {
             message,
             code: ERROR_CODES.RATE_LIMIT_EXCEEDED
         },
-        standardHeaders: true,
-        legacyHeaders: false,
-        keyGenerator: (req) => {
-            // Use IP + user ID (if logged in) as key
-            const userId = req.user?.id || 'anonymous';
-            return `${userId}-${req.ip}`;
-        },
-        skip: (req) => {
-            // Skip rate limiting for health check
-            return req.path === '/health';
+        // ============================================
+        // ✅ ADD THIS HANDLER
+        // ============================================
+        handler: (req, res) => {
+            const retryAfterSeconds = Math.ceil(windowMs / 1000);
+            const retryAfterMinutes = Math.ceil(retryAfterSeconds / 60);
+            
+            // Log the rate limit event
+            console.warn('🚫 Rate limit exceeded:', {
+                ip: req.ip,
+                path: req.path,
+                email: req.body?.email,
+                timestamp: new Date().toISOString()
+            });
+
+            res.status(429).json({
+                success: false,
+                message: `Too many attempts. Please try again in ${retryAfterMinutes} minute${retryAfterMinutes > 1 ? 's' : ''}.`,
+                code: 'RATE_LIMIT_EXCEEDED',
+                retryAfter: retryAfterSeconds,
+                retryAfterMinutes: retryAfterMinutes
+            });
         }
     });
 };
 
 module.exports = { rateLimiter };
+
+       

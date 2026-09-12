@@ -341,95 +341,115 @@ const authService = {
             message: 'New OTP sent to your email. Valid for 2 minutes.'
         };
     },
-
-    // =============================================
-    // LOGIN - Complete Login Flow
-    // =============================================
-    async login({ email, password }, req = {}) {
-        // Find user
-        const user = await prisma.user.findUnique({
-            where: { email },
-            include: { 
-                wallet: true,
-                twoFA: true
-            }
-        });
-
-        if (!user) {
-            throw new Error('Invalid email or password.');
+// =============================================
+// LOGIN - Complete Login Flow (FIXED ORDER)
+// =============================================
+async login({ email, password }, req = {}) {
+    // ============================================
+    // 1. Find user
+    // ============================================
+    const user = await prisma.user.findUnique({
+        where: { email },
+        include: { 
+            wallet: true,
+            twoFA: true
         }
+    });
 
-        // Check account status
-        if (user.status === USER_STATUS.PENDING_VERIFICATION) {
-            const error = new Error('Please complete your email verification.');
-            error.code = ERROR_CODES.PENDING_VERIFICATION;
-            throw error;
-        }
+    if (!user) {
+        throw new Error('Invalid email or password.');
+    }
 
-        if (user.status !== USER_STATUS.ACTIVE) {
-            throw new Error('Account is not active. Please contact support.');
-        }
+    // ============================================
+    // 2. ✅ VERIFY PASSWORD FIRST (Security!)
+    // ============================================
+    const isValid = await comparePassword(password, user.passwordHash);
+    if (!isValid) {
+        throw new Error('Invalid email or password.');
+    }
 
-        // Verify password
-        const isValid = await comparePassword(password, user.passwordHash);
-        if (!isValid) {
-            throw new Error('Invalid email or password.');
-        }
+    // ============================================
+    // 3. ✅ THEN check account status
+    // ============================================
+    if (user.status === USER_STATUS.PENDING_VERIFICATION) {
+        const error = new Error('Please complete your email verification.');
+        error.code = ERROR_CODES.PENDING_VERIFICATION;
+        throw error;
+    }
 
-        // Update login count
-        const loginCount = (user.loginCount || 0) + 1;
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { loginCount }
-        });
+    if (user.status !== USER_STATUS.ACTIVE) {
+        throw new Error('Account is not active. Please contact support.');
+    }
 
-        // Log security event
-        await logSecurityEvent(
-            user.id,
-            'LOGIN_SUCCESS',
-            `User ${user.email} logged in successfully`,
-            req.ip || 'unknown',
-            req.headers?.['user-agent'] || 'unknown'
-        );
+    // ============================================
+    // 4. Update login count
+    // ============================================
+    const loginCount = (user.loginCount || 0) + 1;
+    await prisma.user.update({
+        where: { id: user.id },
+        data: { loginCount }
+    });
 
-        // Check 2FA status
-        const twoFA = user.twoFA;
-        const isWithinFirst3 = loginCount <= 3;
+    // ============================================
+    // 5. Log security event
+    // ============================================
+    await logSecurityEvent(
+        user.id,
+        'LOGIN_SUCCESS',
+        `User ${user.email} logged in successfully`,
+        req.ip || 'unknown',
+        req.headers?.['user-agent'] || 'unknown'
+    );
 
-        // Generate tokens
-        const { accessToken, refreshToken } = generateTokens({
-            userId: user.id,
-            email: user.email
-        });
+    // ============================================
+    // 6. Check 2FA status
+    // ============================================
+    const twoFA = user.twoFA;
+    const isWithinFirst3 = loginCount <= 3;
 
-        const { passwordHash: _, ...userWithoutPassword } = user;
+    // ============================================
+    // 7. Generate tokens
+    // ============================================
+    const { accessToken, refreshToken } = generateTokens({
+        userId: user.id,
+        email: user.email
+    });
 
-        // If 2FA is enabled, require 2FA verification
-        if (twoFA && twoFA.isEnabled) {
-            return {
-                require2FA: true,
-                userId: user.id,
-                email: user.email,
-                message: '2FA verification required',
-                tempToken: accessToken
-            };
-        }
+    const { passwordHash: _, ...userWithoutPassword } = user;
 
-        // Show 2FA prompt on first 3 logins
-        const show2FAPrompt = isWithinFirst3 && !twoFA?.isEnabled;
-
+    // ============================================
+    // 8. If 2FA is enabled, require 2FA verification
+    // ============================================
+    if (twoFA && twoFA.isEnabled) {
         return {
-            require2FA: false,
-            user: userWithoutPassword,
-            wallet: user.wallet,
-            accessToken,
-            refreshToken,
-            show2FAPrompt,
-            loginCount,
-            isFirstLogin: loginCount === 1,
-            message: 'Login successful'
+            require2FA: true,
+            userId: user.id,
+            email: user.email,
+            message: '2FA verification required',
+            tempToken: accessToken
         };
-    },
+    }
+
+    // ============================================
+    // 9. Show 2FA prompt on first 3 logins
+    // ============================================
+    const show2FAPrompt = isWithinFirst3 && !twoFA?.isEnabled;
+
+    // ============================================
+    // 10. Return success
+    // ============================================
+    return {
+        require2FA: false,
+        user: userWithoutPassword,
+        wallet: user.wallet,
+        accessToken,
+        refreshToken,
+        show2FAPrompt,
+        loginCount,
+        isFirstLogin: loginCount === 1,
+        message: 'Login successful'
+    };
+}, 
 
     // =============================================
     // FORGOT PASSWORD - Complete Flow
