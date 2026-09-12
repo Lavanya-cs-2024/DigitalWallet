@@ -4,382 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SplitWise — Verify Email</title>
-  
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  
+
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  
-  <style>
-    /* ========================================
-       CSS VARIABLES
-    ======================================== */
-    :root {
-      --bg-0: #0e0716;
-      --bg-1: #170a24;
-      --stroke: rgba(168, 120, 255, 0.16);
-      --stroke-strong: rgba(168, 120, 255, 0.28);
-      --violet-1: #7c3aed;
-      --violet-2: #c026d3;
-      --magenta: #e63cc2;
-      --text-hi: #f3eefc;
-      --text-mid: #b7a9cf;
-      --text-low: #8779a3;
-      --gold: #f0b84f;
-      --success: #5eea9a;
-      --danger: #f77b7b;
-      --field-bg: #150a20;
-    }
 
-    /* ========================================
-       RESET & BASE
-    ======================================== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+  <!-- Global Styles -->
+  <link rel="stylesheet" href="../css/style.css">
 
-    body {
-      min-height: 100vh;
-      background:
-        radial-gradient(ellipse 900px 500px at 12% 8%, rgba(124, 58, 237, 0.25), transparent 60%),
-        radial-gradient(ellipse 700px 600px at 85% 90%, rgba(230, 60, 194, 0.14), transparent 55%),
-        linear-gradient(160deg, var(--bg-0), var(--bg-1) 60%, #0c0512);
-      font-family: 'Inter', sans-serif;
-      color: var(--text-hi);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    /* ========================================
-       AUTH CONTAINER
-    ======================================== */
-    .auth-container {
-      width: 100%;
-      max-width: 440px;
-    }
-
-    /* ========================================
-       BRAND
-    ======================================== */
-    .brand {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      font-family: 'Sora', sans-serif;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      font-size: 18px;
-      color: var(--text-hi);
-      text-decoration: none;
-      margin-bottom: 28px;
-    }
-
-    .brand-mark {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 6px 18px -4px rgba(192, 38, 211, 0.6);
-      font-size: 20px;
-      color: #fff;
-    }
-
-    /* ========================================
-       AUTH CARD
-    ======================================== */
-    .auth-card {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
-      border: 1px solid var(--stroke-strong);
-      border-radius: 24px;
-      padding: 36px 32px 32px;
-      box-shadow: 0 30px 80px -20px rgba(70, 10, 120, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-    }
-
-    /* ========================================
-       AUTH HEADER
-    ======================================== */
-    .auth-header {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-
-    .auth-header .icon-badge {
-      width: 56px;
-      height: 56px;
-      margin: 0 auto 14px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 24px -6px rgba(192, 38, 211, 0.55);
-      font-size: 24px;
-      color: #fff;
-    }
-
-    .auth-header h1 {
-      font-family: 'Sora', sans-serif;
-      font-size: 24px;
-      margin: 0 0 6px;
-      font-weight: 700;
-    }
-
-    .auth-header p {
-      font-size: 13px;
-      color: var(--text-low);
-      margin: 0;
-    }
-
-    /* ========================================
-       FORM
-    ======================================== */
-    .auth-form {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .field {
-      margin-bottom: 0;
-    }
-
-    .field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-mid);
-      margin-bottom: 5px;
-    }
-
-    .input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .input-wrap .leading {
-      position: absolute;
-      left: 13px;
-      width: 16px;
-      height: 16px;
-      color: var(--text-low);
-      pointer-events: none;
-      font-size: 16px;
-    }
-
-    .input-wrap input {
-      width: 100%;
-      padding: 12px 14px 12px 40px;
-      background: var(--field-bg);
-      border: 1px solid var(--stroke);
-      border-radius: 11px;
-      color: var(--text-hi);
-      font-size: 13.5px;
-      font-family: 'Inter', sans-serif;
-      outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .input-wrap input::placeholder {
-      color: var(--text-low);
-      font-size: 13px;
-    }
-
-    .input-wrap input:focus {
-      border-color: var(--magenta);
-      box-shadow: 0 0 0 3px rgba(230, 60, 194, 0.15);
-    }
-
-    .input-wrap input:read-only {
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text-mid);
-      cursor: not-allowed;
-    }
-
-    /* ========================================
-       OTP INPUT - Center the OTP
-    ======================================== */
-    #otp {
-      text-align: center;
-      font-size: 24px;
-      letter-spacing: 12px;
-      font-weight: 700;
-      padding: 12px 14px 12px 14px;
-    }
-
-    #otp::placeholder {
-      font-size: 14px;
-      letter-spacing: 2px;
-    }
-
-    /* ========================================
-       BUTTONS
-    ======================================== */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 12px;
-      font-family: 'Sora', sans-serif;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      text-decoration: none;
-      width: 100%;
-    }
-
-    .btn-primary {
-      background: linear-gradient(90deg, var(--violet-1), var(--magenta));
-      color: #fff;
-      box-shadow: 0 14px 30px -10px rgba(192, 38, 211, 0.55);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 18px 34px -8px rgba(192, 38, 211, 0.65);
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text-mid);
-      border: 1px solid var(--stroke);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-hi);
-    }
-
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
-    /* ========================================
-       RESEND LINK
-    ======================================== */
-    .resend-link {
-      text-align: center;
-      font-size: 13px;
-      color: var(--text-mid);
-      margin-top: 8px;
-    }
-
-    .resend-link a {
-      color: var(--magenta);
-      text-decoration: none;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .resend-link a:hover {
-      text-decoration: underline;
-    }
-
-    /* ========================================
-       AUTH FOOTER
-    ======================================== */
-    .auth-footer {
-      text-align: center;
-      margin-top: 22px;
-      font-size: 13px;
-      color: var(--text-mid);
-      padding-top: 4px;
-    }
-
-    .auth-footer a {
-      color: var(--magenta);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .auth-footer a:hover {
-      text-decoration: underline;
-    }
-
-    /* ========================================
-       ALERT
-    ======================================== */
-    #alert-container {
-      margin-bottom: 16px;
-    }
-
-    .alert {
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      animation: slideDown 0.3s ease;
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-8px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .alert-error {
-      background: rgba(247, 123, 123, 0.15);
-      border: 1px solid rgba(247, 123, 123, 0.3);
-      color: var(--danger);
-    }
-
-    .alert-success {
-      background: rgba(94, 234, 154, 0.15);
-      border: 1px solid rgba(94, 234, 154, 0.3);
-      color: var(--success);
-    }
-
-    .alert-info {
-      background: rgba(124, 58, 237, 0.15);
-      border: 1px solid rgba(124, 58, 237, 0.3);
-      color: var(--violet-1);
-    }
-
-    /* ========================================
-       RESPONSIVE
-    ======================================== */
-    @media (max-width: 480px) {
-      .auth-card {
-        padding: 24px 18px 20px;
-      }
-
-      .auth-header h1 {
-        font-size: 20px;
-      }
-
-      .brand {
-        font-size: 16px;
-      }
-
-      #otp {
-        font-size: 20px;
-        letter-spacing: 8px;
-      }
-    }
-  </style>
+  <!-- Auth Styles -->
+  <link rel="stylesheet" href="../css/auth.css">
 </head>
 <body>
 
@@ -426,7 +63,7 @@
       </div>
 
       <!-- Submit Button -->
-      <button type="submit" class="btn btn-primary spacer-8" id="verifyBtn">
+      <button type="submit" class="btn btn-primary btn-block" id="verifyBtn" style="margin-top: 8px;">
         <i class="bi bi-check-circle"></i> Verify Email
       </button>
 
@@ -457,7 +94,6 @@
   if (pendingEmail) {
     document.getElementById('email').value = pendingEmail;
   } else {
-    // No pending email, redirect to register
     showAlert('❌ No pending registration found. Please register first.', 'error');
     setTimeout(() => {
       window.location.href = 'register.html';
@@ -506,24 +142,54 @@
       verifyBtn.disabled = false;
       verifyBtn.innerHTML = '<i class="bi bi-check-circle"></i> Verify Email';
 
+      // ============================================
+      // ✅ SUCCESS
+      // ============================================
       if (data.success) {
         showAlert('✅ ' + (data.message || 'Email verified successfully!'), 'success');
         localStorage.removeItem('pendingEmail');
         setTimeout(() => {
           window.location.href = 'login.html';
         }, 2000);
-      } else {
-        // Handle specific error codes
-        if (data.code === 'OTP_EXPIRED') {
-          showAlert('❌ OTP has expired. Please request a new one.', 'error');
-        } else if (data.code === 'MAX_ATTEMPTS_REACHED') {
-          showAlert('❌ Maximum attempts reached. Please request a new OTP.', 'error');
-        } else if (data.message && data.message.includes('Invalid OTP')) {
-          showAlert('❌ ' + data.message, 'error');
-        } else {
-          showAlert('❌ ' + (data.message || 'Verification failed.'), 'error');
-        }
+        return;
       }
+
+      // ============================================
+      // ✅ Handle RATE_LIMIT_EXCEEDED
+      // ============================================
+      if (data.code === 'RATE_LIMIT_EXCEEDED') {
+        handleRateLimit(data, verifyBtn);
+        return;
+      }
+
+      // ============================================
+      // ✅ Handle OTP_EXPIRED
+      // ============================================
+      if (data.code === 'OTP_EXPIRED') {
+        showAlert('❌ OTP has expired. Please request a new one.', 'error');
+        return;
+      }
+
+      // ============================================
+      // ✅ Handle MAX_ATTEMPTS_REACHED
+      // ============================================
+      if (data.code === 'MAX_ATTEMPTS_REACHED') {
+        showAlert('❌ Maximum attempts reached. Please request a new OTP.', 'error');
+        return;
+      }
+
+      // ============================================
+      // ✅ Handle Invalid OTP
+      // ============================================
+      if (data.message && data.message.includes('Invalid OTP')) {
+        showAlert('❌ ' + data.message, 'error');
+        return;
+      }
+
+      // ============================================
+      // ✅ Handle other errors
+      // ============================================
+      showAlert('❌ ' + (data.message || 'Verification failed.'), 'error');
     })
     .catch(error => {
       verifyBtn.disabled = false;
@@ -532,6 +198,44 @@
       console.error('Verification error:', error);
     });
   });
+
+  // ============================================
+  // ✅ RATE LIMIT HANDLER
+  // ============================================
+  function handleRateLimit(data, verifyBtn) {
+    const totalSeconds = data.retryAfter || 60;
+    const minutes = data.retryAfterMinutes || Math.ceil(totalSeconds / 60);
+
+    showAlert(
+      `⏳ Too many attempts. Please try again in ${minutes} minute${minutes > 1 ? 's' : ''}.`,
+      'error'
+    );
+
+    verifyBtn.disabled = true;
+    let remainingSeconds = totalSeconds;
+
+    const updateButton = () => {
+      const mins = Math.floor(remainingSeconds / 60);
+      const secs = remainingSeconds % 60;
+      verifyBtn.innerHTML = `<i class="bi bi-hourglass-split"></i> Try again in ${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    updateButton();
+
+    const countdown = setInterval(() => {
+      remainingSeconds--;
+
+      if (remainingSeconds <= 0) {
+        clearInterval(countdown);
+        verifyBtn.disabled = false;
+        verifyBtn.innerHTML = '<i class="bi bi-check-circle"></i> Verify Email';
+        showAlert('✅ You can try verifying again.', 'info');
+        return;
+      }
+
+      updateButton();
+    }, 1000);
+  }
 
   // ============================================
   // RESEND OTP
@@ -562,6 +266,8 @@
           showAlert('⏳ ' + (data.message || 'Please wait before requesting again.'), 'info');
         } else if (data.code === 'RESEND_LIMIT_EXCEEDED') {
           showAlert('⏳ ' + (data.message || 'Too many requests. Please wait 10 minutes.'), 'info');
+        } else if (data.code === 'RATE_LIMIT_EXCEEDED') {
+          showAlert('⏳ ' + (data.message || 'Too many attempts. Please try again later.'), 'error');
         } else {
           showAlert('❌ ' + (data.message || 'Failed to resend OTP.'), 'error');
         }
@@ -586,7 +292,6 @@
     alert.textContent = message;
     container.appendChild(alert);
 
-    // Auto dismiss after 5 seconds
     setTimeout(() => {
       alert.style.opacity = '0';
       alert.style.transition = 'opacity 0.3s';

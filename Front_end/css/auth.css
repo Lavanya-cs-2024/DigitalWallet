@@ -3,15 +3,24 @@
 /* Auth Layout */
 .auth-container {
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;           /* ✅ Widened from 480px */
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ✅ Center the brand */
+.auth-container .brand {
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 28px;
 }
 
 .auth-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
   border: 1px solid var(--stroke-strong);
   border-radius: 24px;
-  padding: 40px 36px 36px;
+  padding: 44px 40px 40px;    /* ✅ More padding */
   box-shadow: 0 30px 80px -20px rgba(70, 10, 120, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -23,18 +32,14 @@
 .auth-header .icon-badge {
   width: 56px;
   height: 56px;
-  margin: 0 auto 14px;
+  margin: 0 auto 16px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--violet-1), var(--magenta));
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 10px 24px -6px rgba(192, 38, 211, 0.55);
-}
-
-.auth-header .icon-badge svg {
-  width: 24px;
-  height: 24px;
+  font-size: 24px;
   color: #fff;
 }
 
@@ -58,14 +63,89 @@
   gap: 16px;
 }
 
+.auth-form .field {
+  margin-bottom: 0;
+}
+
 .auth-form .field label {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-mid);
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   display: block;
 }
 
+/* Input with icon - FIXED alignment */
+.auth-form .input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-form .input-wrap .leading {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-low);
+  pointer-events: none;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.auth-form .input-wrap input {
+  width: 100%;
+  padding: 12px 44px 12px 42px;
+  background: var(--field-bg);
+  border: 1px solid var(--stroke);
+  border-radius: 11px;
+  color: var(--text-hi);
+  font-size: 13.5px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-form .input-wrap input::placeholder {
+  color: var(--text-low);
+  font-size: 13px;
+}
+
+.auth-form .input-wrap input:focus {
+  border-color: var(--magenta);
+  box-shadow: 0 0 0 3px rgba(230, 60, 194, 0.15);
+}
+
+.auth-form .input-wrap .toggle-eye {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: var(--text-low);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: color 0.15s;
+  z-index: 1;
+}
+
+.auth-form .input-wrap .toggle-eye:hover {
+  color: var(--text-mid);
+}
+
+/* Divider */
 .auth-divider {
   display: flex;
   align-items: center;
@@ -91,20 +171,26 @@
 
 .social-btn {
   flex: 1;
-  height: 44px;
+  height: 48px;
   border-radius: 11px;
   border: 1px solid var(--stroke);
   background: rgba(255, 255, 255, 0.02);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-mid);
 }
 
 .social-btn:hover {
   border-color: var(--stroke-strong);
   background: rgba(255, 255, 255, 0.05);
+  color: var(--text-hi);
 }
 
 .social-btn svg {
@@ -221,6 +307,38 @@
   color: var(--violet-1);
 }
 
+/* Forgot Password Link */
+.forgot-link {
+  text-align: right;
+  margin-top: -4px;
+  margin-bottom: 4px;
+}
+
+.forgot-link a {
+  color: var(--magenta);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  transition: 0.15s;
+}
+
+.forgot-link a:hover {
+  text-decoration: underline;
+}
+
+/* OTP Input */
+#otp {
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 12px;
+  font-weight: 700;
+}
+
+#otp::placeholder {
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
 /* Responsive Auth */
 @media (max-width: 520px) {
   .auth-card {
@@ -228,5 +346,9 @@
   }
   .social-row {
     flex-direction: column;
+  }
+  #otp {
+    font-size: 20px;
+    letter-spacing: 8px;
   }
 }
