@@ -11,12 +11,20 @@ const {
     ERROR_CODES 
 } = require('../../config/constants');
 
+// ============================================
+// HELPER: Normalize email (lowercase + trim)
+// ============================================
+function normalizeEmail(email) {
+    return email ? email.toLowerCase().trim() : '';
+}
+
 const authService = {
     // =============================================
     // REGISTER - Complete Registration Flow
     // =============================================
     async register(userData, req = {}) {
-        const { name, email, mobile, password } = userData;
+        const { name, mobile, password } = userData;
+        const email = normalizeEmail(userData.email);
 
         // Check existing email
         const existingEmail = await prisma.user.findUnique({ 
@@ -43,7 +51,7 @@ const authService = {
         // Hash password
         const passwordHash = await hashPassword(password);
         
-        // Create user
+        // Create user (email stored lowercase)
         const user = await prisma.user.create({
             data: {
                 name,
@@ -116,8 +124,12 @@ const authService = {
     // VERIFY EMAIL - Complete OTP Verification
     // =============================================
     async verifyEmail({ email, otp }, req = {}) {
+        const normalizedEmail = normalizeEmail(email);
+
+        console.log('🔍 [verifyEmail] Looking for:', normalizedEmail);
+
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { email: normalizedEmail },
             include: {
                 otps: {
                     where: {
@@ -131,6 +143,7 @@ const authService = {
         });
 
         if (!user) {
+            console.log('❌ [verifyEmail] User not found for:', normalizedEmail);
             throw new Error('User not found.');
         }
 
@@ -212,7 +225,7 @@ const authService = {
         // Send welcome email
         try {
             await sendEmail({
-                to: email,
+                to: normalizedEmail,
                 subject: 'Welcome to Digital Wallet!',
                 html: getWelcomeTemplate(user.name)
             });
@@ -242,8 +255,10 @@ const authService = {
     // RESEND OTP - Complete Resend Flow
     // =============================================
     async resendOTP({ email }, req = {}) {
+        const normalizedEmail = normalizeEmail(email);
+
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { email: normalizedEmail },
             include: {
                 otps: {
                     where: { type: OTP_TYPES.EMAIL_VERIFICATION },
@@ -319,7 +334,7 @@ const authService = {
         // Send new OTP email
         try {
             await sendEmail({
-                to: email,
+                to: normalizedEmail,
                 subject: 'New OTP - Digital Wallet',
                 html: getOTPEmailTemplate(otpCode, user.name)
             });
@@ -341,129 +356,112 @@ const authService = {
             message: 'New OTP sent to your email. Valid for 2 minutes.'
         };
     },
-// =============================================
-// LOGIN - Complete Login Flow (FIXED ORDER)
-// =============================================
-async login({ email, password }, req = {}) {
-    // ============================================
-    // 1. Find user
-    // ============================================
-    const user = await prisma.user.findUnique({
-        where: { email },
-        include: { 
-            wallet: true,
-            twoFA: true
+
+    // =============================================
+    // LOGIN - Complete Login Flow
+    // =============================================
+    async login({ email, password }, req = {}) {
+        const normalizedEmail = normalizeEmail(email);
+
+        const user = await prisma.user.findUnique({
+            where: { email: normalizedEmail },
+            include: { 
+                wallet: true,
+                twoFA: true
+            }
+        });
+
+        if (!user) {
+            throw new Error('Invalid email or password.');
         }
-    });
 
-    if (!user) {
-        throw new Error('Invalid email or password.');
-    }
+        // Verify password FIRST (Security!)
+        const isValid = await comparePassword(password, user.passwordHash);
+        if (!isValid) {
+            throw new Error('Invalid email or password.');
+        }
 
-    // ============================================
-    // 2. ✅ VERIFY PASSWORD FIRST (Security!)
-    // ============================================
-    const isValid = await comparePassword(password, user.passwordHash);
-    if (!isValid) {
-        throw new Error('Invalid email or password.');
-    }
+        // Then check account status
+        if (user.status === USER_STATUS.PENDING_VERIFICATION) {
+            const error = new Error('Please complete your email verification.');
+            error.code = ERROR_CODES.PENDING_VERIFICATION;
+            throw error;
+        }
 
-    // ============================================
-    // 3. ✅ THEN check account status
-    // ============================================
-    if (user.status === USER_STATUS.PENDING_VERIFICATION) {
-        const error = new Error('Please complete your email verification.');
-        error.code = ERROR_CODES.PENDING_VERIFICATION;
-        throw error;
-    }
+        if (user.status !== USER_STATUS.ACTIVE) {
+            throw new Error('Account is not active. Please contact support.');
+        }
 
-    if (user.status !== USER_STATUS.ACTIVE) {
-        throw new Error('Account is not active. Please contact support.');
-    }
+        // Update login count
+        const loginCount = (user.loginCount || 0) + 1;
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { loginCount }
+        });
 
-    // ============================================
-    // 4. Update login count
-    // ============================================
-    const loginCount = (user.loginCount || 0) + 1;
-    await prisma.user.update({
-        where: { id: user.id },
-        data: { loginCount }
-    });
+        // Log security event
+        await logSecurityEvent(
+            user.id,
+            'LOGIN_SUCCESS',
+            `User ${user.email} logged in successfully`,
+            req.ip || 'unknown',
+            req.headers?.['user-agent'] || 'unknown'
+        );
 
-    // ============================================
-    // 5. Log security event
-    // ============================================
-    await logSecurityEvent(
-        user.id,
-        'LOGIN_SUCCESS',
-        `User ${user.email} logged in successfully`,
-        req.ip || 'unknown',
-        req.headers?.['user-agent'] || 'unknown'
-    );
+        // Check 2FA status
+        const twoFA = user.twoFA;
+        const isWithinFirst3 = loginCount <= 3;
 
-    // ============================================
-    // 6. Check 2FA status
-    // ============================================
-    const twoFA = user.twoFA;
-    const isWithinFirst3 = loginCount <= 3;
-
-    // ============================================
-    // 7. Generate tokens
-    // ============================================
-    const { accessToken, refreshToken } = generateTokens({
-        userId: user.id,
-        email: user.email
-    });
-
-    const { passwordHash: _, ...userWithoutPassword } = user;
-
-    // ============================================
-    // 8. If 2FA is enabled, require 2FA verification
-    // ============================================
-    if (twoFA && twoFA.isEnabled) {
-        return {
-            require2FA: true,
+        // Generate tokens
+        const { accessToken, refreshToken } = generateTokens({
             userId: user.id,
-            email: user.email,
-            message: '2FA verification required',
-            tempToken: accessToken
+            email: user.email
+        });
+
+        const { passwordHash: _, ...userWithoutPassword } = user;
+
+        // If 2FA is enabled
+        if (twoFA && twoFA.isEnabled) {
+            return {
+                require2FA: true,
+                userId: user.id,
+                email: user.email,
+                message: '2FA verification required',
+                tempToken: accessToken
+            };
+        }
+
+        // Show 2FA prompt on first 3 logins
+        const show2FAPrompt = isWithinFirst3 && !twoFA?.isEnabled;
+
+        return {
+            require2FA: false,
+            user: userWithoutPassword,
+            wallet: user.wallet,
+            accessToken,
+            refreshToken,
+            show2FAPrompt,
+            loginCount,
+            isFirstLogin: loginCount === 1,
+            message: 'Login successful'
         };
-    }
-
-    // ============================================
-    // 9. Show 2FA prompt on first 3 logins
-    // ============================================
-    const show2FAPrompt = isWithinFirst3 && !twoFA?.isEnabled;
-
-    // ============================================
-    // 10. Return success
-    // ============================================
-    return {
-        require2FA: false,
-        user: userWithoutPassword,
-        wallet: user.wallet,
-        accessToken,
-        refreshToken,
-        show2FAPrompt,
-        loginCount,
-        isFirstLogin: loginCount === 1,
-        message: 'Login successful'
-    };
-}, 
+    },
 
     // =============================================
     // FORGOT PASSWORD - Complete Flow
     // =============================================
     async forgotPassword({ email }, req = {}) {
+        const normalizedEmail = normalizeEmail(email);
+
         const user = await prisma.user.findUnique({ 
-            where: { email } 
+            where: { email: normalizedEmail } 
         });
 
-        // Don't reveal if email exists (security)
+        // Show error if email not registered
         if (!user) {
-            return {
-                message: 'If an account exists for this email, a password reset code has been sent.'
-            };
+            const error = new Error('This email is not registered. Please sign up first.');
+            error.code = 'EMAIL_NOT_FOUND';
+            throw error;
         }
 
         // Check account status
@@ -503,7 +501,7 @@ async login({ email, password }, req = {}) {
         // Send password reset email
         try {
             await sendEmail({
-                to: email,
+                to: normalizedEmail,
                 subject: 'Reset Your Password - Digital Wallet',
                 html: getPasswordResetTemplate(otpCode, user.name)
             });
@@ -522,7 +520,7 @@ async login({ email, password }, req = {}) {
 
         return {
             email: user.email,
-            message: 'If an account exists for this email, a password reset code has been sent.'
+            message: 'Password reset code sent to your email.'
         };
     },
 
@@ -530,8 +528,10 @@ async login({ email, password }, req = {}) {
     // RESET PASSWORD - Complete Flow
     // =============================================
     async resetPassword({ email, otp, newPassword }, req = {}) {
+        const normalizedEmail = normalizeEmail(email);
+
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: { email: normalizedEmail },
             include: {
                 otps: {
                     where: {
@@ -670,7 +670,6 @@ async login({ email, password }, req = {}) {
     // LOGOUT
     // =============================================
     async logout({ userId }, req = {}) {
-        // Log security event
         await logSecurityEvent(
             userId,
             'LOGOUT',
@@ -686,7 +685,6 @@ async login({ email, password }, req = {}) {
     // REFRESH TOKEN
     // =============================================
     async refreshToken({ refreshToken }) {
-        // Verify refresh token
         const { verifyToken } = require('../../utils/jwt');
         const decoded = verifyToken(refreshToken);
         
@@ -694,7 +692,6 @@ async login({ email, password }, req = {}) {
             throw new Error('Invalid refresh token.');
         }
 
-        // Check if user exists
         const user = await prisma.user.findUnique({
             where: { id: decoded.userId }
         });
@@ -703,7 +700,6 @@ async login({ email, password }, req = {}) {
             throw new Error('User not found.');
         }
 
-        // Generate new tokens
         const { accessToken, refreshToken: newRefreshToken } = generateTokens({
             userId: user.id,
             email: user.email

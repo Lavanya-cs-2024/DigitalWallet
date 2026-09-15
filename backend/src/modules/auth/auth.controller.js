@@ -191,38 +191,44 @@ const authController = {
         }
     },
 
-    // =============================================
-    // FORGOT PASSWORD
-    // =============================================
-    forgotPassword: async (req, res, next) => {
-        try {
-            const { email } = req.body;
-            const result = await authService.forgotPassword(
-                { email },
-                req
-            );
-            
-            // Handle PENDING_VERIFICATION
-            if (result.code === ERROR_CODES.PENDING_VERIFICATION) {
-                return res.status(HTTP_STATUS.FORBIDDEN).json({
-                    success: false,
-                    message: 'Please verify your email first.',
-                    code: ERROR_CODES.PENDING_VERIFICATION,
-                    action: 'VERIFY_EMAIL'
-                });
-            }
+// =============================================
+// FORGOT PASSWORD
+// =============================================
+forgotPassword: async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const result = await authService.forgotPassword({ email }, req);
 
-            res.status(HTTP_STATUS.OK).json({
-                success: true,
-                message: result.message || 'If an account exists for this email, a password reset code has been sent.',
-                data: {
-                    email: result.email
-                }
+        // ✅ If user doesn't exist
+        if (result.userExists === false) {
+            return res.status(HTTP_STATUS.OK).json({
+                success: false,  // ✅ success: false → no redirect
+                message: 'If an account exists for this email, a password reset code has been sent.',
+                code: 'EMAIL_SENT_GENERIC',  // Generic code
+                action: 'CHECK_EMAIL'
             });
-        } catch (error) {
-            next(error);
         }
-    },
+
+        // ✅ If user exists → send success
+        res.status(HTTP_STATUS.OK).json({
+            success: true,
+            message: result.message || 'Password reset code sent to your email.',
+            data: { email: result.email }
+        });
+
+    } catch (error) {
+        // Handle PENDING_VERIFICATION
+        if (error.code === ERROR_CODES.PENDING_VERIFICATION) {
+            return res.status(HTTP_STATUS.FORBIDDEN).json({
+                success: false,
+                message: 'Please verify your email first.',
+                code: ERROR_CODES.PENDING_VERIFICATION,
+                action: 'VERIFY_EMAIL'
+            });
+        }
+        next(error);
+    }
+},
 
     // =============================================
     // RESET PASSWORD

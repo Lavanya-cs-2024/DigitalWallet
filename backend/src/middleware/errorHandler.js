@@ -63,6 +63,18 @@ const errorHandler = (err, req, res, next) => {
     }
 
     // ============================================
+// ✅ Handle EMAIL_NOT_FOUND
+// ============================================
+if (err.code === 'EMAIL_NOT_FOUND') {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'This email is not registered. Please sign up first.',
+        code: 'EMAIL_NOT_FOUND',
+        action: 'SIGN_UP'
+    });
+}
+
+    // ============================================
     // HANDLE: PRISMA P2002 (Duplicate entry)
     // ============================================
     // When trying to create a record with duplicate unique field
