@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Wallet — Dashboard</title>
-  
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  
+
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  
+
   <style>
     /* ===== CSS VARIABLES ===== */
     :root {
@@ -406,32 +406,6 @@
       border-color: var(--stroke-strong);
     }
 
-    /* ===== EMPTY STATE ===== */
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-    }
-
-    .empty-state i {
-      font-size: 56px;
-      color: var(--text-low);
-      opacity: 0.3;
-      margin-bottom: 16px;
-    }
-
-    .empty-state h3 {
-      font-family: 'Sora', sans-serif;
-      font-size: 18px;
-      margin-bottom: 6px;
-    }
-
-    .empty-state p {
-      color: var(--text-low);
-      font-size: 13px;
-      max-width: 320px;
-      margin: 0 auto 18px;
-    }
-
     /* ===== DASHBOARD GRID ===== */
     .dashboard-grid {
       display: grid;
@@ -636,25 +610,17 @@
     }
 
     @media (max-width: 768px) {
-      .sidebar {
-        width: 72px;
-        padding: 16px 10px;
-      }
-      
+      .sidebar { width: 72px; padding: 16px 10px; }
       .sidebar-brand span,
       .sidebar-nav a span,
       .sidebar-nav .nav-label,
       .sidebar-footer .user-info,
-      .sidebar-footer .logout-btn {
-        display: none;
-      }
-      
+      .sidebar-footer .logout-btn { display: none; }
       .sidebar-brand { justify-content: center; padding-bottom: 16px; margin-bottom: 16px; }
       .sidebar-nav a { justify-content: center; padding: 10px; }
       .sidebar-nav a i { font-size: 22px; margin: 0; }
       .sidebar-footer .user-card { justify-content: center; padding: 8px; }
       .sidebar-footer .user-avatar { width: 32px; height: 32px; font-size: 12px; }
-      
       .main-content { padding: 16px; }
       .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
       .top-bar .actions .search-box input { width: 100px; }
@@ -733,12 +699,12 @@
   <!-- User Footer -->
   <div class="sidebar-footer">
     <div class="user-card">
-      <div class="user-avatar">JD</div>
+      <div class="user-avatar" id="userAvatar">--</div>
       <div class="user-info">
-        <div class="name">John Doe</div>
-        <div class="email">john@example.com</div>
+        <div class="name" id="userName">Loading...</div>
+        <div class="email" id="userEmail">loading@example.com</div>
       </div>
-      <button class="logout-btn" title="Logout">
+      <button class="logout-btn" id="logoutBtn" title="Logout">
         <i class="bi bi-box-arrow-right"></i>
       </button>
     </div>
@@ -769,7 +735,7 @@
   <!-- Welcome Banner -->
   <div class="welcome-banner">
     <div class="text">
-      <h2>👋 Welcome, John!</h2>
+      <h2>👋 Welcome, <span id="welcomeName">Loading...</span>!</h2>
       <p>Your account is ready. Add money to start using your wallet.</p>
     </div>
     <div class="action-btns">
@@ -903,6 +869,132 @@
   </div>
 
 </main>
+
+<!-- ========================================
+   SCRIPTS — LOAD USER DATA
+======================================== -->
+<script>
+  // ============================================
+  // DASHBOARD - Load User Data
+  // ============================================
+
+  const accessToken = localStorage.getItem('accessToken');
+  const userData = localStorage.getItem('user');
+
+  console.log('🔍 Dashboard check:');
+  console.log('   accessToken:', accessToken ? 'EXISTS ✅' : 'MISSING ❌');
+  console.log('   userData:', userData);
+
+  // If no token → redirect to login
+  if (!accessToken) {
+    console.log('❌ No token found. Redirecting to login...');
+    window.location.href = 'login.html';
+  } else {
+    // Parse user data
+    let user = null;
+    try {
+      user = userData ? JSON.parse(userData) : null;
+    } catch (e) {
+      console.error('❌ Failed to parse user data:', e);
+    }
+
+    if (user && user.name) {
+      // Update sidebar user card
+      const userNameEl = document.getElementById('userName');
+      const userEmailEl = document.getElementById('userEmail');
+      const userAvatarEl = document.getElementById('userAvatar');
+      const welcomeNameEl = document.getElementById('welcomeName');
+
+      if (userNameEl) userNameEl.textContent = user.name || 'User';
+      if (userEmailEl) userEmailEl.textContent = user.email || 'user@example.com';
+
+      // Generate initials (e.g., "John Doe" → "JD")
+      if (userAvatarEl) {
+        const initials = (user.name || 'U')
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .toUpperCase()
+          .substring(0, 2);
+        userAvatarEl.textContent = initials;
+      }
+
+      // Welcome message with first name only
+      if (welcomeNameEl) {
+        const firstName = (user.name || 'User').split(' ')[0];
+        welcomeNameEl.textContent = firstName;
+      }
+
+      console.log('✅ User data loaded:', user.name, user.email);
+    } else {
+      // No user data → fetch from backend
+      console.log('⚠️ No user in localStorage. Fetching from backend...');
+
+      fetch('http://localhost:5000/api/auth/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data?.user) {
+          const user = data.data.user;
+
+          // Save to localStorage
+          localStorage.setItem('user', JSON.stringify(user));
+
+          // Update UI
+          document.getElementById('userName').textContent = user.name;
+          document.getElementById('userEmail').textContent = user.email;
+
+          const initials = (user.name || 'U')
+            .split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase()
+            .substring(0, 2);
+          document.getElementById('userAvatar').textContent = initials;
+
+          const firstName = (user.name || 'User').split(' ')[0];
+          document.getElementById('welcomeName').textContent = firstName;
+
+          console.log('✅ User fetched from backend:', user.name);
+        } else {
+          console.log('❌ Failed to fetch user. Redirecting to login.');
+          localStorage.clear();
+          window.location.href = 'login.html';
+        }
+      })
+      .catch(error => {
+        console.error('❌ Error fetching user:', error);
+      });
+    }
+  }
+
+  // ============================================
+  // LOGOUT
+  // ============================================
+  document.getElementById('logoutBtn')?.addEventListener('click', async function() {
+    try {
+      // Call backend logout (optional)
+      await fetch('http://localhost:5000/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
+    // Clear localStorage
+    localStorage.clear();
+
+    // Redirect to login
+    window.location.href = 'login.html';
+  });
+</script>
 
 </body>
 </html>
