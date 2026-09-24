@@ -40,6 +40,8 @@ const protect = async (req, res, next) => {
                 id: true,
                 email: true,
                 name: true,
+                mobile: true,
+                state: true,
                 status: true,
                 emailVerified: true,
                 profilePicture: true

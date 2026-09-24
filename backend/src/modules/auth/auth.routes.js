@@ -128,6 +128,17 @@ router.get(
 );
 
 /**
+ * @route   PATCH /api/auth/profile
+ * @desc    Update user profile (mobile, state)
+ * @access  Private
+ */
+router.patch(
+    '/profile',
+    protect,
+    authController.updateProfile
+);
+
+/**
  * @route   POST /api/auth/logout
  * @desc    Logout user
  * @access  Private
@@ -151,3 +162,21 @@ router.post(
 );
 
 module.exports = router;
+
+// ============================================
+// GOOGLE OAUTH ROUTES
+// ============================================
+
+/**
+ * @route   GET /api/auth/google
+ * @desc    Redirect to Google OAuth
+ * @access  Public
+ */
+router.get('/google', authController.googleAuth);
+
+/**
+ * @route   GET /api/auth/google/callback
+ * @desc    Google OAuth callback
+ * @access  Public
+ */
+router.get('/google/callback', authController.googleCallback);

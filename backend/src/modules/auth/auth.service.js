@@ -131,6 +131,7 @@ const authService = {
         const user = await prisma.user.findUnique({
             where: { email: normalizedEmail },
             include: {
+                
                 otps: {
                     where: {
                         type: OTP_TYPES.EMAIL_VERIFICATION,
@@ -214,12 +215,6 @@ const authService = {
                     status: USER_STATUS.ACTIVE
                 }
             }),
-            prisma.wallet.create({
-                data: {
-                    userId: user.id,
-                    balance: 0
-                }
-            })
         ]);
 
         // Send welcome email

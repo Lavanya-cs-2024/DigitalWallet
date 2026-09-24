@@ -10,15 +10,14 @@ const prisma = require('../config/prisma');
  * @param {string} userAgent - User agent of the request
  * @param {Object} metadata - Additional metadata (optional)
  */
-async function logSecurityEvent(
-    userId,
-    eventType,
-    description,
-    ipAddress = 'unknown',
-    userAgent = 'unknown',
-    metadata = {}
-) {
+async function logSecurityEvent(userId, eventType, description, ipAddress = 'unknown', userAgent = 'unknown', metadata = {}) {
     try {
+        // ✅ Check if model exists
+        if (!prisma.securityEvent || typeof prisma.securityEvent.create !== 'function') {
+            console.log('⚠️ SecurityEvent model not available. Skipping audit log.');
+            return;
+        }
+        
         await prisma.securityEvent.create({
             data: {
                 userId: userId || null,
@@ -30,7 +29,6 @@ async function logSecurityEvent(
             }
         });
     } catch (error) {
-        // Log error but don't break the flow
         console.error('❌ Failed to log security event:', error.message);
     }
 }

@@ -122,6 +122,60 @@ const authController = {
         }
     },
 
+        
+    // =============================================
+    // GOOGLE OAUTH — Redirect to Google
+    // =============================================
+    googleAuth: (req, res) => {
+        const authUrl = googleService.getAuthUrl();
+        res.redirect(authUrl);
+    },
+
+    // =============================================
+    // GOOGLE OAUTH — Callback
+    // =============================================
+    googleCallback: async (req, res, next) => {
+        try {
+            const { code, error } = req.query;
+
+            // Handle Google error
+            if (error) {
+                return res.redirect(
+                    `${process.env.FRONTEND_URL}/pages/login.html?error=google_failed`
+                );
+            }
+
+            if (!code) {
+                return res.redirect(
+                    `${process.env.FRONTEND_URL}/pages/login.html?error=no_code`
+                );
+            }
+
+            // Exchange code for tokens
+            const tokens = await googleService.getTokens(code);
+
+            // Get user info from Google
+            const googleUser = await googleService.getUserInfo(tokens);
+
+            // Handle login/registration
+            const result = await googleService.handleGoogleLogin(googleUser, req);
+
+            // Redirect to frontend with tokens
+            const redirectUrl = new URL(`${process.env.FRONTEND_URL}/pages/login.html`);
+            redirectUrl.searchParams.set('auth', 'success');
+            redirectUrl.searchParams.set('accessToken', result.accessToken);
+            redirectUrl.searchParams.set('refreshToken', result.refreshToken);
+            redirectUrl.searchParams.set('userId', result.user.id);
+
+            res.redirect(redirectUrl.toString());
+        } catch (error) {
+            console.error('Google OAuth error:', error);
+            res.redirect(
+                `${process.env.FRONTEND_URL}/pages/login.html?error=google_failed`
+            );
+        }
+    },
+
     // =============================================
     // LOGIN
     // =============================================
@@ -341,7 +395,40 @@ forgotPassword: async (req, res, next) => {
         } catch (error) {
             next(error);
         }
+    },
+
+    // =============================================
+    // UPDATE PROFILE
+    // =============================================
+    updateProfile: async (req, res, next) => {
+        try {
+            const { userId } = req.user;
+            const { mobile, state } = req.body;
+
+            const updated = await authService.updateProfile(
+                { userId, mobile, state },
+                req
+            );
+
+            res.status(HTTP_STATUS.OK).json({
+                success: true,
+                message: 'Profile updated successfully.',
+                data: { user: updated }
+            });
+        } catch (error) {
+            if (error.code === 'INVALID_MOBILE' || error.code === 'MOBILE_EXISTS') {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                    success: false,
+                    message: error.message,
+                    code: error.code
+                });
+            }
+            next(error);
+        }
     }
+    
 };
 
 module.exports = authController;
+
+const googleService = require('./google.service');

@@ -12,6 +12,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Import routes
 const authRoutes = require('./modules/auth/auth.routes');
+const walletRoutes = require('./modules/wallet/wallet.routes');  
 
 // Create Express app
 const app = express();
@@ -50,6 +51,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/wallet', walletRoutes); 
 
 // ============================================
 // ERROR HANDLING

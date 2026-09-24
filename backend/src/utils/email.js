@@ -66,29 +66,59 @@ function getOTPEmailTemplate(otpCode, name = 'User') {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Email Verification</title>
+            <title>Verify Your Email - Digital Wallet</title>
         </head>
         <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
-            <div style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #4f46e5; margin: 0;">💰 Digital Wallet</h1>
-                    <p style="color: #666; margin: 5px 0 0;">Secure Digital Payments</p>
+            <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                
+                <!-- Logo Header -->
+                <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #4f46e5;">
+                    <h1 style="color: #4f46e5; margin: 0; font-size: 28px;">💰 Digital Wallet</h1>
+                    <p style="color: #666; margin: 8px 0 0 0; font-size: 14px;">Secure Digital Payments</p>
                 </div>
                 
-                <div style="border-top: 2px solid #4f46e5; padding-top: 20px;">
-                    <h2 style="color: #1a1a2e;">Verify Your Email Address</h2>
+                <!-- Main Content -->
+                <div>
+                    <h2 style="color: #1a1a2e; font-size: 22px; margin-top: 0;">Verify Your Email Address</h2>
                     <p style="color: #333; font-size: 16px; line-height: 1.6;">Hello <strong>${name}</strong>,</p>
-                    <p style="color: #333; font-size: 16px; line-height: 1.6;">Thank you for registering with Digital Wallet. Please use the following OTP to verify your email address:</p>
+                    <p style="color: #333; font-size: 16px; line-height: 1.6;">
+                        Thank you for registering with <strong>Digital Wallet</strong>. 
+                        To complete your account setup, please use the following One-Time Password (OTP) to verify your email address.
+                    </p>
                     
-                    <div style="background: #f0f2f5; padding: 20px; text-align: center; border-radius: 8px; margin: 25px 0; border: 2px dashed #4f46e5;">
-                        <span style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #4f46e5;">${otpCode}</span>
+                    <!-- OTP Box -->
+                    <div style="background: #f0f2f5; padding: 25px; text-align: center; border-radius: 8px; margin: 30px 0; border: 2px dashed #4f46e5;">
+                        <p style="color: #666; font-size: 14px; margin: 0 0 10px 0;">Your OTP code is:</p>
+                        <span style="font-size: 42px; font-weight: bold; letter-spacing: 12px; color: #4f46e5; font-family: 'Courier New', monospace;">
+                            ${otpCode}
+                        </span>
                     </div>
                     
-                    <p style="color: #666; font-size: 14px;">⏰ This OTP is valid for <strong>2 minutes</strong>.</p>
-                    <p style="color: #666; font-size: 14px;">🔒 If you didn't request this, please ignore this email.</p>
+                    <!-- Instructions -->
+                    <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                        <p style="color: #92400e; font-size: 14px; margin: 0;">
+                            ⏰ <strong>Important:</strong> This OTP is valid for <strong>2 minutes</strong> only.
+                        </p>
+                    </div>
                     
-                    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 25px 0;">
-                    <p style="color: #999; font-size: 12px; text-align: center;">This is an automated message from Digital Wallet. Please do not reply to this email.</p>
+                    <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                        If you didn't create an account with Digital Wallet, you can safely ignore this email.
+                    </p>
+                    
+                    <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+                    
+                    <!-- Footer -->
+                    <div style="text-align: center;">
+                        <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 5px 0;">
+                            This is an automated message from Digital Wallet.
+                        </p>
+                        <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 5px 0;">
+                            Please do not reply to this email.
+                        </p>
+                        <p style="color: #999; font-size: 12px; line-height: 1.6; margin: 15px 0 0 0;">
+                            © 2026 Digital Wallet. All rights reserved.
+                        </p>
+                    </div>
                 </div>
             </div>
         </body>
