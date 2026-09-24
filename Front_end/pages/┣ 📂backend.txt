@@ -1,0 +1,155 @@
+┣ 📂backend
+┃ ┣ 📂database
+┃ ┃ ┣ 📂migrations
+┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┣ 📂schema
+┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┗ 📂seed
+┃ ┃   ┗ 📜.gitkeep
+┃ ┣ 📂docs
+┃ ┃ ┣ 📂api
+┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┣ 📂diagrams
+┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┣ 📂requirements
+┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┗ 📂screenshots
+┃ ┃   ┗ 📜.gitkeep
+┃ ┣ 📂frontend
+┃ ┃ ┗ 📂src
+┃ ┃   ┣ 📂components
+┃ ┃   ┃ ┗ 📜.gitkeep
+┃ ┃   ┣ 📂hooks
+┃ ┃   ┃ ┗ 📜.gitkeep
+┃ ┃   ┣ 📂layouts
+┃ ┃   ┃ ┗ 📜.gitkeep
+┃ ┃   ┣ 📂modules
+┃ ┃   ┃ ┣ 📂auth
+┃ ┃   ┃ ┃ ┗ 📜.gitkeep
+┃ ┃   ┃ ┣ 📂expenses
+┃ ┃   ┃ ┃ ┗ 📜.gitkeep
+┃ ┃   ┃ ┣ 📂groups
+┃ ┃   ┃ ┃ ┗ 📜.gitkeep
+┃ ┃   ┃ ┣ 📂split
+┃ ┃   ┃ ┃ ┗ 📜.gitkeep
+┃ ┃   ┃ ┣ 📂users
+┃ ┃   ┃ ┃ ┗ 📜.gitkeep
+┃ ┃   ┃ ┗ 📂wallet
+┃ ┃   ┃   ┗ 📜.gitkeep
+┃ ┃   ┣ 📂routes
+┃ ┃   ┃ ┗ 📜.gitkeep
+┃ ┃   ┣ 📂services
+┃ ┃   ┃ ┗ 📜.gitkeep
+┃ ┃   ┗ 📂utils
+┃ ┃     ┗ 📜.gitkeep
+┃ ┣ 📂prisma
+┃ ┃ ┣ 📂migrations
+┃ ┃ ┃ ┣ 📂20260823181622_prevent_duplicate_group_members
+┃ ┃ ┃ ┃ ┗ 📜migration.sql
+┃ ┃ ┃ ┣ 📂20260826041932_add_auth_models
+┃ ┃ ┃ ┃ ┗ 📜migration.sql
+┃ ┃ ┃ ┗ 📜migration_lock.toml
+┃ ┃ ┗ 📜schema.prisma
+┃ ┣ 📂src
+┃ ┃ ┣ 📂config
+┃ ┃ ┃ ┣ 📜.gitkeep
+┃ ┃ ┃ ┣ 📜constants.js
+┃ ┃ ┃ ┗ 📜prisma.js
+┃ ┃ ┣ 📂middleware
+┃ ┃ ┃ ┣ 📜.gitkeep
+┃ ┃ ┃ ┣ 📜auth.middleware.js
+┃ ┃ ┃ ┣ 📜errorHandler.js
+┃ ┃ ┃ ┣ 📜logger.js
+┃ ┃ ┃ ┣ 📜rateLimiter.js
+┃ ┃ ┃ ┗ 📜validation.middleware.js
+┃ ┃ ┣ 📂modules
+┃ ┃ ┃ ┣ 📂auth
+┃ ┃ ┃ ┃ ┣ 📜.gitkeep
+┃ ┃ ┃ ┃ ┣ 📜auth.controller.js
+┃ ┃ ┃ ┃ ┣ 📜auth.routes.js
+┃ ┃ ┃ ┃ ┣ 📜auth.service.js
+┃ ┃ ┃ ┃ ┣ 📜auth.validation.js
+┃ ┃ ┃ ┃ ┗ 📜google.service.js
+┃ ┃ ┃ ┣ 📂expenses
+┃ ┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┃ ┣ 📂groups
+┃ ┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┃ ┣ 📂payment
+┃ ┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┃ ┣ 📂split
+┃ ┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┃ ┣ 📂users
+┃ ┃ ┃ ┃ ┗ 📜.gitkeep
+┃ ┃ ┃ ┗ 📂wallet
+┃ ┃ ┃   ┗ 📜.gitkeep
+┃ ┃ ┣ 📂utils
+┃ ┃ ┃ ┣ 📜.gitkeep
+┃ ┃ ┃ ┣ 📜audit.js
+┃ ┃ ┃ ┣ 📜email.js
+┃ ┃ ┃ ┣ 📜jwt.js
+┃ ┃ ┃ ┗ 📜password.js
+┃ ┃ ┣ 📜app.js
+┃ ┃ ┗ 📜server.js
+┃ ┣ 📜.env
+┃ ┣ 📜.env.example
+┃ ┣ 📜.gitignore
+┃ ┣ 📜jest.config.js
+┃ ┣ 📜jest.setup.js
+┃ ┣ 📜package.json
+┃ ┣ 📜prisma.config.ts
+┃ ┗ 📜test-verify.js
+┣ 📂Front_end
+┃ ┣ 📂assets
+┃ ┃ ┗ 📜icons
+┃ ┣ 📂css
+┃ ┃ ┣ 📜auth.css
+┃ ┃ ┗ 📜style.css
+┃ ┣ 📂js
+┃ ┃ ┣ 📜app.js
+┃ ┃ ┣ 📜auth.js
+┃ ┃ ┗ 📜dashboard.js
+┃ ┣ 📂pages
+┃ ┃ ┣ 📜auth-callback.html
+┃ ┃ ┣ 📜dashboard.html
+┃ ┃ ┣ 📜forgot-password.html
+┃ ┃ ┣ 📜login.html
+┃ ┃ ┣ 📜register.html
+┃ ┃ ┣ 📜reset-password.html
+┃ ┃ ┗ 📜verify.html
+┃ ┣ 📜.gitignore
+┃ ┗ 📜index.html
+┣ 📂frontend
+┃ ┣ 📂public
+┃ ┃ ┣ 📜favicon.svg
+┃ ┃ ┗ 📜icons.svg
+┃ ┣ 📂src
+┃ ┃ ┣ 📂assets
+┃ ┃ ┃ ┣ 📜hero.png
+┃ ┃ ┃ ┣ 📜logo.svg
+┃ ┃ ┃ ┣ 📜react.svg
+┃ ┃ ┃ ┗ 📜vite.svg
+┃ ┃ ┣ 📂components
+┃ ┃ ┃ ┣ 📜Navbar.jsx
+┃ ┃ ┃ ┗ 📜ProtectedRoute.jsx
+┃ ┃ ┣ 📂pages
+┃ ┃ ┃ ┣ 📜Dashboard.jsx
+┃ ┃ ┃ ┣ 📜Login.jsx
+┃ ┃ ┃ ┗ 📜Register.jsx
+┃ ┃ ┣ 📂services
+┃ ┃ ┃ ┗ 📜api.js
+┃ ┃ ┣ 📜App.css
+┃ ┃ ┣ 📜App.jsx
+┃ ┃ ┣ 📜index.css
+┃ ┃ ┗ 📜main.jsx
+┃ ┣ 📜.gitignore
+┃ ┣ 📜eslint.config.js
+┃ ┣ 📜index.html
+┃ ┣ 📜package.json
+┃ ┣ 📜README.md
+┃ ┗ 📜vite.config.js
+┣ 📂ZTest
+┃ ┗ 📜auth-test.html
+┣ 📜.gitignore
+┣ 📜package.json
+┣ 📜README.md
+┗ 📜test-email.js

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Setup Profile & Create Wallet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/auth.css">
+  <style>
+    .avatar-preview {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #e63cc2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 700; color: #fff; margin: 0 auto 16px;
+      overflow: hidden; border: 2px solid rgba(168, 120, 255, 0.4);
+    }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .input-disabled {
+      background: rgba(255, 255, 255, 0.04) !important;
+      cursor: not-allowed;
+      color: #b7a9cf !important;
+    }
+    select {
+      width: 100%; height: 46px; background: #150a20;
+      border: 1px solid rgba(168, 120, 255, 0.2); border-radius: 10px;
+      padding: 0 14px 0 40px; color: #f3eefc; font-family: 'Inter', sans-serif;
+    }
+    select option { background: #170a24; color: #fff; }
+  </style>
+</head>
+<body>
+<div class="auth-container">
+  <div class="auth-card" style="max-width: 480px;">
+    <div class="auth-header">
+      <div class="avatar-preview" id="pfpContainer">--</div>
+      <h1 style="font-size: 20px;">Complete Profile</h1>
+      <p>Confirm your details to activate your wallet</p>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <form id="onboardingForm" class="auth-form">
+      <div class="field">
+        <label>Full Name</label>
+        <div class="input-wrap">
+          <i class="bi bi-person leading"></i>
+          <input type="text" id="name" class="input-disabled" readonly />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Email Address</label>
+        <div class="input-wrap">
+          <i class="bi bi-envelope leading"></i>
+          <input type="email" id="email" class="input-disabled" readonly />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Mobile Number</label>
+        <div class="input-wrap">
+          <i class="bi bi-telephone leading"></i>
+          <input type="tel" id="mobile" placeholder="Enter 10-digit mobile" maxlength="10" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="state">State (India)</label>
+        <div class="input-wrap">
+          <i class="bi bi-geo-alt leading"></i>
+          <select id="state" required>
+            <option value="">Select your state</option>
+            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+            <option value="Assam">Assam</option>
+            <option value="Bihar">Bihar</option>
+            <option value="Chhattisgarh">Chhattisgarh</option>
+            <option value="Goa">Goa</option>
+            <option value="Gujarat">Gujarat</option>
+            <option value="Haryana">Haryana</option>
+            <option value="Himachal Pradesh">Himachal Pradesh</option>
+            <option value="Jharkhand">Jharkhand</option>
+            <option value="Karnataka">Karnataka</option>
+            <option value="Kerala">Kerala</option>
+            <option value="Madhya Pradesh">Madhya Pradesh</option>
+            <option value="Maharashtra">Maharashtra</option>
+            <option value="Manipur">Manipur</option>
+            <option value="Meghalaya">Meghalaya</option>
+            <option value="Mizoram">Mizoram</option>
+            <option value="Nagaland">Nagaland</option>
+            <option value="Odisha">Odisha</option>
+            <option value="Punjab">Punjab</option>
+            <option value="Rajasthan">Rajasthan</option>
+            <option value="Sikkim">Sikkim</option>
+            <option value="Tamil Nadu">Tamil Nadu</option>
+            <option value="Telangana">Telangana</option>
+            <option value="Tripura">Tripura</option>
+            <option value="Uttar Pradesh">Uttar Pradesh</option>
+            <option value="Uttarakhand">Uttarakhand</option>
+            <option value="West Bengal">West Bengal</option>
+            <option value="Delhi">Delhi</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn" class="btn btn-primary btn-block" style="margin-top: 16px;">
+        <i class="bi bi-shield-check"></i> Save & Create Wallet
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('accessToken');
+  if (!token) window.location.href = 'login.html';
+
+  async function loadUser() {
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error();
+
+      const user = data.data.user;
+      document.getElementById('name').value = user.name || '';
+      document.getElementById('email').value = user.email || '';
+
+      const pfpBox = document.getElementById('pfpContainer');
+      if (user.profilePicture) {
+        pfpBox.innerHTML = `<img src="${user.profilePicture}" alt="PFP" />`;
+      } else {
+        pfpBox.textContent = (user.name || 'U').split(' ').map(n=>n[0]).join('').slice(0, 2).toUpperCase();
+      }
+
+      const mobileInput = document.getElementById('mobile');
+      if (user.mobile) {
+        mobileInput.value = user.mobile;
+        mobileInput.classList.add('input-disabled');
+        mobileInput.readOnly = true;
+      }
+
+      if (user.state) {
+        document.getElementById('state').value = user.state;
+      }
+    } catch (e) {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+  }
+  loadUser();
+
+  document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const state = document.getElementById('state').value;
+    const mobile = document.getElementById('mobile').value.trim();
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating Wallet...';
+
+    try {
+      const res = await fetch('http://localhost:5000/api/wallet/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ state, mobile })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.setItem('walletJustCreated', 'true');
+        if (data.data.user) localStorage.setItem('user', JSON.stringify(data.data.user));
+        window.location.href = 'dashboard.html';
+      } else {
+        alert(data.message || 'Creation failed');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-shield-check"></i> Save & Create Wallet';
+      }
+    } catch (err) {
+      alert('Network error. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-shield-check"></i> Save & Create Wallet';
+    }
+  });
+</script>
+</body>
+</html>

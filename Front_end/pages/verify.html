@@ -93,6 +93,40 @@
   }
 
   // ============================================
+// AUTO-RESEND OTP (when coming from login)
+// ============================================
+(async function autoResendOTP() {
+    const shouldResend = localStorage.getItem('autoResendOTP') === 'true';
+    
+    if (!shouldResend) return;
+    if (!pendingEmail) return;
+
+    // Clear the flag so we don't resend again on refresh
+    localStorage.removeItem('autoResendOTP');
+
+    console.log('📧 Auto-resending OTP for:', pendingEmail);
+
+    try {
+        const res = await fetch('http://localhost:5000/api/auth/resend-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: pendingEmail })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            showAlert('✅ A new OTP has been sent to your email.', 'success');
+        } else {
+            // Silent fail — user can click "Resend OTP" manually
+            console.log('Auto-resend failed:', data.message);
+        }
+    } catch (error) {
+        console.log('Auto-resend network error:', error);
+    }
+})();
+
+  // ============================================
   // AUTO-FOCUS OTP FIELD
   // ============================================
   document.getElementById('otp').focus();

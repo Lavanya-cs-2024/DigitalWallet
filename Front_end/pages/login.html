@@ -206,6 +206,7 @@
       // ============================================
       if (data.code === 'PENDING_VERIFICATION') {
         localStorage.setItem('pendingEmail', email);
+        localStorage.setItem('autoResendOTP', 'true'); 
         showAlert('⚠️ Please verify your email. Redirecting to verification page...', 'error');
         setTimeout(() => {
           window.location.href = 'verify.html';
@@ -286,23 +287,73 @@
     }, 5000);
   }
 
-  // ========================================
-  // CHECK FOR REDIRECT FROM GOOGLE
-  // ========================================
-  (function checkGoogleRedirect() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('auth');
-    const error = urlParams.get('error');
+   // ============================================
+    // GOOGLE LOGIN BUTTON
+    // ============================================
+    document.getElementById('googleLoginBtn').addEventListener('click', function() {
+        // Redirect to backend Google auth endpoint
+        window.location.href = 'http://localhost:5000/api/auth/google';
+    });
 
-    if (status === 'success') {
-      showAlert('✅ Google authentication successful!', 'success');
-      setTimeout(() => {
-        window.location.href = 'dashboard.html';
-      }, 1500);
-    } else if (error === 'google_failed') {
-      showAlert('❌ Google authentication failed. Please try again.', 'error');
-    }
-  })();
+    // ============================================
+    // CHECK FOR GOOGLE CALLBACK
+    // ============================================
+    (function checkGoogleCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const authStatus = urlParams.get('auth');
+        const error = urlParams.get('error');
+        const accessToken = urlParams.get('accessToken');
+        const refreshToken = urlParams.get('refreshToken');
+        const userId = urlParams.get('userId');
+
+        // Success case
+        if (authStatus === 'success' && accessToken) {
+            // Save tokens
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
+            localStorage.setItem('userId', userId);
+            window.location.href = 'dashboard.html';
+
+            // Fetch user profile
+            fetch('http://localhost:5000/api/auth/me', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data?.user) {
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+                    if (data.data.wallet) {
+                        localStorage.setItem('wallet', JSON.stringify(data.data.wallet));
+                    }
+
+                    showAlert('✅ Google login successful! Redirecting...', 'success');
+
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                }
+            })
+            .catch(err => {
+                console.error('Profile fetch failed:', err);
+                showAlert('❌ Failed to load profile', 'error');
+            });
+
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+        }
+
+        // Error case
+        if (error === 'google_failed') {
+            showAlert('❌ Google authentication failed. Please try again.', 'error');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else if (error === 'no_code') {
+            showAlert('❌ Authentication cancelled.', 'error');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    })();
 </script>
 
 </body>
