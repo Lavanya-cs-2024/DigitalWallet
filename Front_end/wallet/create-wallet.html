@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet — Create Wallet</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/wallet.css">
+
+  <style>
+    :root {
+      --violet-1:      #a878ff;
+      --violet-2:      #7c3aed;
+      --magenta:       #e63cc2;
+      --gold:          #f0b84f;
+      --success:       #5eea9a;
+      --danger:        #f77b7b;
+      --text-hi:       #f5f0ff;
+      --text-mid:      #b6a8cc;
+      --text-low:      #7a6c94;
+      --stroke:        rgba(255, 255, 255, 0.08);
+      --stroke-strong: rgba(168, 120, 255, 0.35);
+      --bg-0:          #0b0616;
+      --bg-1:          #140a24;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { min-height: 100vh; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-hi);
+      display: flex;
+      background:
+        radial-gradient(1200px 800px at 80% 100%, rgba(230, 60, 194, 0.18), transparent 60%),
+        radial-gradient(900px 700px at 10% 0%, rgba(124, 58, 237, 0.22), transparent 55%),
+        linear-gradient(180deg, var(--bg-0), var(--bg-1));
+      background-attachment: fixed;
+    }
+
+    /* ============================================================
+       SIDEBAR
+       ============================================================ */
+    .sidebar {
+      width: 240px;
+      min-height: 100vh;
+      background: rgba(15, 10, 26, 0.75);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--stroke);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-brand {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--text-hi);
+      font-family: 'Sora', sans-serif; font-weight: 800; font-size: 15px;
+      letter-spacing: 0.06em; padding: 0 8px; margin-bottom: 32px;
+    }
+
+    .brand-mark {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: #fff;
+      box-shadow: 0 8px 22px -8px rgba(230, 60, 194, 0.7);
+    }
+
+    .nav-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-low);
+      padding: 0 12px; margin-bottom: 8px;
+    }
+
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: 10px;
+      color: var(--text-mid); text-decoration: none;
+      font-size: 13.5px; font-weight: 500; transition: 0.15s;
+      margin-bottom: 2px;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text-hi);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--text-hi);
+      background: linear-gradient(90deg, rgba(168, 120, 255, 0.18), rgba(230, 60, 194, 0.10));
+      border: 1px solid rgba(168, 120, 255, 0.30);
+    }
+
+    .sidebar-footer {
+      margin-top: auto; padding-top: 16px;
+      border-top: 1px solid var(--stroke);
+    }
+
+    .user-card {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 8px;
+    }
+
+    .user-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+
+    .user-info { flex: 1; min-width: 0; }
+    .user-info .name { font-size: 13px; font-weight: 600; }
+    .user-info .email { font-size: 11px; color: var(--text-low); }
+
+    .logout-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-low); font-size: 16px;
+      padding: 6px; border-radius: 8px; transition: 0.15s;
+    }
+
+    .logout-btn:hover { color: var(--danger); background: rgba(248, 113, 113, 0.1); }
+
+    /* ============================================================
+       MAIN CONTENT
+       ============================================================ */
+    .main-content {
+      margin-left: 240px; flex: 1;
+      padding: 32px 40px;
+      min-height: 100vh;
+    }
+
+    /* ============================================================
+       BACK BUTTON + BREADCRUMB
+       ============================================================ */
+    .back-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      color: var(--text-mid);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: 0.15s;
+      cursor: pointer;
+    }
+
+    .back-btn:hover {
+      color: var(--text-hi);
+      border-color: var(--stroke-strong);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(-2px);
+    }
+
+    .back-btn i { font-size: 14px; }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--text-low);
+      flex-wrap: wrap;
+    }
+
+    .breadcrumb a {
+      color: var(--text-mid);
+      text-decoration: none;
+      transition: 0.15s;
+    }
+
+    .breadcrumb a:hover { color: var(--violet-1); }
+
+    .breadcrumb i { font-size: 10px; }
+    .breadcrumb span { color: var(--text-hi); font-weight: 600; }
+
+    .top-bar { margin-bottom: 28px; }
+    .page-title h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 26px; font-weight: 700;
+      color: var(--text-hi); margin-bottom: 4px;
+    }
+    .page-title p { font-size: 14px; color: var(--text-mid); }
+
+    .create-wallet-wrapper {
+      max-width: 850px; margin: 0 auto;
+      padding-bottom: 40px;
+    }
+
+    .create-wallet-header {
+      background: linear-gradient(135deg, rgba(168, 120, 255, 0.22), rgba(230, 60, 194, 0.14));
+      border: 1px solid var(--stroke-strong);
+      border-radius: 20px;
+      padding: 30px 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 60px -30px rgba(168, 120, 255, 0.55);
+    }
+
+    .create-wallet-header::before {
+      content: '';
+      position: absolute;
+      width: 260px; height: 260px;
+      right: -80px; top: -100px;
+      background: radial-gradient(circle, rgba(230, 60, 194, 0.35), transparent);
+      border-radius: 50%;
+    }
+
+    .create-wallet-header-content {
+      position: relative; z-index: 1;
+    }
+
+    .create-wallet-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(168, 120, 255, 0.18);
+      border: 1px solid rgba(168, 120, 255, 0.4);
+      color: var(--violet-1);
+      font-size: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 30px -12px rgba(168, 120, 255, 0.6);
+    }
+
+    .create-wallet-header h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: 24px; font-weight: 700;
+      color: var(--text-hi); margin-bottom: 8px;
+    }
+
+    .create-wallet-header p {
+      color: var(--text-mid); font-size: 14px; line-height: 1.6;
+    }
+    .create-wallet-header p strong { color: var(--text-hi); }
+
+    .wallet-form-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--stroke);
+      border-radius: 18px;
+      padding: 30px 32px;
+      backdrop-filter: blur(8px);
+    }
+
+    .form-message {
+      display: none; align-items: flex-start; gap: 10px;
+      padding: 12px 14px; margin-bottom: 20px;
+      border-radius: 10px; font-size: 12.5px; line-height: 1.5;
+    }
+    .form-message.error {
+      display: flex;
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      color: var(--danger);
+    }
+    .form-message.success {
+      display: flex;
+      background: rgba(94, 234, 154, 0.08);
+      border: 1px solid rgba(94, 234, 154, 0.2);
+      color: var(--success);
+    }
+
+    .form-section { margin-bottom: 32px; }
+
+    .section-title {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 16px; font-weight: 700;
+      color: var(--text-hi); margin-bottom: 6px;
+    }
+    .section-title i { color: var(--violet-1); font-size: 18px; }
+
+    .section-description {
+      color: var(--text-low); font-size: 12.5px;
+      margin-bottom: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    .form-group {
+      display: flex; flex-direction: column; gap: 7px;
+    }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-label {
+      font-size: 12px; font-weight: 600;
+      color: var(--text-mid); letter-spacing: 0.02em;
+    }
+    .required { color: var(--magenta); }
+
+    .input-wrapper { position: relative; }
+
+    .input-wrapper > i {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-low); font-size: 16px;
+      pointer-events: none;
+    }
+
+    .wallet-input,
+    .wallet-select {
+      width: 100%;
+      padding: 13px 14px 13px 42px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      color: var(--text-hi);
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      outline: none;
+      transition: 0.15s;
+    }
+
+    .wallet-input:focus,
+    .wallet-select:focus {
+      border-color: var(--violet-1);
+      background: rgba(255, 255, 255, 0.04);
+      box-shadow: 0 0 0 3px rgba(168, 120, 255, 0.15);
+    }
+
+    .wallet-input::placeholder { color: var(--text-low); }
+
+    .wallet-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23b6a8cc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+      cursor: pointer;
+    }
+
+    .wallet-select option { background: #1a0f2b; color: var(--text-hi); }
+
+    .wallet-input.readonly {
+      background: rgba(255, 255, 255, 0.015);
+      color: var(--text-mid);
+      cursor: not-allowed;
+    }
+
+    .readonly-badge {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px; padding: 4px 8px;
+      border-radius: 12px;
+      color: var(--text-low);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--stroke);
+    }
+
+    .input-help {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-low);
+      transition: 0.15s;
+    }
+    .input-help i { color: var(--gold); }
+    .input-help.error { color: var(--danger); }
+    .input-help.ok    { color: var(--success); }
+    .input-help.error i,
+    .input-help.ok i  { color: inherit; }
+
+    .wallet-preview {
+      margin-top: 24px; padding: 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(168, 120, 255, 0.12), rgba(230, 60, 194, 0.08));
+      border: 1px solid var(--stroke);
+    }
+
+    .preview-label {
+      font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-low);
+      margin-bottom: 12px;
+    }
+
+    .preview-content {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 20px;
+    }
+
+    .preview-alias {
+      display: flex; align-items: center; gap: 10px;
+      color: var(--text-hi);
+      font-family: 'Sora', sans-serif;
+      font-size: 16px; font-weight: 600;
+    }
+    .preview-alias i { color: var(--gold); }
+
+    .preview-balance { text-align: right; }
+    .preview-balance span {
+      display: block; font-size: 10px;
+      color: var(--text-low);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .preview-balance strong {
+      display: block;
+      font-family: 'Sora', sans-serif;
+      font-size: 18px; color: var(--text-hi);
+      margin-top: 3px;
+    }
+
+    .form-actions {
+      display: flex; justify-content: flex-end;
+      gap: 12px; padding-top: 24px;
+      margin-top: 28px;
+      border-top: 1px solid var(--stroke);
+      flex-wrap: wrap;
+    }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 11px 20px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--stroke);
+      color: var(--text-mid);
+      font-size: 13px; font-weight: 600;
+      text-decoration: none; cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .btn-secondary:hover {
+      color: var(--text-hi);
+      border-color: var(--stroke-strong);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-create-wallet {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 11px 22px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: 0.15s;
+      box-shadow: 0 10px 30px -12px rgba(230, 60, 194, 0.7);
+    }
+
+    .btn-create-wallet:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 36px -12px rgba(230, 60, 194, 0.9);
+    }
+
+    .btn-create-wallet:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .button-spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 60px; padding: 16px 8px; }
+      .sidebar-brand span,
+      .sidebar-nav a span,
+      .nav-label,
+      .user-info,
+      .logout-btn { display: none; }
+      .sidebar-nav a { justify-content: center; padding: 10px; }
+      .main-content { margin-left: 60px; padding: 20px 16px; }
+      .create-wallet-header, .wallet-form-card { padding: 24px 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: auto; }
+      .preview-content { flex-direction: column; align-items: flex-start; }
+      .preview-balance { text-align: left; }
+      .form-actions { flex-direction: column-reverse; }
+      .form-actions a, .form-actions button { width: 100%; }
+      .back-bar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="#" class="sidebar-brand">
+      <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+      <span>DIGITAL WALLET</span>
+    </a>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Main Menu</div>
+
+      <a href="../pages/dashboard.html">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="wallet.html" class="active">
+        <i class="bi bi-wallet2"></i>
+        <span>Wallet</span>
+      </a>
+
+      <a href="wallet-summary.html">
+        <i class="bi bi-graph-up-arrow"></i>
+        <span>Summary</span>
+      </a>
+
+      <a href="wallet-transactions.html">
+        <i class="bi bi-clock-history"></i>
+        <span>Transactions</span>
+      </a>
+
+      <a href="#">
+        <i class="bi bi-person"></i>
+        <span>My Account</span>
+      </a>
+
+      <a href="#">
+        <i class="bi bi-gear"></i>
+        <span>Settings</span>
+      </a>
+
+      <div class="nav-label" style="margin-top: 12px;">Quick Links</div>
+
+      <a href="../payment/add-money.html">
+        <i class="bi bi-plus-circle"></i>
+        <span>Add Money</span>
+      </a>
+
+      <a href="../payment/payment-history.html">
+        <i class="bi bi-receipt"></i>
+        <span>Payment History</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="userAvatar">--</div>
+        <div class="user-info">
+          <div class="name" id="userName">Loading...</div>
+          <div class="email" id="userEmail">loading@example.com</div>
+        </div>
+        <button class="logout-btn" id="logoutBtn" title="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- BACK + BREADCRUMB -->
+    <div class="back-bar">
+      <a href="wallet.html" class="back-btn">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back</span>
+      </a>
+      <nav class="breadcrumb">
+        <a href="../pages/dashboard.html">Dashboard</a>
+        <i class="bi bi-chevron-right"></i>
+        <a href="wallet.html">Wallet</a>
+        <i class="bi bi-chevron-right"></i>
+        <span>Create Wallet</span>
+      </nav>
+    </div>
+
+    <div class="top-bar">
+      <div class="page-title">
+        <h1>Create Wallet</h1>
+        <p>Set up your wallet to start managing your money</p>
+      </div>
+    </div>
+
+    <div class="create-wallet-wrapper">
+
+      <div class="create-wallet-header">
+        <div class="create-wallet-header-content">
+          <div class="create-wallet-icon">
+            <i class="bi bi-wallet2"></i>
+          </div>
+
+          <h2>Create Your Wallet</h2>
+
+          <p>
+            Your wallet will start with a balance of
+            <strong>₹0.00</strong>.
+            You can add money later using the payment module.
+          </p>
+        </div>
+      </div>
+
+      <div class="wallet-form-card">
+
+        <div id="formMessage" class="form-message">
+          <i class="bi bi-exclamation-circle-fill"></i>
+          <span id="formMessageText"></span>
+        </div>
+
+        <form id="createWalletForm">
+
+          <!-- PERSONAL INFORMATION -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="bi bi-person-circle"></i>
+              Personal Information
+            </div>
+
+            <p class="section-description">
+              These details come from your registered account
+              and cannot be changed here.
+            </p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <div class="input-wrapper">
+                  <i class="bi bi-person"></i>
+                  <input type="text" id="name" class="wallet-input readonly" readonly placeholder="—">
+                  <span class="readonly-badge">Account</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <div class="input-wrapper">
+                  <i class="bi bi-envelope"></i>
+                  <input type="email" id="email" class="wallet-input readonly" readonly placeholder="—">
+                  <span class="readonly-badge">Account</span>
+                </div>
+              </div>
+
+              <div class="form-group full">
+                <label class="form-label">Mobile Number</label>
+                <div class="input-wrapper">
+                  <i class="bi bi-phone"></i>
+                  <input type="text" id="mobile" class="wallet-input readonly" readonly placeholder="—">
+                  <span class="readonly-badge">Account</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- WALLET INFORMATION -->
+          <div class="form-section">
+            <div class="section-title">
+              <i class="bi bi-wallet2"></i>
+              Wallet Information
+            </div>
+
+            <p class="section-description">
+              Add the details needed to personalize your wallet.
+            </p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="state">
+                  State <span class="required">*</span>
+                </label>
+
+                <div class="input-wrapper">
+                  <i class="bi bi-geo-alt"></i>
+                  <select id="state" class="wallet-select" required>
+                    <option value="">Select your state</option>
+                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                    <option value="Assam">Assam</option>
+                    <option value="Bihar">Bihar</option>
+                    <option value="Chhattisgarh">Chhattisgarh</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Goa">Goa</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Haryana">Haryana</option>
+                    <option value="Himachal Pradesh">Himachal Pradesh</option>
+                    <option value="Jharkhand">Jharkhand</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="Kerala">Kerala</option>
+                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Odisha">Odisha</option>
+                    <option value="Punjab">Punjab</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Tamil Nadu">Tamil Nadu</option>
+                    <option value="Telangana">Telangana</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="Uttarakhand">Uttarakhand</option>
+                    <option value="West Bengal">West Bengal</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="aliasName">
+                  Alias Name <span class="required">*</span>
+                </label>
+
+                <div class="input-wrapper">
+                  <i class="bi bi-at"></i>
+                  <input
+                    type="text"
+                    id="aliasName"
+                    class="wallet-input"
+                    placeholder="e.g. kavya_2026"
+                    maxlength="30"
+                    autocomplete="off"
+                    required
+                  >
+                </div>
+
+                <div class="input-help" id="aliasHint">
+                  <i class="bi bi-info-circle"></i>
+                  <span>Between 6 and 30 characters. Letters, numbers &amp; underscores only.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- WALLET PREVIEW -->
+            <div class="wallet-preview">
+              <div class="preview-label">Wallet Preview</div>
+
+              <div class="preview-content">
+                <div class="preview-alias">
+                  <i class="bi bi-tag-fill"></i>
+                  <span id="previewAlias">your_wallet</span>
+                </div>
+
+                <div class="preview-balance">
+                  <span>Starting Balance</span>
+                  <strong>₹0.00</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACTIONS -->
+          <div class="form-actions">
+            <a href="wallet.html" class="btn-secondary">
+              <i class="bi bi-arrow-left"></i>
+              Cancel
+            </a>
+
+            <button type="submit" class="btn-create-wallet" id="createWalletBtn">
+              <i class="bi bi-wallet2"></i>
+              <span id="createBtnText">Create Wallet</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ============================================
+    // CONFIG
+    // ============================================
+    const API_BASE = 'http://localhost:5000/api';
+
+    // DOM
+    const form              = document.getElementById('createWalletForm');
+    const stateInput        = document.getElementById('state');
+    const aliasInput        = document.getElementById('aliasName');
+    const aliasHint         = document.getElementById('aliasHint');
+    const previewAlias      = document.getElementById('previewAlias');
+    const messageBox        = document.getElementById('formMessage');
+    const messageText       = document.getElementById('formMessageText');
+    const createButton      = document.getElementById('createWalletBtn');
+    const createButtonText  = document.getElementById('createBtnText');
+
+    // ============================================
+    // PAGE LOAD
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function () {
+      const token = localStorage.getItem('accessToken');
+      const user = getLoggedInUser();
+
+      if (!token) {
+        window.location.href = '../pages/login.html';
+        return;
+      }
+
+      if (user) {
+        fillSidebarUser(user);
+        fillPersonalInfo(user);
+      }
+
+      attachLogout(token);
+      attachAliasLiveValidation();
+      checkExistingWallet(token);
+    });
+
+    // ============================================
+    // USER HELPERS
+    // ============================================
+    function getLoggedInUser() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!user || !user.name) return null;
+        return user;
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    }
+
+    function fillSidebarUser(user) {
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('userEmail').textContent = user.email || '';
+
+      const initials = (user.name || 'U')
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+
+      document.getElementById('userAvatar').textContent = initials;
+    }
+
+    function fillPersonalInfo(user) {
+      document.getElementById('name').value = user.name || '';
+      document.getElementById('email').value = user.email || '';
+      document.getElementById('mobile').value = user.mobile || user.phone || '';
+    }
+
+    // ============================================
+    // CHECK EXISTING WALLET
+    // ============================================
+    async function checkExistingWallet(token) {
+      try {
+        const response = await fetch(`${API_BASE}/wallet`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const existingWallet = data?.data?.wallet || null;
+
+        if (existingWallet) {
+          showMessage('You already have a wallet. Redirecting...', 'success');
+          createButton.disabled = true;
+          createButtonText.textContent = 'Wallet Already Exists';
+
+          setTimeout(() => {
+            window.location.href = 'wallet.html';
+          }, 1200);
+        }
+      } catch (error) {
+        console.warn('Backend not reachable:', error);
+      }
+    }
+
+    // ============================================
+    // ALIAS VALIDATION
+    // ============================================
+    function validateAlias(value) {
+      if (!value) return { valid: false, message: 'Alias is required.' };
+      if (value.length < 6) return { valid: false, message: `At least 6 characters (${value.length}/6)` };
+      if (value.length > 30) return { valid: false, message: `At most 30 characters (${value.length}/30)` };
+      if (!/^[a-zA-Z0-9_]+$/.test(value)) return { valid: false, message: 'Only letters, numbers, and underscores.' };
+      return { valid: true, message: '' };
+    }
+
+    function setAliasHint(text, type) {
+      aliasHint.classList.remove('error', 'ok');
+
+      const span = aliasHint.querySelector('span');
+      if (span) {
+        span.innerHTML = text || 'Between 6 and 30 characters. Letters, numbers &amp; underscores only.';
+      }
+
+      if (type === 'error') aliasHint.classList.add('error');
+      else if (type === 'ok') aliasHint.classList.add('ok');
+    }
+
+    function attachAliasLiveValidation() {
+      aliasInput.addEventListener('input', function () {
+        const value = aliasInput.value.trim();
+
+        previewAlias.textContent = value || 'your_wallet';
+
+        if (!value) {
+          setAliasHint('', '');
+          return;
+        }
+
+        const result = validateAlias(value);
+        if (result.valid) {
+          setAliasHint('✓ Valid alias', 'ok');
+        } else {
+          setAliasHint(result.message, 'error');
+        }
+      });
+    }
+
+    // ============================================
+    // MESSAGE
+    // ============================================
+    function showMessage(message, type = 'error') {
+      messageText.textContent = message;
+      messageBox.className = `form-message ${type}`;
+
+      const icon = messageBox.querySelector('i');
+      icon.className = type === 'success'
+        ? 'bi bi-check-circle-fill'
+        : 'bi bi-exclamation-circle-fill';
+    }
+
+    function hideMessage() {
+      messageBox.className = 'form-message';
+      messageText.textContent = '';
+    }
+
+    // ============================================
+    // FORM SUBMIT
+    // ============================================
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      hideMessage();
+
+      const token = localStorage.getItem('accessToken');
+      const state = stateInput.value.trim();
+      const alias = aliasInput.value.trim().toLowerCase();
+
+      // validate state
+      if (!state) {
+        showMessage('Please select your state.', 'error');
+        stateInput.focus();
+        return;
+      }
+
+      // validate alias
+      const aliasResult = validateAlias(alias);
+      if (!aliasResult.valid) {
+        showMessage(aliasResult.message, 'error');
+        aliasInput.focus();
+        return;
+      }
+
+      // loading
+      createButton.disabled = true;
+      createButtonText.innerHTML = `
+        <span class="button-spinner"></span>
+        Creating...
+      `;
+
+      try {
+        const response = await fetch(`${API_BASE}/wallet`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ state, alias })
+        });
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+          localStorage.clear();
+          window.location.href = '../pages/login.html';
+          return;
+        }
+
+        if (!response.ok) {
+          // backend uses `code` field for error codes
+          const errCode = data?.code || '';
+          let message = data?.message || 'Unable to create wallet.';
+
+          if (errCode === 'WALLET_ALREADY_EXISTS') {
+            message = 'You already have a wallet.';
+          } else if (errCode === 'ALIAS_TAKEN') {
+            message = 'This alias is already taken. Please choose another one.';
+          } else if (errCode === 'VALIDATION_ERROR') {
+            message = data.message || 'Please check your inputs.';
+          }
+
+          showMessage(message, 'error');
+          createButton.disabled = false;
+          createButtonText.textContent = 'Create Wallet';
+          return;
+        }
+
+        showMessage('Wallet created successfully. Redirecting...', 'success');
+
+        setTimeout(function () {
+          window.location.href = 'wallet.html';
+        }, 800);
+
+      } catch (error) {
+        console.error(error);
+        showMessage('Backend not reachable. Please try again.', 'error');
+        createButton.disabled = false;
+        createButtonText.textContent = 'Create Wallet';
+      }
+    });
+
+    // ============================================
+    // LOGOUT
+    // ============================================
+    function attachLogout(token) {
+      const button = document.getElementById('logoutBtn');
+      if (!button) return;
+
+      button.addEventListener('click', async function () {
+        try {
+          await fetch(`${API_BASE}/auth/logout`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        } catch (error) {
+          console.error(error);
+        }
+
+        localStorage.clear();
+        window.location.href = '../pages/login.html';
+      });
+    }
+  </script>
+</body>
+</html>

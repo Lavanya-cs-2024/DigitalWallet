@@ -13,22 +13,18 @@ const AppState = {
 // ===== DOM READY =====
 document.addEventListener('DOMContentLoaded', () => {
   console.log('💰 Digital Wallet App initialized');
-  
-  // Check authentication status
+
   checkAuth();
-  
-  // Initialize password toggle buttons
   initPasswordToggles();
-  
-  // Initialize any forms
   initForms();
 });
 
 // ===== AUTH CHECK =====
 function checkAuth() {
-  const token = localStorage.getItem('auth_token');
-  const user = localStorage.getItem('user_data');
-  
+  // use the SAME keys as wallet/payment pages
+  const token = localStorage.getItem('accessToken');
+  const user = localStorage.getItem('user');
+
   if (token && user) {
     try {
       AppState.currentUser = JSON.parse(user);
@@ -39,19 +35,17 @@ function checkAuth() {
       logout();
     }
   }
-  
-  // Redirect logic can be handled by page-specific scripts
+
   return AppState.isAuthenticated;
 }
 
 // ===== PASSWORD TOGGLE =====
 function initPasswordToggles() {
   document.querySelectorAll('.toggle-eye').forEach(btn => {
-    btn.addEventListener('click', function() {
+    btn.addEventListener('click', function () {
       const input = document.getElementById(this.dataset.target);
       if (input) {
         input.type = input.type === 'password' ? 'text' : 'password';
-        // Update icon if needed
         this.classList.toggle('active');
       }
     });
@@ -60,9 +54,8 @@ function initPasswordToggles() {
 
 // ===== FORM INITIALIZATION =====
 function initForms() {
-  // Add form submit handlers for any forms with class 'needs-validation'
   document.querySelectorAll('form.needs-validation').forEach(form => {
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
       if (!this.checkValidity()) {
         e.preventDefault();
         e.stopPropagation();
@@ -73,10 +66,11 @@ function initForms() {
 }
 
 // ===== AUTH FUNCTIONS =====
+// NOTE: login/register are MOCK here.
+// Your real login page (pages/login.html) already calls the backend.
+// This file is a fallback/shared utility — do not use these for real auth.
 function login(email, password) {
-  // Mock login - replace with actual API call
   return new Promise((resolve, reject) => {
-    // Simulate API request
     setTimeout(() => {
       if (email && password && password.length >= 6) {
         const user = {
@@ -85,8 +79,9 @@ function login(email, password) {
           name: email.split('@')[0],
           createdAt: new Date().toISOString()
         };
-        localStorage.setItem('auth_token', 'mock_jwt_token_' + Date.now());
-        localStorage.setItem('user_data', JSON.stringify(user));
+        // use the same keys as wallet pages
+        localStorage.setItem('accessToken', 'mock_jwt_token_' + Date.now());
+        localStorage.setItem('user', JSON.stringify(user));
         AppState.currentUser = user;
         AppState.isAuthenticated = true;
         resolve(user);
@@ -98,7 +93,6 @@ function login(email, password) {
 }
 
 function register(userData) {
-  // Mock registration
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (userData.email && userData.password && userData.password.length >= 6) {
@@ -107,8 +101,9 @@ function register(userData) {
           ...userData,
           createdAt: new Date().toISOString()
         };
-        localStorage.setItem('auth_token', 'mock_jwt_token_' + Date.now());
-        localStorage.setItem('user_data', JSON.stringify(user));
+        // use the same keys as wallet pages
+        localStorage.setItem('accessToken', 'mock_jwt_token_' + Date.now());
+        localStorage.setItem('user', JSON.stringify(user));
         AppState.currentUser = user;
         AppState.isAuthenticated = true;
         resolve(user);
@@ -120,8 +115,10 @@ function register(userData) {
 }
 
 function logout() {
-  localStorage.removeItem('auth_token');
-  localStorage.removeItem('user_data');
+  // clear the SAME keys that wallet pages use
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
   AppState.currentUser = null;
   AppState.isAuthenticated = false;
   window.location.href = '/pages/login.html';
@@ -129,8 +126,8 @@ function logout() {
 
 function getCurrentUser() {
   if (AppState.currentUser) return AppState.currentUser;
-  
-  const userData = localStorage.getItem('user_data');
+
+  const userData = localStorage.getItem('user');
   if (userData) {
     try {
       AppState.currentUser = JSON.parse(userData);
@@ -150,18 +147,17 @@ function showAlert(message, type = 'info', containerId = 'alert-container') {
     console.warn('Alert container not found');
     return;
   }
-  
+
   const alert = document.createElement('div');
   alert.className = `alert alert-${type}`;
   alert.textContent = message;
-  
-  // Auto-dismiss after 5 seconds
+
   setTimeout(() => {
     alert.style.opacity = '0';
     alert.style.transition = 'opacity 0.3s';
     setTimeout(() => alert.remove(), 300);
   }, 5000);
-  
+
   container.appendChild(alert);
 }
 
@@ -178,7 +174,6 @@ function validatePhone(phone) {
 }
 
 // ===== EXPORTS =====
-// Make functions globally available
 window.App = {
   state: AppState,
   login,

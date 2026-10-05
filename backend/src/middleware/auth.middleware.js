@@ -64,7 +64,11 @@ const protect = async (req, res, next) => {
         }
 
         // 5. Attach user to request
-        req.user = user;
+        // Include userId alias so controllers can use `const { userId } = req.user`
+        req.user = {
+            ...user,
+            userId: user.id
+        };
         next();
     } catch (error) {
         next(error);

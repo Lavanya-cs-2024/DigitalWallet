@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL") 
+  url      = env("DATABASE_URL")
 }
 
 // ============================================================
@@ -44,10 +44,18 @@ enum SettlementStatus {
   COMPLETED
 }
 
+// ============================================================
+// PAYMENT ORDER STATUS — Paytm
+// ============================================================
 enum PaymentOrderStatus {
+  INITIATED
   CREATED
+  PENDING_VERIFICATION
   PAID
   FAILED
+  CANCELLED
+  EXPIRED
+  REVIEW_REQUIRED
 }
 
 enum PaymentTransactionStatus {
@@ -55,12 +63,18 @@ enum PaymentTransactionStatus {
   FAILED
 }
 
+enum OTPType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
 
 // ============================================================
 // MODELS
 // ============================================================
 
-// Stores user account information.
+// ============================================================
+// USER
+// ============================================================
 model User {
   id               Int        @id @default(autoincrement())
   name             String
@@ -70,66 +84,47 @@ model User {
   profilePicture   String?    @map("profile_picture")
   emailVerified    Boolean    @default(false) @map("email_verified")
   status           UserStatus @default(PENDING_VERIFICATION)
+  alias            String?    @unique
+  state            String?
+  loginCount       Int        @default(0) @map("login_count")
   createdAt        DateTime   @default(now()) @map("created_at")
   updatedAt        DateTime   @updatedAt @map("updated_at")
 
+  // relations
   wallet           Wallet?
-  createdGroups    Group[]    @relation("GroupCreator")
+  createdGroups    Group[]         @relation("GroupCreator")
   groupMemberships GroupMember[]
   paidExpenses     Expense[]
   expenseSplits    ExpenseSplit[]
-
-  settlementsFrom  Settlement[] @relation("SettlementFromUser")
-  settlementsTo    Settlement[] @relation("SettlementToUser")
-
+  settlementsFrom  Settlement[]    @relation("SettlementFromUser")
+  settlementsTo    Settlement[]    @relation("SettlementToUser")
   paymentOrders    PaymentOrder[]
 
+  // auth relations
+  otps             OTP[]
+  twoFA            TwoFA?
+  twoFAAttempts    TwoFAAttempt[]
+  sessions         Session[]
 
-  // ============================================
-  // NEW AUTH FIELDS (Add these)
-  // ============================================
-  loginCount       Int        @default(0) @map("login_count")  // Track logins for 2FA prompt
-  
-  // ============================================
-  // NEW AUTH RELATIONSHIPS (Add these)
-  // ============================================
-  otps             OTP[]                                      // User's OTP records
-  twoFA            TwoFA?                                     // User's 2FA settings
-  twoFAAttempts    TwoFAAttempt[]                             // User's 2FA attempt logs
-  sessions         Session[]                                  // User's active sessions
+  @@index([alias])
 }
 
 // ============================================================
-// AUTH MODELS 
+// AUTH MODELS
 // ============================================================
 
 // ============================================================
-// AUTH MODELS - Add these after your existing models
+// OTP
 // ============================================================
-
-// ============================================================
-// ENUMS
-// ============================================================
-
-enum OTPType {
-  EMAIL_VERIFICATION
-  PASSWORD_RESET
-}
-
-// ============================================================
-// OTP MODEL
-// ============================================================
-
-// Stores OTP codes for email verification and password reset
 model OTP {
   id           Int      @id @default(autoincrement())
   userId       Int      @map("user_id")
-  code         String                            // 6-digit OTP
-  type         OTPType                           // EMAIL_VERIFICATION or PASSWORD_RESET
-  expiresAt    DateTime @map("expires_at")       // Valid for 2 minutes
-  used         Boolean  @default(false)          // Used OTP cannot be reused
-  attempts     Int      @default(0)              // Track verification attempts (max 5)
-  resendCount  Int      @default(0)              // Track resend attempts (max 3 per 10 min)
+  code         String
+  type         OTPType
+  expiresAt    DateTime @map("expires_at")
+  used         Boolean  @default(false)
+  attempts     Int      @default(0)
+  resendCount  Int      @default(0) @map("resend_count")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -141,19 +136,17 @@ model OTP {
 }
 
 // ============================================================
-// TWO FACTOR AUTHENTICATION MODEL
+// TWO FACTOR AUTHENTICATION
 // ============================================================
-
-// Stores 2FA secrets and settings for each user
 model TwoFA {
   id              Int       @id @default(autoincrement())
   userId          Int       @unique @map("user_id")
-  secret          String?                             // 2FA secret key (speakeasy)
+  secret          String?
   isEnabled       Boolean   @default(false) @map("is_enabled")
-  verifiedAt      DateTime? @map("verified_at")       // When 2FA was first verified
-  failedAttempts  Int       @default(0) @map("failed_attempts")  // Max 5 attempts
-  lockedUntil     DateTime? @map("locked_until")      // Lock for 10 minutes after 5 failures
-  lastVerifiedAt  DateTime? @map("last_verified_at")  // Last successful verification
+  verifiedAt      DateTime? @map("verified_at")
+  failedAttempts  Int       @default(0) @map("failed_attempts")
+  lockedUntil     DateTime? @map("locked_until")
+  lastVerifiedAt  DateTime? @map("last_verified_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -161,15 +154,13 @@ model TwoFA {
 }
 
 // ============================================================
-// 2FA ATTEMPT LOG MODEL
+// 2FA ATTEMPT LOG
 // ============================================================
-
-// Tracks 2FA verification attempts for rate limiting and audit
 model TwoFAAttempt {
   id          Int       @id @default(autoincrement())
   userId      Int       @map("user_id")
-  success     Boolean                            // Was the attempt successful?
-  ipAddress   String?   @map("ip_address")       // For audit purposes
+  success     Boolean
+  ipAddress   String?   @map("ip_address")
   createdAt   DateTime  @default(now()) @map("created_at")
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -179,31 +170,28 @@ model TwoFAAttempt {
 }
 
 // ============================================================
-// SESSION MODEL
+// SESSION
 // ============================================================
-
-// Tracks user sessions for logout and security
 model Session {
-  id          String    @id @default(uuid())
-  userId      Int       @map("user_id")
-  refreshToken String   @unique @map("refresh_token")
-  expiresAt   DateTime  @map("expires_at")
-  ipAddress   String?   @map("ip_address")
-  userAgent   String?   @map("user_agent")
-  isValid     Boolean   @default(true) @map("is_valid")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id           String    @id @default(uuid())
+  userId       Int       @map("user_id")
+  refreshToken String    @unique @map("refresh_token")
+  expiresAt    DateTime  @map("expires_at")
+  ipAddress    String?   @map("ip_address")
+  userAgent    String?   @map("user_agent")
+  isValid      Boolean   @default(true) @map("is_valid")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([refreshToken])
 }
 
-
-
-
-// Stores wallet balance for each user.
+// ============================================================
+// WALLET
+// ============================================================
 model Wallet {
   id           Int      @id @default(autoincrement())
   userId       Int      @unique @map("user_id")
@@ -213,12 +201,13 @@ model Wallet {
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  transactions WalletTransaction[]
-  paymentOrders PaymentOrder[]
+  transactions   WalletTransaction[]
+  paymentOrders  PaymentOrder[]
 }
 
-
-// Records all credit and debit activities in wallet.
+// ============================================================
+// WALLET TRANSACTION
+// ============================================================
 model WalletTransaction {
   id            Int                    @id @default(autoincrement())
   walletId      Int                    @map("wallet_id")
@@ -235,8 +224,9 @@ model WalletTransaction {
   @@index([referenceType, referenceId])
 }
 
-
-// Represents a group created by a user.
+// ============================================================
+// GROUP
+// ============================================================
 model Group {
   id          Int          @id @default(autoincrement())
   name        String
@@ -251,8 +241,9 @@ model Group {
   expenses    Expense[]
 }
 
-
-// Maps users to groups with their roles.
+// ============================================================
+// GROUP MEMBER
+// ============================================================
 model GroupMember {
   id        Int             @id @default(autoincrement())
   groupId   Int             @map("group_id")
@@ -265,12 +256,12 @@ model GroupMember {
 
   @@index([groupId])
   @@index([userId])
-  // Prevents the same user from being added to the same group more than once.
   @@unique([groupId, userId])
 }
 
-
-// Stores expense details within a group.
+// ============================================================
+// EXPENSE
+// ============================================================
 model Expense {
   id          Int         @id @default(autoincrement())
   groupId     Int         @map("group_id")
@@ -292,8 +283,9 @@ model Expense {
   @@index([paidBy])
 }
 
-
-// Stores each user's individual share of an expense.
+// ============================================================
+// EXPENSE SPLIT
+// ============================================================
 model ExpenseSplit {
   id         Int       @id @default(autoincrement())
   expenseId  Int       @map("expense_id")
@@ -308,8 +300,9 @@ model ExpenseSplit {
   @@index([userId])
 }
 
-
-// Tracks settlements between users.
+// ============================================================
+// SETTLEMENT
+// ============================================================
 model Settlement {
   id         Int              @id @default(autoincrement())
   fromUserId Int              @map("from_user_id")
@@ -330,35 +323,67 @@ model Settlement {
   @@index([expenseId])
 }
 
-
-// Stores Razorpay orders created for adding money.
+// ============================================================
+// PAYMENT ORDER — Paytm
+// ============================================================
+// Stores Paytm payment orders for wallet funding.
 model PaymentOrder {
-  id              Int                @id @default(autoincrement())
-  userId          Int                @map("user_id")
-  walletId        Int                @map("wallet_id")
-  amount          Decimal            @db.Decimal(12, 2)
-  currency        String             @default("INR")
-  razorpayOrderId String             @unique @map("razorpay_order_id")
-  status          PaymentOrderStatus @default(CREATED)
-  createdAt       DateTime           @default(now()) @map("created_at")
-  updatedAt       DateTime           @updatedAt @map("updated_at")
+  id                Int                @id @default(autoincrement())
+  userId            Int                @map("user_id")
+  walletId          Int                @map("wallet_id")
 
-  user            User               @relation(fields: [userId], references: [id])
-  wallet          Wallet             @relation(fields: [walletId], references: [id])
+  // amounts — INR is BOTH the wallet credit and the provider currency
+  amount            Decimal            @db.Decimal(12, 2)
+  currency          String             @default("INR")
 
-  transactions    PaymentTransaction[]
+  // idempotency
+  idempotencyKey    String             @map("idempotency_key")
 
+  // Paytm linkage
+  paytmOrderId      String             @unique @map("paytm_order_id")     // our orderId sent to Paytm
+  paytmTxnId        String?            @map("paytm_txn_id")               // Paytm's TXNID on success
+  paytmBankTxnId    String?            @map("paytm_bank_txn_id")          // BANKTXNID from Paytm
+  paytmResponseCode String?            @map("paytm_response_code")        // RESPCODE
+  paytmResponseMsg  String?            @map("paytm_response_msg")         // RESPMSG
+
+  // state
+  status            PaymentOrderStatus @default(INITIATED)
+
+  // timestamps
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  paidAt            DateTime?          @map("paid_at")
+  providerPaidAt    DateTime?          @map("provider_paid_at")
+
+  user              User               @relation(fields: [userId], references: [id])
+  wallet            Wallet             @relation(fields: [walletId], references: [id])
+
+  transactions      PaymentTransaction[]
+
+  @@unique([userId, idempotencyKey])
   @@index([userId])
   @@index([walletId])
+  @@index([status])
+  @@index([paytmOrderId])
 }
 
-
-// Stores Razorpay payment responses.
+// ============================================================
+// PAYMENT TRANSACTION — Paytm
+// ============================================================
+// Stores Paytm transaction responses (one per successful payment).
 model PaymentTransaction {
   id                 Int                      @id @default(autoincrement())
   paymentOrderId     Int                      @map("payment_order_id")
-  razorpayPaymentId  String                   @unique @map("razorpay_payment_id")
-  signature          String
+
+  // Paytm identifiers (from callback/webhook payload)
+  paytmTxnId         String                   @unique @map("paytm_txn_id")           // TXNID — Paytm's txn id
+  paytmBankTxnId     String?                  @map("paytm_bank_txn_id")              // BANKTXNID
+  paytmBankName      String?                  @map("paytm_bank_name")                // BANKNAME
+  paytmPaymentMode   String?                  @map("paytm_payment_mode")             // PAYMENTMODE (UPI/CC/DC/NB)
+
+  // verification artifact
+  checksum           String?                                                          // raw checksum Paytm sent
+
   status             PaymentTransactionStatus
   paidAt             DateTime?                @map("paid_at")
   createdAt          DateTime                 @default(now()) @map("created_at")
@@ -366,4 +391,20 @@ model PaymentTransaction {
   paymentOrder       PaymentOrder             @relation(fields: [paymentOrderId], references: [id], onDelete: Cascade)
 
   @@index([paymentOrderId])
+}
+// ============================================================
+// WEBHOOK EVENT — Paytm
+// ============================================================
+// Tracks processed webhook events for idempotency.
+// MUST be inserted in the SAME transaction as settlement.
+model WebhookEvent {
+  id          Int      @id @default(autoincrement())
+  provider    String   @default("paytm")
+  eventId     String   @map("event_id")               // TXNID (unique per transaction)
+  eventType   String   @map("event_type")             // e.g. "PAYMENT_SUCCESS"
+  payload     Json
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@unique([provider, eventId])
+  @@index([eventType])
 }

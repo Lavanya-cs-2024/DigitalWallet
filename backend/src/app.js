@@ -12,6 +12,8 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Import routes
 const authRoutes = require('./modules/auth/auth.routes');
+const walletRoutes = require('./modules/wallet/wallet.routes');
+const paymentRoutes = require('./modules/payment/payment.routes');
 
 // Create Express app
 const app = express();
@@ -28,6 +30,8 @@ app.use(cors({
 
 // Parse JSON requests
 app.use(express.json());
+
+// Parse URL-encoded bodies — Paytm callback & webhook use this
 app.use(express.urlencoded({ extended: true }));
 
 // Request logging
@@ -50,6 +54,8 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/wallet', walletRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // ============================================
 // ERROR HANDLING

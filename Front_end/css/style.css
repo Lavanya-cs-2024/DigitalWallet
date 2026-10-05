@@ -284,3 +284,65 @@ body {
   .frame { padding: 16px; }
   .topbar { flex-direction: column; align-items: stretch; }
 }
+
+/* ============================================================
+   BACK BUTTON + BREADCRUMB
+   ============================================================ */
+.back-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+  color: var(--text-mid);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: 0.15s;
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  color: var(--text-hi);
+  border-color: var(--stroke-strong);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(-2px);
+}
+
+.back-btn i { font-size: 14px; }
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-low);
+  flex-wrap: wrap;
+}
+
+.breadcrumb a {
+  color: var(--text-mid);
+  text-decoration: none;
+  transition: 0.15s;
+}
+
+.breadcrumb a:hover { color: var(--violet-1); }
+
+.breadcrumb i { font-size: 10px; color: var(--text-low); }
+
+.breadcrumb span { color: var(--text-hi); font-weight: 600; }
+
+@media (max-width: 768px) {
+  .back-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .breadcrumb { font-size: 11.5px; }
+}

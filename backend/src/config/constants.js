@@ -58,20 +58,21 @@ module.exports = {
         PASSWORD_RESET: 'PASSWORD_RESET'
     },
 
-    // ============================================
-    // HTTP Status Codes
-    // ============================================
     HTTP_STATUS: {
-        OK: 200,
-        CREATED: 201,
-        BAD_REQUEST: 400,
-        UNAUTHORIZED: 401,
-        FORBIDDEN: 403,
-        NOT_FOUND: 404,
-        CONFLICT: 409,
-        TOO_MANY_REQUESTS: 429,
-        INTERNAL_SERVER_ERROR: 500
-    },
+    OK: 200,
+    CREATED: 201,
+    ACCEPTED: 202,                     // ← NEW (Paytm callback uses this internally, not exposed)
+    BAD_REQUEST: 400,
+    UNAUTHORIZED: 401,
+    FORBIDDEN: 403,
+    NOT_FOUND: 404,
+    CONFLICT: 409,
+    UNPROCESSABLE: 422,                // ← NEW (idempotency mismatch, verification failed)
+    TOO_MANY_REQUESTS: 429,
+    INTERNAL_SERVER_ERROR: 500,
+    BAD_GATEWAY: 502,                  // ← NEW (Paytm provider error, reserved)
+    GATEWAY_TIMEOUT: 504               // ← NEW (Paytm provider timeout, reserved)
+},
 
     // ============================================
     // Error Codes

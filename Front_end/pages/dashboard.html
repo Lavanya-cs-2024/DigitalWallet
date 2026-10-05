@@ -5,468 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Wallet — Dashboard</title>
 
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+
   <style>
-    /* ===== CSS VARIABLES ===== */
-    :root {
-      --bg-0: #0e0716;
-      --bg-1: #170a24;
-      --stroke: rgba(168, 120, 255, 0.16);
-      --stroke-strong: rgba(168, 120, 255, 0.28);
-      --violet-1: #7c3aed;
-      --magenta: #e63cc2;
-      --text-hi: #f3eefc;
-      --text-mid: #b7a9cf;
-      --text-low: #8779a3;
-      --gold: #f0b84f;
-      --field-bg: #150a20;
-      --success: #5eea9a;
-      --danger: #f77b7b;
-      --sidebar-width: 260px;
-    }
+    /* ============================================ */
+    /* DASHBOARD-ONLY STYLES                         */
+    /* ============================================ */
 
-    /* ===== RESET & BASE ===== */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      min-height: 100vh;
-      background:
-        radial-gradient(ellipse 900px 500px at 12% 8%, rgba(124, 58, 237, 0.25), transparent 60%),
-        radial-gradient(ellipse 700px 600px at 85% 90%, rgba(230, 60, 194, 0.14), transparent 55%),
-        linear-gradient(160deg, var(--bg-0), #170a24 60%, #0c0512);
-      font-family: 'Inter', sans-serif;
-      color: var(--text-hi);
-      display: flex;
-    }
-
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--stroke-strong); border-radius: 4px; }
-
-    /* ===== SIDEBAR ===== */
-    .sidebar {
-      width: var(--sidebar-width);
-      min-height: 100vh;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
-      border-right: 1px solid var(--stroke);
-      padding: 24px 16px;
-      display: flex;
-      flex-direction: column;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-
-    .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: 'Sora', sans-serif;
-      font-weight: 700;
-      font-size: 16px;
-      letter-spacing: 0.06em;
-      color: var(--text-hi);
-      padding-bottom: 28px;
-      border-bottom: 1px solid var(--stroke);
-      margin-bottom: 24px;
-      text-decoration: none;
-    }
-
-    .sidebar-brand .brand-mark {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 6px 18px -4px rgba(192, 38, 211, 0.6);
-      flex-shrink: 0;
-      font-size: 18px;
-      color: #fff;
-    }
-
-    /* ===== SIDEBAR NAVIGATION ===== */
-    .sidebar-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-    }
-
-    .sidebar-nav .nav-label {
-      font-size: 11px;
-      color: var(--text-low);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 12px 12px 6px;
-      font-weight: 600;
-    }
-
-    .sidebar-nav a {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 14px;
-      border-radius: 12px;
-      color: var(--text-mid);
-      text-decoration: none;
-      font-size: 13.5px;
-      font-weight: 500;
-      transition: all 0.15s ease;
-      position: relative;
-      cursor: pointer;
-    }
-
-    .sidebar-nav a:hover {
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text-hi);
-    }
-
-    .sidebar-nav a.active {
-      background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(230, 60, 194, 0.1));
-      color: var(--text-hi);
-      border: 1px solid var(--stroke-strong);
-    }
-
-    .sidebar-nav a.active::before {
-      content: '';
-      position: absolute;
-      left: -1px;
-      top: 20%;
-      height: 60%;
-      width: 3px;
-      background: linear-gradient(180deg, var(--violet-1), var(--magenta));
-      border-radius: 0 4px 4px 0;
-    }
-
-    .sidebar-nav a i {
-      font-size: 20px;
-      width: 24px;
-      text-align: center;
-      color: var(--text-low);
-    }
-
-    .sidebar-nav a.active i {
-      color: var(--magenta);
-    }
-
-    .sidebar-nav a .badge {
-      margin-left: auto;
-      background: rgba(230, 60, 194, 0.2);
-      padding: 2px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      color: var(--magenta);
-      font-weight: 600;
-    }
-
-    /* ===== SIDEBAR FOOTER ===== */
-    .sidebar-footer {
-      border-top: 1px solid var(--stroke);
-      padding-top: 16px;
-      margin-top: auto;
-    }
-
-    .sidebar-footer .user-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--stroke);
-      cursor: pointer;
-      transition: 0.15s;
-    }
-
-    .sidebar-footer .user-card:hover {
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .sidebar-footer .user-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 14px;
-      flex-shrink: 0;
-      color: #fff;
-    }
-
-    .sidebar-footer .user-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .sidebar-footer .user-info .name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-hi);
-    }
-
-    .sidebar-footer .user-info .email {
-      font-size: 11px;
-      color: var(--text-low);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .sidebar-footer .user-card .logout-btn {
-      color: var(--text-low);
-      font-size: 18px;
-      transition: 0.15s;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px;
-    }
-
-    .sidebar-footer .user-card .logout-btn:hover {
-      color: var(--danger);
-    }
-
-    /* ===== MAIN CONTENT ===== */
-    .main-content {
-      flex: 1;
-      padding: 24px 32px 32px;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ===== TOP BAR ===== */
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--stroke);
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .top-bar .page-title h1 {
-      font-family: 'Sora', sans-serif;
-      font-size: 22px;
-      font-weight: 700;
-    }
-
-    .top-bar .page-title p {
-      font-size: 13px;
-      color: var(--text-low);
-      margin-top: 2px;
-    }
-
-    .top-bar .actions {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .top-bar .actions .search-box {
-      display: flex;
-      align-items: center;
-      background: var(--field-bg);
-      border: 1px solid var(--stroke);
-      border-radius: 10px;
-      padding: 8px 14px;
-      gap: 10px;
-    }
-
-    .top-bar .actions .search-box i {
-      color: var(--text-low);
-      font-size: 16px;
-    }
-
-    .top-bar .actions .search-box input {
-      background: none;
-      border: none;
-      color: var(--text-hi);
-      font-size: 13px;
-      outline: none;
-      font-family: 'Inter', sans-serif;
-      width: 160px;
-    }
-
-    .top-bar .actions .search-box input::placeholder {
-      color: var(--text-low);
-    }
-
-    .top-bar .actions .notification-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      border: 1px solid var(--stroke);
-      background: rgba(255, 255, 255, 0.02);
-      color: var(--text-mid);
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: 0.15s;
-      position: relative;
-    }
-
-    .top-bar .actions .notification-btn:hover {
-      border-color: var(--stroke-strong);
-      color: var(--text-hi);
-    }
-
-    .top-bar .actions .notification-btn .dot {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--magenta);
-    }
-
-    /* ===== WELCOME BANNER ===== */
-    .welcome-banner {
-      background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(230, 60, 194, 0.08));
-      border: 1px solid var(--stroke-strong);
-      border-radius: 16px;
-      padding: 20px 24px;
-      margin-bottom: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .welcome-banner .text h2 {
-      font-family: 'Sora', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .welcome-banner .text p {
-      color: var(--text-mid);
-      font-size: 13px;
-      margin-top: 2px;
-    }
-
-    .welcome-banner .action-btns {
-      display: flex;
-      gap: 10px;
-    }
-
-    /* ===== BUTTONS ===== */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      font-family: 'Sora', sans-serif;
-      font-weight: 600;
-      font-size: 13px;
-      cursor: pointer;
-      transition: 0.15s;
-      text-decoration: none;
-    }
-
-    .btn-primary {
-      background: linear-gradient(90deg, var(--violet-1), var(--magenta));
-      color: #fff;
-      box-shadow: 0 8px 24px -8px rgba(192, 38, 211, 0.4);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px -8px rgba(192, 38, 211, 0.6);
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text-hi);
-      border: 1px solid var(--stroke);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: var(--stroke-strong);
-    }
-
-    /* ===== DASHBOARD GRID ===== */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 22px;
-    }
-
-    /* ===== CARDS ===== */
-    .card {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
-      border: 1px solid var(--stroke-strong);
-      border-radius: 16px;
-      padding: 20px 22px;
-      box-shadow: 0 20px 50px -20px rgba(70, 10, 120, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-      transition: border-color 0.2s;
-    }
-
-    .card:hover {
-      border-color: rgba(168, 120, 255, 0.35);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-
-    .card-header h3 {
-      font-family: 'Sora', sans-serif;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-mid);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .card-header h3 i {
-      font-size: 18px;
-      color: var(--text-low);
-    }
-
-    .card-header .link {
-      font-size: 12px;
-      color: var(--text-low);
-      text-decoration: none;
-      transition: 0.15s;
-    }
-
-    .card-header .link:hover {
-      color: var(--magenta);
-    }
-
-    /* ===== QUICK ACTIONS ===== */
+    /* ===== QUICK ACTIONS GRID ===== */
     .quick-actions-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 10px;
     }
-
     .quick-action-item {
       display: flex;
       flex-direction: column;
@@ -481,14 +37,12 @@
       text-decoration: none;
       color: var(--text-mid);
     }
-
     .quick-action-item:hover {
       border-color: var(--stroke-strong);
       background: rgba(255, 255, 255, 0.04);
       color: var(--text-hi);
       transform: translateY(-2px);
     }
-
     .quick-action-item .icon-wrap {
       width: 44px;
       height: 44px;
@@ -497,47 +51,25 @@
       align-items: center;
       justify-content: center;
     }
-
     .quick-action-item .icon-wrap.purple { background: rgba(124, 58, 237, 0.15); }
-    .quick-action-item .icon-wrap.green { background: rgba(16, 185, 129, 0.15); }
-    .quick-action-item .icon-wrap.pink { background: rgba(230, 60, 194, 0.15); }
-    .quick-action-item .icon-wrap.gold { background: rgba(240, 184, 79, 0.15); }
+    .quick-action-item .icon-wrap.green  { background: rgba(16, 185, 129, 0.15); }
+    .quick-action-item .icon-wrap.pink   { background: rgba(230, 60, 194, 0.15); }
+    .quick-action-item .icon-wrap.gold   { background: rgba(240, 184, 79, 0.15); }
+    .quick-action-item .icon-wrap i { font-size: 20px; color: var(--text-hi); }
+    .quick-action-item span { font-size: 12px; font-weight: 500; }
 
-    .quick-action-item .icon-wrap i {
-      font-size: 20px;
-      color: var(--text-hi);
-    }
-
-    .quick-action-item span {
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    /* ===== RECENT ACTIVITY ===== */
-    .activity-empty {
-      text-align: center;
-      padding: 30px 10px;
-    }
-
+    /* ===== EMPTY ACTIVITY ===== */
+    .activity-empty { text-align: center; padding: 30px 10px; }
     .activity-empty i {
       font-size: 40px;
       color: var(--text-low);
       opacity: 0.2;
       margin-bottom: 10px;
     }
-
-    .activity-empty p {
-      color: var(--text-low);
-      font-size: 13px;
-    }
+    .activity-empty p { color: var(--text-low); font-size: 13px; }
 
     /* ===== STATS LIST ===== */
-    .stats-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
+    .stats-list { display: flex; flex-direction: column; gap: 12px; }
     .stat-item {
       display: flex;
       align-items: center;
@@ -547,7 +79,6 @@
       border-radius: 10px;
       border: 1px solid var(--stroke);
     }
-
     .stat-item .label {
       font-size: 13px;
       color: var(--text-mid);
@@ -555,22 +86,9 @@
       align-items: center;
       gap: 8px;
     }
-
-    .stat-item .label i {
-      font-size: 16px;
-      color: var(--text-low);
-    }
-
-    .stat-item .value {
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .stat-item .value.empty {
-      color: var(--text-low);
-      font-weight: 400;
-      font-size: 12px;
-    }
+    .stat-item .label i { font-size: 16px; color: var(--text-low); }
+    .stat-item .value { font-weight: 600; font-size: 14px; }
+    .stat-item .value.empty { color: var(--text-low); font-weight: 400; font-size: 12px; }
 
     /* ===== TIPS ===== */
     .tip-item {
@@ -583,120 +101,190 @@
       border-left: 2px solid var(--violet-1);
       margin-bottom: 10px;
     }
-
     .tip-item:last-child { margin-bottom: 0; }
-
-    .tip-item .tip-icon {
-      font-size: 18px;
-      margin-top: 2px;
-    }
-
-    .tip-item .tip-content .tip-title {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .tip-item .tip-content .tip-desc {
-      font-size: 12px;
-      color: var(--text-low);
-    }
-
+    .tip-item .tip-icon { font-size: 18px; margin-top: 2px; }
+    .tip-item .tip-content .tip-title { font-size: 13px; font-weight: 500; }
+    .tip-item .tip-content .tip-desc { font-size: 12px; color: var(--text-low); }
     .tip-item.gold { border-left-color: var(--gold); }
     .tip-item.green { border-left-color: var(--success); }
 
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 1024px) {
-      .dashboard-grid { grid-template-columns: 1fr; }
+    /* ============================================ */
+    /* NO-WALLET STATE                               */
+    /* ============================================ */
+    .simple-top-bar {
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--stroke);
+      margin-bottom: 40px;
+    }
+    .simple-top-bar h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-hi);
+    }
+
+    .welcome-wrapper {
+      max-width: 640px;
+      margin: 0 auto 40px;
+      text-align: center;
+      padding: 0 32px;
+    }
+    .welcome-icon {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(230, 60, 194, 0.15));
+      border: 2px solid var(--stroke-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      color: var(--magenta);
+      box-shadow: 0 20px 60px -20px rgba(192, 38, 211, 0.5);
+    }
+    .welcome-wrapper h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 32px;
+      margin-bottom: 12px;
+      color: var(--text-hi);
+    }
+    .welcome-subtitle {
+      font-size: 15px;
+      color: var(--text-mid);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .value-props {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .value-prop {
+      padding: 18px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--stroke);
+      border-radius: 14px;
+      text-align: center;
+      transition: 0.15s;
+    }
+    .value-prop:hover {
+      border-color: var(--stroke-strong);
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateY(-2px);
+    }
+    .value-prop .vp-icon {
+      width: 42px;
+      height: 42px;
+      margin: 0 auto 10px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .value-prop .vp-icon.violet { background: rgba(124, 58, 237, 0.15); color: var(--violet-1); }
+    .value-prop .vp-icon.green  { background: rgba(94, 234, 154, 0.15); color: var(--success); }
+    .value-prop .vp-icon.gold   { background: rgba(240, 184, 79, 0.15); color: var(--gold); }
+    .value-prop .vp-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-hi);
+      margin-bottom: 4px;
+    }
+    .value-prop .vp-desc {
+      font-size: 11.5px;
+      color: var(--text-low);
+      line-height: 1.4;
+    }
+
+    .savings-quote {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 22px 24px;
+      background: rgba(124, 58, 237, 0.08);
+      border: 1px solid var(--stroke-strong);
+      border-radius: 14px;
+      margin-bottom: 32px;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+    .savings-quote::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--violet-1), var(--magenta));
+    }
+    .savings-quote i {
+      font-size: 26px;
+      color: var(--violet-1);
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+    .savings-quote p {
+      font-size: 14.5px;
+      color: var(--text-hi);
+      line-height: 1.6;
+      font-style: italic;
+      margin: 0;
+    }
+    .savings-quote span {
+      display: block;
+      font-size: 12px;
+      color: var(--text-low);
+      margin-top: 8px;
+      font-style: normal;
+    }
+
+    .btn-large {
+      padding: 16px 40px;
+      font-size: 16px;
+      font-weight: 700;
     }
 
     @media (max-width: 768px) {
-      .sidebar { width: 72px; padding: 16px 10px; }
-      .sidebar-brand span,
-      .sidebar-nav a span,
-      .sidebar-nav .nav-label,
-      .sidebar-footer .user-info,
-      .sidebar-footer .logout-btn { display: none; }
-      .sidebar-brand { justify-content: center; padding-bottom: 16px; margin-bottom: 16px; }
-      .sidebar-nav a { justify-content: center; padding: 10px; }
-      .sidebar-nav a i { font-size: 22px; margin: 0; }
-      .sidebar-footer .user-card { justify-content: center; padding: 8px; }
-      .sidebar-footer .user-avatar { width: 32px; height: 32px; font-size: 12px; }
-      .main-content { padding: 16px; }
       .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
-      .top-bar .actions .search-box input { width: 100px; }
+      .welcome-wrapper h1 { font-size: 24px; }
+      .welcome-icon { width: 80px; height: 80px; font-size: 36px; }
+      .savings-quote { padding: 18px 20px; }
+      .value-props { grid-template-columns: 1fr; }
     }
-
     @media (max-width: 480px) {
       .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
-      .welcome-banner { flex-direction: column; text-align: center; }
-      .welcome-banner .action-btns { width: 100%; justify-content: center; flex-wrap: wrap; }
     }
   </style>
 </head>
 <body>
 
-<!-- ===== SIDEBAR ===== -->
+<!-- ============================================ -->
+<!-- SIDEBAR (consistent across ALL pages)         -->
+<!-- ============================================ -->
 <aside class="sidebar">
-  <!-- Brand -->
   <a href="#" class="sidebar-brand">
     <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
     <span>DIGITAL WALLET</span>
   </a>
 
-  <!-- Navigation -->
   <nav class="sidebar-nav">
     <div class="nav-label">Main Menu</div>
-    
-    <a href="#" class="active">
-      <i class="bi bi-grid-1x2-fill"></i>
-      <span>Dashboard</span>
-    </a>
-    
-    <a href="#">
-      <i class="bi bi-wallet2"></i>
-      <span>Wallet Groups</span>
-      <span class="badge">0</span>
-    </a>
-    
-    <a href="#">
-      <i class="bi bi-clock-history"></i>
-      <span>Transactions</span>
-    </a>
-    
-    <a href="#">
-      <i class="bi bi-person"></i>
-      <span>My Account</span>
-    </a>
-    
-    <a href="#">
-      <i class="bi bi-gear"></i>
-      <span>Settings</span>
-    </a>
+    <a href="dashboard.html" class="active"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a href="../wallet/wallet.html"><i class="bi bi-wallet2"></i><span>Wallet</span></a>
+    <a href="../wallet/wallet-transactions.html"><i class="bi bi-clock-history"></i><span>Transactions</span></a>
+    <a href="../pages/groups.html"><i class="bi bi-people-fill"></i><span>Groups</span></a>
+    <a href="#"><i class="bi bi-person"></i><span>My Account</span></a>
+    <a href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
 
     <div class="nav-label" style="margin-top: 12px;">Quick Links</div>
-    
-    <a href="#">
-      <i class="bi bi-send"></i>
-      <span>Send Money</span>
-    </a>
-    
-    <a href="#">
-      <i class="bi bi-arrow-down-circle"></i>
-      <span>Receive Money</span>
-    </a>
-    
-    <a href="#">
-      <i class="bi bi-graph-up-arrow"></i>
-      <span>Analytics</span>
-    </a>
-    
-    <a href="#">
-      <i class="bi bi-trophy"></i>
-      <span>Goals</span>
-    </a>
+    <a href="../payment/add-money.html"><i class="bi bi-plus-circle"></i><span>Add Money</span></a>
+    <a href="../payment/payment-history.html"><i class="bi bi-receipt"></i><span>Payment History</span></a>
   </nav>
 
-  <!-- User Footer -->
   <div class="sidebar-footer">
     <div class="user-card">
       <div class="user-avatar" id="userAvatar">--</div>
@@ -711,290 +299,218 @@
   </div>
 </aside>
 
-<!-- ===== MAIN CONTENT ===== -->
+<!-- ============================================ -->
+<!-- MAIN CONTENT                                  -->
+<!-- ============================================ -->
 <main class="main-content">
 
-  <!-- Top Bar -->
-  <div class="top-bar">
-    <div class="page-title">
+  <!-- STATE 1: LOADING -->
+  <section id="loadingState" class="dashboard-state">
+    <div class="processing-card">
+      <div class="spinner"></div>
+      <h2>Loading dashboard...</h2>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- STATE 2: NO WALLET                            -->
+  <!-- ============================================ -->
+  <section id="noWalletState" class="dashboard-state" style="display: none;">
+
+    <div class="simple-top-bar">
       <h1>Dashboard</h1>
-      <p>Welcome to your Digital Wallet</p>
     </div>
-    <div class="actions">
-      <div class="search-box">
-        <i class="bi bi-search"></i>
-        <input type="text" placeholder="Search..." />
+
+    <div class="welcome-wrapper">
+      <div class="welcome-icon">
+        <i class="bi bi-wallet2"></i>
       </div>
-      <button class="notification-btn">
-        <i class="bi bi-bell"></i>
-        <span class="dot"></span>
+
+      <h1>Welcome, <span id="welcomeNoWalletName">User</span>!</h1>
+
+      <p class="welcome-subtitle">
+        Create your Digital Wallet to start sending,<br>
+        receiving, and managing your money.
+      </p>
+
+      <div class="value-props">
+        <div class="value-prop">
+          <div class="vp-icon violet"><i class="bi bi-shield-lock-fill"></i></div>
+          <div class="vp-title">Secure</div>
+          <div class="vp-desc">Encrypted & safe</div>
+        </div>
+        <div class="value-prop">
+          <div class="vp-icon green"><i class="bi bi-lightning-charge-fill"></i></div>
+          <div class="vp-title">Instant</div>
+          <div class="vp-desc">Real-time transfers</div>
+        </div>
+        <div class="value-prop">
+          <div class="vp-icon gold"><i class="bi bi-people-fill"></i></div>
+          <div class="vp-title">Split</div>
+          <div class="vp-desc">Share with friends</div>
+        </div>
+      </div>
+
+      <div class="savings-quote">
+        <i class="bi bi-quote"></i>
+        <p>
+          "Do not save what is left after spending; instead spend what is left after saving."
+          <span>— Warren Buffett</span>
+        </p>
+      </div>
+
+      <button class="btn btn-primary btn-large" id="createWalletBtn" onclick="createWallet()">
+        <i class="bi bi-plus-circle"></i> Create Wallet
       </button>
     </div>
-  </div>
 
-  <!-- Welcome Banner -->
-  <div class="welcome-banner">
-    <div class="text">
-      <h2>👋 Welcome, <span id="welcomeName">Loading...</span>!</h2>
-      <p>Your account is ready. Add money to start using your wallet.</p>
-    </div>
-    <div class="action-btns">
-      <button class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Add Money
-      </button>
-      <button class="btn btn-secondary">
-        <i class="bi bi-arrow-repeat"></i> Get Started
-      </button>
-    </div>
-  </div>
+  </section>
 
-  <!-- Dashboard Grid -->
-  <div class="dashboard-grid">
+  <!-- ============================================ -->
+  <!-- STATE 3: WALLET EXISTS (full dashboard)       -->
+  <!-- ============================================ -->
+  <section id="walletState" class="dashboard-state" style="display: none;">
 
-    <!-- LEFT COLUMN -->
-    <div>
-
-      <!-- Quick Actions -->
-      <div class="card" style="margin-bottom: 22px;">
-        <div class="card-header">
-          <h3><i class="bi bi-lightning-fill"></i> Quick Actions</h3>
-          <a href="#" class="link">View All</a>
-        </div>
-        <div class="quick-actions-grid">
-          <a href="#" class="quick-action-item">
-            <div class="icon-wrap purple">
-              <i class="bi bi-send"></i>
-            </div>
-            <span>Send</span>
-          </a>
-          <a href="#" class="quick-action-item">
-            <div class="icon-wrap green">
-              <i class="bi bi-arrow-down-circle"></i>
-            </div>
-            <span>Receive</span>
-          </a>
-          <a href="#" class="quick-action-item">
-            <div class="icon-wrap pink">
-              <i class="bi bi-plus-circle"></i>
-            </div>
-            <span>Add Money</span>
-          </a>
-          <a href="#" class="quick-action-item">
-            <div class="icon-wrap gold">
-              <i class="bi bi-wallet2"></i>
-            </div>
-            <span>Groups</span>
-          </a>
-        </div>
+    <div class="top-bar">
+      <div class="page-title">
+        <h1>Dashboard</h1>
+        <p>Welcome to your Digital Wallet</p>
       </div>
-
-      <!-- Recent Activity -->
-      <div class="card">
-        <div class="card-header">
-          <h3><i class="bi bi-clock-history"></i> Recent Activity</h3>
-          <a href="#" class="link">View All</a>
+      <div class="actions">
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Search..." />
         </div>
-        <div class="activity-empty">
-          <i class="bi bi-inbox"></i>
-          <p>No transactions yet.<br>Your first transaction will appear here.</p>
-          <button class="btn btn-primary" style="margin-top: 12px; padding: 8px 20px; font-size: 12px;">
-            <i class="bi bi-plus-circle"></i> Make your first transaction
-          </button>
-        </div>
+        <button class="notification-btn">
+          <i class="bi bi-bell"></i>
+          <span class="dot"></span>
+        </button>
       </div>
-
     </div>
 
-    <!-- RIGHT COLUMN - Stats -->
-    <div>
-      <div class="card">
-        <div class="card-header">
-          <h3><i class="bi bi-pie-chart-fill"></i> Wallet Overview</h3>
+    <div class="welcome-banner">
+      <div class="text">
+        <h2>👋 Welcome, <span id="welcomeName">User</span>!</h2>
+        <p>Your account is ready. Add money to start using your wallet.</p>
+      </div>
+      <div class="action-btns">
+        <a href="../payment/add-money.html" class="btn btn-primary">
+          <i class="bi bi-plus-circle"></i> Add Money
+        </a>
+        <button class="btn btn-secondary">
+          <i class="bi bi-arrow-repeat"></i> Get Started
+        </button>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div>
+        <div class="card" style="margin-bottom: 22px;">
+          <div class="card-header">
+            <h3><i class="bi bi-lightning-fill"></i> Quick Actions</h3>
+            <a href="#" style="font-size:12px;color:var(--text-low);text-decoration:none;">View All</a>
+          </div>
+          <div class="quick-actions-grid">
+            <a href="../payment/add-money.html" class="quick-action-item">
+              <div class="icon-wrap purple"><i class="bi bi-send"></i></div>
+              <span>Send</span>
+            </a>
+            <a href="../payment/add-money.html" class="quick-action-item">
+              <div class="icon-wrap green"><i class="bi bi-arrow-down-circle"></i></div>
+              <span>Receive</span>
+            </a>
+            <a href="../payment/add-money.html" class="quick-action-item">
+              <div class="icon-wrap pink"><i class="bi bi-plus-circle"></i></div>
+              <span>Add Money</span>
+            </a>
+            <a href="../pages/groups.html" class="quick-action-item">
+              <div class="icon-wrap gold"><i class="bi bi-people-fill"></i></div>
+              <span>Groups</span>
+            </a>
+          </div>
         </div>
-        <div class="stats-list">
-          <div class="stat-item">
-            <span class="label"><i class="bi bi-wallet2"></i> Total Balance</span>
-            <span class="value empty">$0.00</span>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-clock-history"></i> Recent Activity</h3>
+            <a href="../wallet/wallet-transactions.html" style="font-size:12px;color:var(--text-low);text-decoration:none;">View All</a>
           </div>
-          <div class="stat-item">
-            <span class="label"><i class="bi bi-currency-dollar"></i> Available</span>
-            <span class="value empty">$0.00</span>
-          </div>
-          <div class="stat-item">
-            <span class="label"><i class="bi bi-lock-fill"></i> Locked</span>
-            <span class="value empty">$0.00</span>
-          </div>
-          <div class="stat-item">
-            <span class="label"><i class="bi bi-files"></i> Wallet Groups</span>
-            <span class="value">0</span>
-          </div>
-          <div class="stat-item">
-            <span class="label"><i class="bi bi-arrow-left-right"></i> Transactions</span>
-            <span class="value">0</span>
+          <div id="recentActivity">
+            <div class="activity-empty">
+              <i class="bi bi-inbox"></i>
+              <p>No transactions yet.<br>Your first transaction will appear here.</p>
+              <a href="../payment/add-money.html" class="btn btn-primary" style="margin-top: 12px; padding: 8px 20px; font-size: 12px;">
+                <i class="bi bi-plus-circle"></i> Make your first transaction
+              </a>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Quick Tips -->
-      <div class="card" style="margin-top: 22px;">
-        <div class="card-header">
-          <h3><i class="bi bi-lightbulb-fill"></i> Quick Tips</h3>
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-pie-chart-fill"></i> Wallet Overview</h3>
+          </div>
+          <div class="stats-list">
+            <div class="stat-item">
+              <span class="label"><i class="bi bi-wallet2"></i> Total Balance</span>
+              <span class="value" id="totalBalance">₹0.00</span>
+            </div>
+            <div class="stat-item">
+              <span class="label"><i class="bi bi-currency-dollar"></i> Available</span>
+              <span class="value" id="availableBalance">₹0.00</span>
+            </div>
+            <div class="stat-item">
+              <span class="label"><i class="bi bi-lock-fill"></i> Locked</span>
+              <span class="value empty" id="lockedBalance">₹0.00</span>
+            </div>
+            <div class="stat-item">
+              <span class="label"><i class="bi bi-files"></i> Wallet Groups</span>
+              <span class="value">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="label"><i class="bi bi-arrow-left-right"></i> Transactions</span>
+              <span class="value" id="transactionCount">0</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <div class="tip-item">
-            <i class="bi bi-info-circle tip-icon" style="color: var(--violet-1);"></i>
-            <div class="tip-content">
-              <div class="tip-title">Add Money</div>
-              <div class="tip-desc">Add funds to start using your wallet</div>
-            </div>
+
+        <div class="card" style="margin-top: 22px;">
+          <div class="card-header">
+            <h3><i class="bi bi-lightbulb-fill"></i> Quick Tips</h3>
           </div>
-          <div class="tip-item gold">
-            <i class="bi bi-arrow-repeat tip-icon" style="color: var(--gold);"></i>
-            <div class="tip-content">
-              <div class="tip-title">Create Groups</div>
-              <div class="tip-desc">Organize your wallets into groups</div>
+          <div>
+            <div class="tip-item">
+              <i class="bi bi-info-circle tip-icon" style="color: var(--violet-1);"></i>
+              <div class="tip-content">
+                <div class="tip-title">Add Money</div>
+                <div class="tip-desc">Add funds to start using your wallet</div>
+              </div>
             </div>
-          </div>
-          <div class="tip-item green">
-            <i class="bi bi-shield-check tip-icon" style="color: var(--success);"></i>
-            <div class="tip-content">
-              <div class="tip-title">Secure</div>
-              <div class="tip-desc">Your funds are protected with encryption</div>
+            <div class="tip-item gold">
+              <i class="bi bi-arrow-repeat tip-icon" style="color: var(--gold);"></i>
+              <div class="tip-content">
+                <div class="tip-title">Create Groups</div>
+                <div class="tip-desc">Organize your wallets into groups</div>
+              </div>
+            </div>
+            <div class="tip-item green">
+              <i class="bi bi-shield-check tip-icon" style="color: var(--success);"></i>
+              <div class="tip-content">
+                <div class="tip-title">Secure</div>
+                <div class="tip-desc">Your funds are protected with encryption</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-  </div>
+  </section>
 
 </main>
 
-<!-- ========================================
-   SCRIPTS — LOAD USER DATA
-======================================== -->
-<script>
-  // ============================================
-  // DASHBOARD - Load User Data
-  // ============================================
-
-  const accessToken = localStorage.getItem('accessToken');
-  const userData = localStorage.getItem('user');
-
-  console.log('🔍 Dashboard check:');
-  console.log('   accessToken:', accessToken ? 'EXISTS ✅' : 'MISSING ❌');
-  console.log('   userData:', userData);
-
-  // If no token → redirect to login
-  if (!accessToken) {
-    console.log('❌ No token found. Redirecting to login...');
-    window.location.href = 'login.html';
-  } else {
-    // Parse user data
-    let user = null;
-    try {
-      user = userData ? JSON.parse(userData) : null;
-    } catch (e) {
-      console.error('❌ Failed to parse user data:', e);
-    }
-
-    if (user && user.name) {
-      // Update sidebar user card
-      const userNameEl = document.getElementById('userName');
-      const userEmailEl = document.getElementById('userEmail');
-      const userAvatarEl = document.getElementById('userAvatar');
-      const welcomeNameEl = document.getElementById('welcomeName');
-
-      if (userNameEl) userNameEl.textContent = user.name || 'User';
-      if (userEmailEl) userEmailEl.textContent = user.email || 'user@example.com';
-
-      // Generate initials (e.g., "John Doe" → "JD")
-      if (userAvatarEl) {
-        const initials = (user.name || 'U')
-          .split(' ')
-          .map(n => n[0])
-          .join('')
-          .toUpperCase()
-          .substring(0, 2);
-        userAvatarEl.textContent = initials;
-      }
-
-      // Welcome message with first name only
-      if (welcomeNameEl) {
-        const firstName = (user.name || 'User').split(' ')[0];
-        welcomeNameEl.textContent = firstName;
-      }
-
-      console.log('✅ User data loaded:', user.name, user.email);
-    } else {
-      // No user data → fetch from backend
-      console.log('⚠️ No user in localStorage. Fetching from backend...');
-
-      fetch('http://localhost:5000/api/auth/me', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data?.user) {
-          const user = data.data.user;
-
-          // Save to localStorage
-          localStorage.setItem('user', JSON.stringify(user));
-
-          // Update UI
-          document.getElementById('userName').textContent = user.name;
-          document.getElementById('userEmail').textContent = user.email;
-
-          const initials = (user.name || 'U')
-            .split(' ')
-            .map(n => n[0])
-            .join('')
-            .toUpperCase()
-            .substring(0, 2);
-          document.getElementById('userAvatar').textContent = initials;
-
-          const firstName = (user.name || 'User').split(' ')[0];
-          document.getElementById('welcomeName').textContent = firstName;
-
-          console.log('✅ User fetched from backend:', user.name);
-        } else {
-          console.log('❌ Failed to fetch user. Redirecting to login.');
-          localStorage.clear();
-          window.location.href = 'login.html';
-        }
-      })
-      .catch(error => {
-        console.error('❌ Error fetching user:', error);
-      });
-    }
-  }
-
-  // ============================================
-  // LOGOUT
-  // ============================================
-  document.getElementById('logoutBtn')?.addEventListener('click', async function() {
-    try {
-      // Call backend logout (optional)
-      await fetch('http://localhost:5000/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-
-    // Clear localStorage
-    localStorage.clear();
-
-    // Redirect to login
-    window.location.href = 'login.html';
-  });
-</script>
-
+<script src="../js/dashboard.js"></script>
 </body>
 </html>

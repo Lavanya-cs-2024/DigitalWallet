@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet — Checkout</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/wallet.css">
+
+  <style>
+    :root {
+      --violet-1: #a878ff; --magenta: #e63cc2; --gold: #f0b84f;
+      --success: #5eea9a; --danger: #f77b7b;
+      --text-hi: #f5f0ff; --text-mid: #b6a8cc; --text-low: #7a6c94;
+      --stroke: rgba(255,255,255,0.08); --stroke-strong: rgba(168,120,255,0.35);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-hi);
+      display: flex; min-height: 100vh;
+      background:
+        radial-gradient(1200px 800px at 80% 100%, rgba(230,60,194,0.18), transparent 60%),
+        radial-gradient(900px 700px at 10% 0%, rgba(124,58,237,0.22), transparent 55%),
+        linear-gradient(180deg, #0b0616, #140a24);
+      background-attachment: fixed;
+    }
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: rgba(15,10,26,0.75);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--stroke);
+      padding: 24px 16px;
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar-brand {
+      display:flex; align-items:center; gap:10px;
+      text-decoration:none; color:var(--text-hi);
+      font-family:'Sora',sans-serif; font-weight:800;
+      font-size:15px; letter-spacing:0.06em;
+      padding:0 8px; margin-bottom:32px;
+    }
+    .brand-mark {
+      width:38px; height:38px; border-radius:10px;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; color:#fff;
+    }
+    .nav-label {
+      font-size:10px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.1em; color:var(--text-low);
+      padding:0 12px; margin-bottom:8px;
+    }
+    .sidebar-nav a {
+      display:flex; align-items:center; gap:12px;
+      padding:10px 12px; border-radius:10px;
+      color:var(--text-mid); text-decoration:none;
+      font-size:13.5px; font-weight:500; transition:0.15s;
+      margin-bottom:2px;
+    }
+    .sidebar-nav a:hover { color:var(--text-hi); background:rgba(255,255,255,0.04); }
+    .sidebar-nav a.active {
+      color:var(--text-hi);
+      background: linear-gradient(90deg, rgba(168,120,255,0.18), rgba(230,60,194,0.10));
+      border: 1px solid rgba(168,120,255,0.30);
+    }
+    .sidebar-footer { margin-top:auto; padding-top:16px; border-top:1px solid var(--stroke); }
+    .user-card { display:flex; align-items:center; gap:10px; padding:10px 8px; }
+    .user-avatar {
+      width:36px; height:36px; border-radius:50%;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px; font-weight:700; color:#fff;
+    }
+    .user-info { flex:1; min-width:0; }
+    .user-info .name { font-size:13px; font-weight:600; }
+    .user-info .email { font-size:11px; color:var(--text-low); }
+    .logout-btn { background:none; border:none; cursor:pointer; color:var(--text-low); font-size:16px; padding:6px; border-radius:8px; }
+    .logout-btn:hover { color:var(--danger); }
+
+    .main-content { margin-left:240px; flex:1; padding:32px 40px; min-height:100vh; }
+    .page-title h1 { font-family:'Sora',sans-serif; font-size:26px; font-weight:700; margin-bottom:4px; }
+    .page-title p { font-size:14px; color:var(--text-mid); }
+
+    .back-bar { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+    .back-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 16px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--stroke);
+      border-radius:10px;
+      color:var(--text-mid); text-decoration:none;
+      font-size:13px; font-weight:600;
+    }
+    .back-btn:hover { color:var(--text-hi); border-color:var(--stroke-strong); }
+    .breadcrumb { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-low); flex-wrap:wrap; }
+    .breadcrumb a { color:var(--text-mid); text-decoration:none; }
+    .breadcrumb a:hover { color:var(--violet-1); }
+    .breadcrumb i { font-size:10px; }
+    .breadcrumb span { color:var(--text-hi); font-weight:600; }
+
+    .card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--stroke);
+      border-radius: 18px;
+      padding: 32px;
+      max-width: 640px;
+      margin: 24px auto 0;
+    }
+    .card h2 {
+      font-family:'Sora',sans-serif; font-size:20px; font-weight:700;
+      display:flex; align-items:center; gap:10px; margin-bottom:8px;
+    }
+    .card h2 i { color: var(--violet-1); }
+    .card .sub { color:var(--text-mid); font-size:13px; margin-bottom:24px; }
+
+    .detail-row {
+      display:flex; justify-content:space-between;
+      padding: 12px 0;
+      border-bottom: 1px dashed var(--stroke);
+      font-size: 13.5px;
+    }
+    .detail-row:last-of-type { border-bottom: none; }
+    .detail-row span:first-child { color: var(--text-low); }
+    .detail-row span:last-child { color: var(--text-hi); font-weight: 600; text-align: right; word-break: break-all; }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px;
+      background: rgba(94,234,154,0.15);
+      border: 1px solid rgba(94,234,154,0.3);
+      border-radius: 20px;
+      font-size: 12px; color: var(--success);
+      font-weight: 500;
+    }
+
+    #paytm-redirect-panel {
+      margin-top: 24px;
+      padding: 24px;
+      background: rgba(168,120,255,0.06);
+      border: 1px solid var(--stroke-strong);
+      border-radius: 14px;
+      text-align: center;
+    }
+    #paytm-redirect-panel .redirect-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: rgba(168,120,255,0.15);
+      border: 2px solid var(--stroke-strong);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: var(--violet-1);
+    }
+    #paytm-redirect-panel h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 16px; font-weight: 700;
+      margin-bottom: 8px;
+    }
+    #paytm-redirect-panel p {
+      font-size: 13px; color: var(--text-mid);
+      margin-bottom: 16px; line-height: 1.5;
+    }
+    #paytm-redirect-panel .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block; vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .msg {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .msg.error   { display: block; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); color: var(--danger); }
+    .msg.success { display: block; background: rgba(94,234,154,0.08); border: 1px solid rgba(94,234,154,0.25); color: var(--success); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 12px 22px;
+      border-radius: 10px;
+      font-family:'Sora',sans-serif;
+      font-size: 13.5px; font-weight: 700;
+      cursor: pointer; transition: 0.15s;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--stroke);
+      color: var(--text-mid);
+    }
+    .btn-secondary:hover { color: var(--text-hi); border-color: var(--stroke-strong); }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="#" class="sidebar-brand">
+    <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+    <span>DIGITAL WALLET</span>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+    <a href="../pages/dashboard.html"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a href="../wallet/wallet.html"><i class="bi bi-wallet2"></i><span>Wallet</span></a>
+    <a href="../wallet/wallet-summary.html"><i class="bi bi-graph-up-arrow"></i><span>Summary</span></a>
+    <a href="../wallet/wallet-transactions.html"><i class="bi bi-clock-history"></i><span>Transactions</span></a>
+    <a href="#"><i class="bi bi-person"></i><span>My Account</span></a>
+    <a href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
+    <div class="nav-label" style="margin-top: 12px;">Quick Links</div>
+    <a href="add-money.html" class="active"><i class="bi bi-plus-circle"></i><span>Add Money</span></a>
+    <a href="payment-history.html"><i class="bi bi-receipt"></i><span>Payment History</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="userAvatar">--</div>
+      <div class="user-info">
+        <div class="name" id="userName">Loading...</div>
+        <div class="email" id="userEmail">loading@example.com</div>
+      </div>
+      <button class="logout-btn" id="logoutBtn"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </div>
+</aside>
+
+<main class="main-content">
+
+  <div class="back-bar">
+    <a href="add-money.html" class="back-btn">
+      <i class="bi bi-arrow-left"></i>
+      <span>Back</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../wallet/wallet.html">Wallet</a>
+      <i class="bi bi-chevron-right"></i>
+      <a href="add-money.html">Add Money</a>
+      <i class="bi bi-chevron-right"></i>
+      <span>Checkout</span>
+    </nav>
+  </div>
+
+  <div class="page-title">
+    <h1>Checkout</h1>
+    <p>Complete your payment via Paytm</p>
+  </div>
+
+  <div class="card">
+    <h2><i class="bi bi-shield-check"></i> Order Summary</h2>
+    <p class="sub">Review and complete your wallet top-up</p>
+
+    <div id="msgBox" class="msg"></div>
+
+    <div class="detail-row">
+      <span>Order ID</span>
+      <span id="orderId">--</span>
+    </div>
+    <div class="detail-row">
+      <span>Amount</span>
+      <span id="walletAmount">--</span>
+    </div>
+    <div class="detail-row">
+      <span>Status</span>
+      <span id="statusBadge">--</span>
+    </div>
+
+    <div id="paytm-redirect-panel">
+      <div class="redirect-icon"><i class="bi bi-bank"></i></div>
+      <h3>Redirecting to Paytm</h3>
+      <p>
+        You will be taken to Paytm's secure payment page.
+        Do not close this tab while the payment is in progress.
+      </p>
+      <form id="paytmForm" method="post" style="margin-top: 16px;"></form>
+      <p id="redirectNote" style="margin-top: 12px; font-size: 12px; color: var(--text-low);">
+        <span class="spinner"></span> Preparing secure payment...
+      </p>
+    </div>
+
+    <a href="add-money.html" class="btn btn-secondary" style="margin-top:20px; width:100%;">
+      <i class="bi bi-arrow-left"></i> Cancel & Go Back
+    </a>
+  </div>
+</main>
+
+<script>
+  const API_BASE = 'http://localhost:5000/api';
+
+  let order = null;
+  let paytmForm = null;
+  let token = null;
+
+  const msgBox = document.getElementById('msgBox');
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    token = localStorage.getItem('accessToken');
+    if (!token) { window.location.href = '../pages/login.html'; return; }
+
+    fillSidebarUser();
+    attachLogout();
+
+    const params = new URLSearchParams(window.location.search);
+    const orderIdFromUrl = params.get('orderId');
+
+    const pendingOrderRaw = sessionStorage.getItem('pendingOrder');
+    const paytmFormRaw    = sessionStorage.getItem('paytmForm');
+
+    if (pendingOrderRaw) {
+      try { order = JSON.parse(pendingOrderRaw); } catch (e) {}
+    }
+    if (paytmFormRaw) {
+      try { paytmForm = JSON.parse(paytmFormRaw); } catch (e) {}
+    }
+
+    if (!order && orderIdFromUrl) {
+      await loadOrderById(orderIdFromUrl);
+    }
+
+    if (!order) {
+      showMsg('No pending order. Please start again.', 'error');
+      document.getElementById('paytm-redirect-panel').style.display = 'none';
+      return;
+    }
+
+    renderOrder(order);
+
+    if (!paytmForm) {
+      showMsg('Payment form missing. Please start the order again.', 'error');
+      document.getElementById('paytm-redirect-panel').style.display = 'none';
+      return;
+    }
+
+    setTimeout(() => {
+      submitPaytmForm(paytmForm);
+    }, 800);
+  });
+
+  function fillSidebarUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.name) return;
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('userEmail').textContent = user.email || '';
+      document.getElementById('userAvatar').textContent =
+        user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2);
+    } catch (e) {}
+  }
+
+  function attachLogout() {
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (e) {}
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '../pages/login.html';
+    });
+  }
+
+  async function loadOrderById(orderId) {
+    try {
+      const res = await fetch(`${API_BASE}/payment/orders/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) { showMsg('Order not found.', 'error'); return; }
+      const data = await res.json();
+      order = data.data || data;
+    } catch (err) {
+      showMsg('Could not load order.', 'error');
+    }
+  }
+
+  function renderOrder(o) {
+    document.getElementById('orderId').textContent = o.orderId || '--';
+    document.getElementById('walletAmount').textContent =
+      `₹${o.walletAmount || '0.00'} ${o.walletCurrency || 'INR'}`;
+    document.getElementById('statusBadge').innerHTML =
+      `<span class="status-badge"><i class="bi bi-check-circle-fill"></i> ${o.status || 'READY'}</span>`;
+  }
+
+  function submitPaytmForm(paytmForm) {
+    const form = document.getElementById('paytmForm');
+    form.action = paytmForm.action;
+    form.method = 'POST';
+    form.innerHTML = '';
+
+    Object.entries(paytmForm.params).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = String(value);
+      form.appendChild(input);
+    });
+
+    const checksumInput = document.createElement('input');
+    checksumInput.type = 'hidden';
+    checksumInput.name = 'CHECKSUMHASH';
+    checksumInput.value = paytmForm.checksum;
+    form.appendChild(checksumInput);
+
+    document.getElementById('redirectNote').innerHTML =
+      '<span class="spinner"></span> Redirecting to Paytm...';
+
+    form.submit();
+  }
+
+  function showMsg(text, type = 'error') {
+    msgBox.textContent = text;
+    msgBox.className = `msg ${type}`;
+  }
+</script>
+
+</body>
+</html>
