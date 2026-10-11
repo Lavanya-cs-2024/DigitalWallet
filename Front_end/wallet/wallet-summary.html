@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet — Summary</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/wallet.css">
+
+  <style>
+    :root {
+      --violet-1: #a878ff; --magenta: #e63cc2; --gold: #f0b84f;
+      --success: #5eea9a; --danger: #f77b7b;
+      --text-hi: #f5f0ff; --text-mid: #b6a8cc; --text-low: #7a6c94;
+      --stroke: rgba(255,255,255,0.08); --stroke-strong: rgba(168,120,255,0.35);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-hi);
+      display: flex; min-height: 100vh;
+      background:
+        radial-gradient(1200px 800px at 80% 100%, rgba(230,60,194,0.18), transparent 60%),
+        radial-gradient(900px 700px at 10% 0%, rgba(124,58,237,0.22), transparent 55%),
+        linear-gradient(180deg, #0b0616, #140a24);
+      background-attachment: fixed;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: rgba(15,10,26,0.75);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--stroke);
+      padding: 24px 16px;
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar-brand {
+      display:flex; align-items:center; gap:10px;
+      text-decoration:none; color:var(--text-hi);
+      font-family:'Sora',sans-serif; font-weight:800;
+      font-size:15px; letter-spacing:0.06em;
+      padding:0 8px; margin-bottom:32px;
+    }
+    .brand-mark {
+      width:38px; height:38px; border-radius:10px;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; color:#fff;
+    }
+    .nav-label {
+      font-size:10px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.1em; color:var(--text-low);
+      padding:0 12px; margin-bottom:8px;
+    }
+    .sidebar-nav a {
+      display:flex; align-items:center; gap:12px;
+      padding:10px 12px; border-radius:10px;
+      color:var(--text-mid); text-decoration:none;
+      font-size:13.5px; font-weight:500; transition:0.15s;
+      margin-bottom:2px;
+    }
+    .sidebar-nav a:hover { color:var(--text-hi); background:rgba(255,255,255,0.04); }
+    .sidebar-nav a.active {
+      color:var(--text-hi);
+      background: linear-gradient(90deg, rgba(168,120,255,0.18), rgba(230,60,194,0.10));
+      border: 1px solid rgba(168,120,255,0.30);
+    }
+    .sidebar-footer { margin-top:auto; padding-top:16px; border-top:1px solid var(--stroke); }
+    .user-card { display:flex; align-items:center; gap:10px; padding:10px 8px; }
+    .user-avatar {
+      width:36px; height:36px; border-radius:50%;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px; font-weight:700; color:#fff;
+    }
+    .user-info { flex:1; min-width:0; }
+    .user-info .name { font-size:13px; font-weight:600; }
+    .user-info .email { font-size:11px; color:var(--text-low); }
+    .logout-btn { background:none; border:none; cursor:pointer; color:var(--text-low); font-size:16px; padding:6px; border-radius:8px; }
+    .logout-btn:hover { color:var(--danger); }
+
+    /* MAIN */
+    .main-content { margin-left:240px; flex:1; padding:32px 40px; min-height:100vh; }
+    .page-title h1 { font-family:'Sora',sans-serif; font-size:26px; font-weight:700; margin-bottom:4px; }
+    .page-title p { font-size:14px; color:var(--text-mid); margin-bottom: 24px; }
+
+    /* HERO BALANCE CARD */
+    .balance-hero {
+      background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(230,60,194,0.15));
+      border: 1px solid var(--stroke-strong);
+      border-radius: 20px;
+      padding: 36px 32px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .balance-hero::before {
+      content: ''; position: absolute;
+      top: -50%; right: -20%;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(230,60,194,0.2), transparent);
+      border-radius: 50%;
+    }
+    .balance-hero .alias {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--stroke-strong);
+      border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      color: var(--text-hi);
+      margin-bottom: 16px;
+      position: relative; z-index: 1;
+    }
+    .balance-hero .alias i { color: var(--gold); }
+    .balance-hero .label {
+      font-size: 13px; color: var(--text-mid);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      font-weight: 600; margin-bottom: 8px;
+      display: block; position: relative; z-index: 1;
+    }
+    .balance-hero .amount {
+      font-family: 'Sora', sans-serif;
+      font-size: 48px; font-weight: 700;
+      color: var(--text-hi);
+      display: block; position: relative; z-index: 1;
+      line-height: 1.1;
+    }
+    .balance-hero .status-row {
+      display: flex; gap: 12px; align-items: center;
+      margin-top: 14px; position: relative; z-index: 1;
+      flex-wrap: wrap;
+    }
+    .balance-hero .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px;
+      background: rgba(94,234,154,0.15);
+      border: 1px solid rgba(94,234,154,0.3);
+      border-radius: 20px;
+      font-size: 12px; color: var(--success);
+      font-weight: 500;
+    }
+    .balance-hero .currency-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 20px;
+      font-size: 12px; color: var(--violet-1);
+      font-weight: 500;
+    }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--stroke);
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .stat-card .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+    .stat-card .stat-icon.green  { background: rgba(94,234,154,0.15); color: var(--success); }
+    .stat-card .stat-icon.red    { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .stat-card .stat-icon.violet { background: rgba(168,120,255,0.15); color: var(--violet-1); }
+    .stat-card .stat-icon.gold   { background: rgba(240,184,79,0.15); color: var(--gold); }
+    .stat-card .stat-value {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px; font-weight: 700;
+      color: var(--text-hi);
+      display: block; margin-bottom: 4px;
+    }
+    .stat-card .stat-label {
+      font-size: 11px; color: var(--text-low);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      font-weight: 500;
+    }
+
+    /* ACTIONS */
+    .actions-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .action-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; padding: 20px 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--stroke);
+      border-radius: 14px;
+      text-decoration: none; color: var(--text-mid);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: 0.15s;
+    }
+    .action-btn:hover {
+      border-color: var(--stroke-strong);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-hi);
+      transform: translateY(-2px);
+    }
+    .action-btn .action-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .action-btn .action-icon.purple { background: rgba(124,58,237,0.15); color: var(--violet-1); }
+    .action-btn .action-icon.green  { background: rgba(94,234,154,0.15); color: var(--success); }
+    .action-btn .action-icon.gold   { background: rgba(240,184,79,0.15); color: var(--gold); }
+
+    /* RECENT TRANSACTIONS */
+    .recent-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .recent-card .header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 16px;
+    }
+    .recent-card h3 {
+      font-family:'Sora',sans-serif;
+      font-size: 16px; font-weight: 700;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .recent-card h3 i { color: var(--violet-1); }
+    .view-all {
+      font-size: 12.5px; color: var(--violet-1);
+      text-decoration: none; font-weight: 600;
+    }
+    .view-all:hover { color: var(--magenta); }
+
+    .tx-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--stroke);
+    }
+    .tx-row:last-child { border-bottom: none; }
+    .tx-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .tx-icon.credit { background: rgba(94,234,154,0.15); color: var(--success); }
+    .tx-icon.debit  { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .tx-info { flex: 1; min-width: 0; }
+    .tx-info .desc {
+      font-size: 13.5px; font-weight: 600;
+      color: var(--text-hi);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tx-info .date { font-size: 11.5px; color: var(--text-low); margin-top: 2px; }
+    .tx-amount {
+      font-family:'Sora',sans-serif;
+      font-size: 14px; font-weight: 700;
+      text-align: right;
+    }
+    .tx-amount.credit { color: var(--success); }
+    .tx-amount.debit  { color: var(--danger); }
+
+    .empty-tx {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-low);
+    }
+    .empty-tx i { font-size: 40px; display: block; margin-bottom: 12px; }
+    .empty-tx p { font-size: 13px; }
+
+    /* LOADER */
+    .loader {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 60vh;
+    }
+    .spinner {
+      width: 60px; height: 60px;
+      border: 4px solid rgba(168,120,255,0.2);
+      border-top-color: var(--magenta);
+      border-radius: 50%;
+      margin-bottom: 20px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader h2 {
+      font-family:'Sora',sans-serif;
+      font-size: 18px; color: var(--text-mid);
+    }
+
+    /* NO WALLET */
+    .no-wallet {
+      text-align: center;
+      padding: 60px 24px;
+    }
+    .no-wallet .empty-icon {
+      width: 88px; height: 88px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      background: rgba(124,58,237,0.1);
+      border: 2px solid var(--stroke-strong);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px; color: var(--violet-1);
+    }
+    .no-wallet h2 {
+      font-family:'Sora',sans-serif; font-size: 22px;
+      margin-bottom: 8px;
+    }
+    .no-wallet p { color: var(--text-mid); font-size: 14px; margin-bottom: 24px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      color: #fff;
+      font-family:'Sora',sans-serif;
+      font-size: 13.5px; font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 12px 32px -12px rgba(230,60,194,0.8);
+    }
+
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .actions-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { width: 60px; padding: 16px 8px; }
+      .sidebar-brand span, .sidebar-nav a span, .nav-label, .user-info, .logout-btn { display: none; }
+      .sidebar-nav a { justify-content: center; padding: 10px; }
+      .main-content { margin-left: 60px; padding: 20px 16px; }
+      .balance-hero .amount { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-brand">
+    <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+    <span>DIGITAL WALLET</span>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+    <a href="../pages/dashboard.html"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a href="wallet.html"><i class="bi bi-wallet2"></i><span>Wallet</span></a>
+    <a href="wallet-transactions.html"><i class="bi bi-clock-history"></i><span>Transactions</span></a>
+    <a href="#"><i class="bi bi-person"></i><span>My Account</span></a>
+    <a href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
+    <div class="nav-label" style="margin-top: 12px;">Quick Links</div>
+    <a href="../payment/add-money.html"><i class="bi bi-plus-circle"></i><span>Add Money</span></a>
+    <a href="../payment/payment-history.html"><i class="bi bi-receipt"></i><span>Payment History</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="userAvatar">--</div>
+      <div class="user-info">
+        <div class="name" id="userName">Loading...</div>
+        <div class="email" id="userEmail">loading@example.com</div>
+      </div>
+      <button class="logout-btn" id="logoutBtn"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+
+    <!-- BACK + BREADCRUMB -->
+    <div class="back-bar">
+      <a href="wallet.html" class="back-btn">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to Wallet</span>
+      </a>
+      <nav class="breadcrumb">
+        <a href="../pages/dashboard.html">Dashboard</a>
+        <i class="bi bi-chevron-right"></i>
+        <a href="wallet.html">Wallet</a>
+        <i class="bi bi-chevron-right"></i>
+        <span>Summary</span>
+      </nav>
+    </div>
+
+  <div class="page-title">
+    <h1>Wallet Summary</h1>
+    <p>Overview of your wallet activity</p>
+  </div>
+
+  <!-- Loader -->
+  <div id="loadingState" class="loader">
+    <div class="spinner"></div>
+    <h2>Loading summary...</h2>
+  </div>
+
+  <!-- No wallet -->
+  <div id="noWalletState" style="display: none;">
+    <div class="no-wallet">
+      <div class="empty-icon"><i class="bi bi-wallet2"></i></div>
+      <h2>No Wallet Yet</h2>
+      <p>Create your wallet to see your summary.</p>
+      <a href="create-wallet.html" class="btn-primary">
+        <i class="bi bi-plus-circle"></i> Create Wallet
+      </a>
+    </div>
+  </div>
+
+  <!-- Wallet data -->
+  <div id="walletState" style="display: none;">
+
+    <!-- Balance hero -->
+    <div class="balance-hero">
+      <span class="alias"><i class="bi bi-tag-fill"></i> <span id="aliasText">wallet</span></span>
+      <span class="label">Total Balance</span>
+      <span class="amount" id="balanceAmount">₹0.00</span>
+      <div class="status-row">
+        <span class="status-pill"><i class="bi bi-check-circle-fill"></i> <span id="statusText">ACTIVE</span></span>
+        <span class="currency-pill"><i class="bi bi-currency-rupee"></i> <span id="currencyText">INR</span></span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="bi bi-arrow-down-circle-fill"></i></div>
+        <span class="stat-value" id="statIncome">₹0.00</span>
+        <span class="stat-label">Total Income</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon red"><i class="bi bi-arrow-up-circle-fill"></i></div>
+        <span class="stat-value" id="statExpense">₹0.00</span>
+        <span class="stat-label">Total Expense</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon violet"><i class="bi bi-arrow-left-right"></i></div>
+        <span class="stat-value" id="statTransactions">0</span>
+        <span class="stat-label">Transactions</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon gold"><i class="bi bi-people-fill"></i></div>
+        <span class="stat-value" id="statGroups">0</span>
+        <span class="stat-label">Groups</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-row">
+      <a href="../payment/add-money.html" class="action-btn">
+        <div class="action-icon purple"><i class="bi bi-plus-circle"></i></div>
+        <span>Add Money</span>
+      </a>
+      <a href="wallet-details.html" class="action-btn">
+        <div class="action-icon green"><i class="bi bi-info-circle"></i></div>
+        <span>View Details</span>
+      </a>
+      <a href="wallet-transactions.html" class="action-btn">
+        <div class="action-icon gold"><i class="bi bi-clock-history"></i></div>
+        <span>Transactions</span>
+      </a>
+    </div>
+
+    <!-- Recent transactions -->
+    <div class="recent-card">
+      <div class="header">
+        <h3><i class="bi bi-clock-history"></i> Recent Transactions</h3>
+        <a href="wallet-transactions.html" class="view-all">View All <i class="bi bi-arrow-right"></i></a>
+      </div>
+      <div id="recentTx"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // ============================================
+  // CONFIG
+  // ============================================
+  const API_BASE = 'https://api.digitalwallet.dpdns.org/api';
+
+  let token = null;
+
+  // ============================================
+  // INIT
+  // ============================================
+  document.addEventListener('DOMContentLoaded', () => {
+    token = localStorage.getItem('accessToken');
+    if (!token) { window.location.href = '../pages/login.html'; return; }
+
+    fillSidebarUser();
+    attachLogout();
+    loadSummary();
+    loadRecentTransactions();
+  });
+
+  function fillSidebarUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.name) return;
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('userEmail').textContent = user.email || '';
+      document.getElementById('userAvatar').textContent =
+        user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2);
+    } catch (e) {}
+  }
+
+  function attachLogout() {
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (e) {}
+      localStorage.clear();
+      window.location.href = '../pages/login.html';
+    });
+  }
+
+  // ============================================
+  // LOAD SUMMARY
+  // ============================================
+  async function loadSummary() {
+    try {
+      const res = await fetch(`${API_BASE}/wallet/summary`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      document.getElementById('loadingState').style.display = 'none';
+
+      if (res.status === 401) {
+        localStorage.clear();
+        window.location.href = '../pages/login.html';
+        return;
+      }
+
+      // no wallet
+      if (res.status === 404) {
+        document.getElementById('noWalletState').style.display = 'block';
+        return;
+      }
+
+      if (!res.ok) {
+        document.getElementById('noWalletState').style.display = 'block';
+        return;
+      }
+
+      const data = await res.json();
+      const s = data.data || data;
+
+      // populate
+      document.getElementById('aliasText').textContent   = s.alias || 'wallet';
+      document.getElementById('balanceAmount').textContent = `₹${parseFloat(s.balance || 0).toFixed(2)}`;
+      document.getElementById('statusText').textContent  = s.status || 'ACTIVE';
+      document.getElementById('currencyText').textContent = s.currency || 'INR';
+
+      document.getElementById('statIncome').textContent       = `₹${parseFloat(s.income || 0).toFixed(2)}`;
+      document.getElementById('statExpense').textContent      = `₹${parseFloat(s.expense || 0).toFixed(2)}`;
+      document.getElementById('statTransactions').textContent = s.transactionCount || 0;
+      document.getElementById('statGroups').textContent       = s.groupCount || 0;
+
+      document.getElementById('walletState').style.display = 'block';
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('noWalletState').style.display = 'block';
+    }
+  }
+
+  // ============================================
+  // LOAD RECENT TRANSACTIONS
+  // ============================================
+  async function loadRecentTransactions() {
+    try {
+      const res = await fetch(`${API_BASE}/wallet/transactions?page=1&limit=5`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) return;
+      const data = await res.json();
+      const transactions = data.data?.transactions || data.transactions || [];
+
+      const container = document.getElementById('recentTx');
+
+      if (!transactions.length) {
+        container.innerHTML = `
+          <div class="empty-tx">
+            <i class="bi bi-inbox"></i>
+            <p>No transactions yet</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = transactions.map(t => {
+        const isCredit = t.type === 'CREDIT';
+        return `
+          <div class="tx-row">
+            <div class="tx-icon ${isCredit ? 'credit' : 'debit'}">
+              <i class="bi bi-arrow-${isCredit ? 'down' : 'up'}-circle-fill"></i>
+            </div>
+            <div class="tx-info">
+              <div class="desc">${t.description || (isCredit ? 'Credit' : 'Debit')}</div>
+              <div class="date">${new Date(t.createdAt).toLocaleString()}</div>
+            </div>
+            <div class="tx-amount ${isCredit ? 'credit' : 'debit'}">
+              ${isCredit ? '+' : '-'}₹${parseFloat(t.amount || 0).toFixed(2)}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (err) {
+      console.error(err);
+    }
+  }
+</script>
+
+</body>
+</html>
