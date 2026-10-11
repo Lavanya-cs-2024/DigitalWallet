@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet — Verify Payment</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/wallet.css">
+
+  <style>
+    :root {
+      --violet-1: #a878ff; --magenta: #e63cc2; --gold: #f0b84f;
+      --success: #5eea9a; --danger: #f77b7b;
+      --text-hi: #f5f0ff; --text-mid: #b6a8cc; --text-low: #7a6c94;
+      --stroke: rgba(255,255,255,0.08); --stroke-strong: rgba(168,120,255,0.35);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-hi);
+      display: flex; min-height: 100vh;
+      background:
+        radial-gradient(1200px 800px at 80% 100%, rgba(230,60,194,0.18), transparent 60%),
+        radial-gradient(900px 700px at 10% 0%, rgba(124,58,237,0.22), transparent 55%),
+        linear-gradient(180deg, #0b0616, #140a24);
+      background-attachment: fixed;
+    }
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: rgba(15,10,26,0.75);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--stroke);
+      padding: 24px 16px;
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar-brand {
+      display:flex; align-items:center; gap:10px;
+      text-decoration:none; color:var(--text-hi);
+      font-family:'Sora',sans-serif; font-weight:800;
+      font-size:15px; letter-spacing:0.06em;
+      padding:0 8px; margin-bottom:32px;
+    }
+    .brand-mark {
+      width:38px; height:38px; border-radius:10px;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; color:#fff;
+    }
+    .nav-label {
+      font-size:10px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.1em; color:var(--text-low);
+      padding:0 12px; margin-bottom:8px;
+    }
+    .sidebar-nav a {
+      display:flex; align-items:center; gap:12px;
+      padding:10px 12px; border-radius:10px;
+      color:var(--text-mid); text-decoration:none;
+      font-size:13.5px; font-weight:500; transition:0.15s;
+      margin-bottom:2px;
+    }
+    .sidebar-nav a:hover { color:var(--text-hi); background:rgba(255,255,255,0.04); }
+    .sidebar-nav a.active {
+      color:var(--text-hi);
+      background: linear-gradient(90deg, rgba(168,120,255,0.18), rgba(230,60,194,0.10));
+      border: 1px solid rgba(168,120,255,0.30);
+    }
+    .sidebar-footer { margin-top:auto; padding-top:16px; border-top:1px solid var(--stroke); }
+    .user-card { display:flex; align-items:center; gap:10px; padding:10px 8px; }
+    .user-avatar {
+      width:36px; height:36px; border-radius:50%;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px; font-weight:700; color:#fff;
+    }
+    .user-info { flex:1; min-width:0; }
+    .user-info .name { font-size:13px; font-weight:600; }
+    .user-info .email { font-size:11px; color:var(--text-low); }
+    .logout-btn { background:none; border:none; cursor:pointer; color:var(--text-low); font-size:16px; padding:6px; border-radius:8px; }
+    .logout-btn:hover { color:var(--danger); }
+
+    .main-content { margin-left:240px; flex:1; padding:32px 40px; min-height:100vh; }
+    .page-title h1 { font-family:'Sora',sans-serif; font-size:26px; font-weight:700; margin-bottom:4px; }
+    .page-title p { font-size:14px; color:var(--text-mid); }
+
+    .back-bar { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+    .back-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 16px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--stroke);
+      border-radius:10px;
+      color:var(--text-mid); text-decoration:none;
+      font-size:13px; font-weight:600;
+    }
+    .back-btn:hover { color:var(--text-hi); border-color:var(--stroke-strong); }
+    .breadcrumb { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-low); flex-wrap:wrap; }
+    .breadcrumb a { color:var(--text-mid); text-decoration:none; }
+    .breadcrumb i { font-size:10px; }
+    .breadcrumb span { color:var(--text-hi); font-weight:600; }
+
+    .result-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--stroke);
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 640px;
+      margin: 24px auto 0;
+      text-align: center;
+    }
+    .result-icon {
+      width: 88px; height: 88px;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+    }
+    .result-icon.processing {
+      background: rgba(240,184,79,0.12);
+      border: 2px solid rgba(240,184,79,0.35);
+      color: var(--gold);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .result-icon.success {
+      background: rgba(94,234,154,0.12);
+      border: 2px solid rgba(94,234,154,0.35);
+      color: var(--success);
+    }
+    .result-icon.failed {
+      background: rgba(248,113,113,0.12);
+      border: 2px solid rgba(248,113,113,0.35);
+      color: var(--danger);
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .result-card h2 {
+      font-family:'Sora',sans-serif; font-size: 22px; font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .result-card p { color: var(--text-mid); font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+
+    .detail-row {
+      display:flex; justify-content:space-between;
+      padding: 12px 0;
+      border-bottom: 1px dashed var(--stroke);
+      font-size: 13.5px; text-align: left;
+    }
+    .detail-row:last-of-type { border-bottom: none; }
+    .detail-row span:first-child { color: var(--text-low); }
+    .detail-row span:last-child { color: var(--text-hi); font-weight: 600; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 12px 22px;
+      border-radius: 10px;
+      font-family:'Sora',sans-serif;
+      font-size: 13.5px; font-weight: 700;
+      cursor: pointer; transition: 0.15s;
+      border: 1px solid transparent;
+      text-decoration: none;
+      width: 100%;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      color: #fff;
+      box-shadow: 0 12px 32px -12px rgba(230,60,194,0.8);
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--stroke);
+      color: var(--text-mid);
+    }
+    .btn-secondary:hover { color: var(--text-hi); border-color: var(--stroke-strong); }
+
+    .spinner {
+      width: 15px; height: 15px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .msg {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .msg.error { display: block; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); color: var(--danger); }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="#" class="sidebar-brand">
+    <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+    <span>DIGITAL WALLET</span>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+    <a href="../pages/dashboard.html"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a href="../wallet/wallet.html"><i class="bi bi-wallet2"></i><span>Wallet</span></a>
+    <a href="../wallet/wallet-summary.html"><i class="bi bi-graph-up-arrow"></i><span>Summary</span></a>
+    <a href="../wallet/wallet-transactions.html"><i class="bi bi-clock-history"></i><span>Transactions</span></a>
+    <a href="#"><i class="bi bi-person"></i><span>My Account</span></a>
+    <a href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
+    <div class="nav-label" style="margin-top: 12px;">Quick Links</div>
+    <a href="add-money.html"><i class="bi bi-plus-circle"></i><span>Add Money</span></a>
+    <a href="payment-history.html"><i class="bi bi-receipt"></i><span>Payment History</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="userAvatar">--</div>
+      <div class="user-info">
+        <div class="name" id="userName">Loading...</div>
+        <div class="email" id="userEmail">loading@example.com</div>
+      </div>
+      <button class="logout-btn" id="logoutBtn"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </div>
+</aside>
+
+<main class="main-content">
+
+  <div class="back-bar">
+    <a href="payment-history.html" class="back-btn">
+      <i class="bi bi-arrow-left"></i>
+      <span>Payment History</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../wallet/wallet.html">Wallet</a>
+      <i class="bi bi-chevron-right"></i>
+      <a href="payment-history.html">Payments</a>
+      <i class="bi bi-chevron-right"></i>
+      <span>Verify</span>
+    </nav>
+  </div>
+
+  <div class="page-title">
+    <h1>Payment Status</h1>
+    <p>Checking your payment with Paytm</p>
+  </div>
+
+  <div class="result-card" id="resultCard">
+    <div class="result-icon processing" id="resultIcon">
+      <i class="bi bi-hourglass-split"></i>
+    </div>
+    <h2 id="resultTitle">Verifying payment...</h2>
+    <p id="resultText">Please wait while we confirm your payment with Paytm.</p>
+
+    <div id="msgBox" class="msg"></div>
+
+    <div style="margin-top: 20px; text-align: left;">
+      <div class="detail-row"><span>Order ID</span><span id="orderId">--</span></div>
+      <div class="detail-row"><span>Amount</span><span id="amount">--</span></div>
+      <div class="detail-row"><span>Status</span><span id="status">--</span></div>
+      <div class="detail-row"><span>Paid At</span><span id="paidAt">--</span></div>
+    </div>
+
+    <button class="btn btn-primary" id="verifyBtn" style="margin-top: 20px;">
+      <i class="bi bi-arrow-clockwise"></i> Verify Now
+    </button>
+
+    <a href="add-money.html" class="btn btn-secondary" style="margin-top: 12px;">
+      <i class="bi bi-plus-circle"></i> Add More Money
+    </a>
+
+    <a href="payment-history.html" class="btn btn-secondary" style="margin-top: 12px;">
+      <i class="bi bi-receipt"></i> View Payment History
+    </a>
+  </div>
+</main>
+
+<script>
+  const API_BASE = 'https://api.digitalwallet.dpdns.org/api';
+  const POLL_INTERVAL = 3000;
+  const POLL_MAX = 20;
+
+  let token = null;
+  let orderId = null;
+  let pollCount = 0;
+  let pollTimer = null;
+
+  const msgBox = document.getElementById('msgBox');
+document.addEventListener('DOMContentLoaded', () => {
+    token = localStorage.getItem('accessToken');
+
+    const params = new URLSearchParams(window.location.search);
+    orderId = params.get('orderId');
+    const statusParam = params.get('status');
+
+    // ✅ FIX: If no token, save the order ID and send user to login
+    if (!token) {
+        if (orderId) {
+            localStorage.setItem('pendingVerifyOrderId', orderId);
+        }
+        window.location.href = '../pages/login.html';
+        return;
+    }
+
+    fillSidebarUser();
+    attachLogout();
+
+    if (!orderId) {
+      showMsg('Missing order ID.', 'error');
+      return;
+    }
+
+    fetchOrder();
+
+    if (statusParam === 'paid') {
+      pollCount = POLL_MAX;
+    } else {
+      startPolling();
+    }
+
+    document.getElementById('verifyBtn').addEventListener('click', verifyStatusNow);
+});
+
+  function fillSidebarUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.name) return;
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('userEmail').textContent = user.email || '';
+      document.getElementById('userAvatar').textContent =
+        user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2);
+    } catch (e) {}
+  }
+
+  function attachLogout() {
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (e) {}
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '../pages/login.html';
+    });
+  }
+
+  async function fetchOrder() {
+    try {
+      const res = await fetch(`${API_BASE}/payment/orders/${orderId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        showMsg('Could not load order.', 'error');
+        return;
+      }
+
+      const data = await res.json();
+      const order = data.data || data;
+      renderOrder(order);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function renderOrder(order) {
+    document.getElementById('orderId').textContent = order.orderId;
+    document.getElementById('amount').textContent  = `₹${order.walletAmount} ${order.walletCurrency || 'INR'}`;
+    document.getElementById('status').textContent  = order.status;
+    document.getElementById('paidAt').textContent  = order.paidAt
+      ? new Date(order.paidAt).toLocaleString()
+      : '—';
+
+    const icon   = document.getElementById('resultIcon');
+    const title  = document.getElementById('resultTitle');
+    const text   = document.getElementById('resultText');
+
+    if (order.status === 'PAID') {
+      icon.className = 'result-icon success';
+      icon.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+      title.textContent = 'Payment Successful!';
+      text.textContent  = `₹${order.walletAmount} has been added to your wallet.`;
+      stopPolling();
+      sessionStorage.removeItem('pendingOrder');
+      sessionStorage.removeItem('paytmForm');
+    } else if (order.status === 'PROCESSING' || order.status === 'READY') {
+      icon.className = 'result-icon processing';
+      icon.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+      title.textContent = 'Verifying payment...';
+      text.textContent  = 'Paytm is still confirming your payment. This usually takes a few seconds.';
+    } else if (order.status === 'FAILED') {
+      icon.className = 'result-icon failed';
+      icon.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+      title.textContent = 'Payment Failed';
+      text.textContent  = 'The payment was declined or cancelled. Please try again with a new order.';
+      stopPolling();
+    } else if (order.status === 'CANCELLED') {
+      icon.className = 'result-icon failed';
+      icon.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+      title.textContent = 'Payment Cancelled';
+      text.textContent  = 'You cancelled this payment.';
+      stopPolling();
+    } else if (order.status === 'UNDER_REVIEW') {
+      icon.className = 'result-icon processing';
+      icon.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i>';
+      title.textContent = 'Under Review';
+      text.textContent  = 'Your payment is being reviewed. Please check back later.';
+      stopPolling();
+    } else {
+      icon.className = 'result-icon processing';
+      icon.innerHTML = '<i class="bi bi-clock-history"></i>';
+      title.textContent = order.status;
+      text.textContent  = 'Please wait...';
+    }
+  }
+
+  function startPolling() {
+    pollTimer = setInterval(async () => {
+      pollCount++;
+      await fetchOrder();
+
+      if (pollCount >= POLL_MAX) {
+        stopPolling();
+        const text = document.getElementById('resultText');
+        text.textContent = 'Payment is still processing. Please check Payment History shortly.';
+      }
+    }, POLL_INTERVAL);
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  async function verifyStatusNow() {
+    const btn = document.getElementById('verifyBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Verifying...';
+
+    try {
+      const res = await fetch(`${API_BASE}/payment/verify-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ orderId })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showMsg(data.message || 'Verification failed.', 'error');
+      } else {
+        const order = data.data || data;
+        renderOrder(order);
+      }
+    } catch (err) {
+      console.error(err);
+      showMsg('Backend not reachable.', 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Verify Now';
+  }
+
+  function showMsg(text, type = 'error') {
+    msgBox.textContent = text;
+    msgBox.className = `msg ${type}`;
+  }
+</script>
+
+</body>
+</html>

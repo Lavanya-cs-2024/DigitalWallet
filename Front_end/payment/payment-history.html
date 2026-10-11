@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet — Payment History</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/wallet.css">
+
+  <style>
+    :root {
+      --violet-1: #a878ff; --magenta: #e63cc2; --gold: #f0b84f;
+      --success: #5eea9a; --danger: #f77b7b;
+      --text-hi: #f5f0ff; --text-mid: #b6a8cc; --text-low: #7a6c94;
+      --stroke: rgba(255,255,255,0.08); --stroke-strong: rgba(168,120,255,0.35);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-hi);
+      display: flex; min-height: 100vh;
+      background:
+        radial-gradient(1200px 800px at 80% 100%, rgba(230,60,194,0.18), transparent 60%),
+        radial-gradient(900px 700px at 10% 0%, rgba(124,58,237,0.22), transparent 55%),
+        linear-gradient(180deg, #0b0616, #140a24);
+      background-attachment: fixed;
+    }
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: rgba(15,10,26,0.75);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--stroke);
+      padding: 24px 16px;
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
+    }
+    .sidebar-brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text-hi); font-family:'Sora',sans-serif; font-weight:800; font-size:15px; letter-spacing:0.06em; padding:0 8px; margin-bottom:32px; }
+    .brand-mark { width:38px; height:38px; border-radius:10px; background: linear-gradient(135deg, var(--violet-1), var(--magenta)); display:flex; align-items:center; justify-content:center; font-size:18px; color:#fff; }
+    .nav-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-low); padding:0 12px; margin-bottom:8px; }
+    .sidebar-nav a { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px; color:var(--text-mid); text-decoration:none; font-size:13.5px; font-weight:500; transition:0.15s; margin-bottom:2px; }
+    .sidebar-nav a:hover { color:var(--text-hi); background:rgba(255,255,255,0.04); }
+    .sidebar-nav a.active { color:var(--text-hi); background: linear-gradient(90deg, rgba(168,120,255,0.18), rgba(230,60,194,0.10)); border: 1px solid rgba(168,120,255,0.30); }
+    .sidebar-footer { margin-top:auto; padding-top:16px; border-top:1px solid var(--stroke); }
+    .user-card { display:flex; align-items:center; gap:10px; padding:10px 8px; }
+    .user-avatar { width:36px; height:36px; border-radius:50%; background: linear-gradient(135deg, var(--violet-1), var(--magenta)); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; }
+    .user-info { flex:1; min-width:0; }
+    .user-info .name { font-size:13px; font-weight:600; }
+    .user-info .email { font-size:11px; color:var(--text-low); }
+    .logout-btn { background:none; border:none; cursor:pointer; color:var(--text-low); font-size:16px; padding:6px; border-radius:8px; }
+    .logout-btn:hover { color:var(--danger); }
+
+    .main-content { margin-left:240px; flex:1; padding:32px 40px; min-height:100vh; }
+    .page-title h1 { font-family:'Sora',sans-serif; font-size:26px; font-weight:700; margin-bottom:4px; }
+    .page-title p { font-size:14px; color:var(--text-mid); }
+
+    .back-bar { display:flex; align-items:center; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+    .back-btn { display:inline-flex; align-items:center; gap:8px; padding:8px 16px; background:rgba(255,255,255,0.03); border:1px solid var(--stroke); border-radius:10px; color:var(--text-mid); text-decoration:none; font-size:13px; font-weight:600; }
+    .back-btn:hover { color:var(--text-hi); border-color:var(--stroke-strong); }
+    .breadcrumb { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-low); flex-wrap:wrap; }
+    .breadcrumb a { color:var(--text-mid); text-decoration:none; }
+    .breadcrumb i { font-size:10px; }
+    .breadcrumb span { color:var(--text-hi); font-weight:600; }
+
+    .filter-row { display:flex; gap:10px; margin:24px 0; flex-wrap:wrap; align-items:center; }
+    .filter-chip { padding: 8px 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--stroke); border-radius: 20px; color: var(--text-mid); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .filter-chip:hover { color: var(--text-hi); border-color: var(--stroke-strong); }
+    .filter-chip.active { background: linear-gradient(135deg, rgba(168,120,255,0.2), rgba(230,60,194,0.15)); border-color: var(--stroke-strong); color: var(--text-hi); }
+
+    .order-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .order-card { display: flex; align-items: center; gap: 16px; padding: 18px 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--stroke); border-radius: 14px; text-decoration: none; color: inherit; transition: 0.15s; }
+    .order-card:hover { background: rgba(255,255,255,0.04); border-color: var(--stroke-strong); transform: translateY(-1px); }
+    .order-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+    .order-icon.paid { background: rgba(94,234,154,0.15); color: var(--success); }
+    .order-icon.processing { background: rgba(240,184,79,0.15); color: var(--gold); }
+    .order-icon.ready { background: rgba(168,120,255,0.15); color: var(--violet-1); }
+    .order-icon.failed { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .order-icon.cancelled { background: rgba(122,108,148,0.15); color: var(--text-low); }
+    .order-info { flex: 1; min-width: 0; }
+    .order-info .id { font-size: 13px; font-weight: 600; color: var(--text-hi); margin-bottom: 2px; }
+    .order-info .date { font-size: 11.5px; color: var(--text-low); }
+    .order-amount { text-align: right; }
+    .order-amount .amt { font-family:'Sora',sans-serif; font-size: 16px; font-weight: 700; color: var(--text-hi); }
+    .order-amount .usd { font-size: 11px; color: var(--text-low); margin-top: 2px; }
+    .order-status { padding: 4px 10px; border-radius: 20px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 12px; }
+    .order-status.PAID { background: rgba(94,234,154,0.15); color: var(--success); }
+    .order-status.PROCESSING { background: rgba(240,184,79,0.15); color: var(--gold); }
+    .order-status.READY { background: rgba(168,120,255,0.15); color: var(--violet-1); }
+    .order-status.FAILED { background: rgba(248,113,113,0.15); color: var(--danger); }
+    .order-status.CANCELLED { background: rgba(122,108,148,0.15); color: var(--text-low); }
+    .order-status.UNDER_REVIEW { background: rgba(230,60,194,0.15); color: var(--magenta); }
+    .order-status.EXPIRED { background: rgba(122,108,148,0.15); color: var(--text-low); }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-mid); }
+    .empty-state i { font-size: 56px; color: var(--text-low); display: block; margin-bottom: 16px; }
+    .empty-state h3 { font-family:'Sora',sans-serif; font-size: 18px; color: var(--text-hi); margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; margin-bottom: 20px; }
+
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px; }
+    .page-btn { min-width: 36px; height: 36px; padding: 0 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--stroke); border-radius: 10px; color: var(--text-mid); font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .page-btn:hover:not(:disabled) { color: var(--text-hi); border-color: var(--stroke-strong); }
+    .page-btn.active { background: linear-gradient(135deg, var(--violet-1), var(--magenta)); border-color: transparent; color: #fff; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 22px; border-radius: 10px; font-family:'Sora',sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.15s; border: 1px solid transparent; text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--violet-1), var(--magenta)); color: #fff; box-shadow: 0 12px 32px -12px rgba(230,60,194,0.8); }
+
+    .loader { display: flex; justify-content: center; padding: 60px 0; }
+    .spinner { width: 40px; height: 40px; border: 3px solid rgba(168,120,255,0.2); border-top-color: var(--magenta); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="#" class="sidebar-brand">
+    <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+    <span>DIGITAL WALLET</span>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+    <a href="../pages/dashboard.html"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a href="../wallet/wallet.html"><i class="bi bi-wallet2"></i><span>Wallet</span></a>
+    <a href="../wallet/wallet-transactions.html"><i class="bi bi-clock-history"></i><span>Transactions</span></a>
+    <a href="#"><i class="bi bi-person"></i><span>My Account</span></a>
+    <a href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
+    <div class="nav-label" style="margin-top: 12px;">Quick Links</div>
+    <a href="add-money.html"><i class="bi bi-plus-circle"></i><span>Add Money</span></a>
+    <a href="payment-history.html" class="active"><i class="bi bi-receipt"></i><span>Payment History</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="userAvatar">--</div>
+      <div class="user-info">
+        <div class="name" id="userName">Loading...</div>
+        <div class="email" id="userEmail">loading@example.com</div>
+      </div>
+      <button class="logout-btn" id="logoutBtn"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </div>
+</aside>
+
+<main class="main-content">
+
+  <div class="back-bar">
+    <a href="../wallet/wallet.html" class="back-btn">
+      <i class="bi bi-arrow-left"></i>
+      <span>Back to Wallet</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="../pages/dashboard.html">Dashboard</a>
+      <i class="bi bi-chevron-right"></i>
+      <a href="../wallet/wallet.html">Wallet</a>
+      <i class="bi bi-chevron-right"></i>
+      <span>Payment History</span>
+    </nav>
+  </div>
+
+  <div class="page-title">
+    <h1>Payment History</h1>
+    <p>All your wallet top-up orders</p>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-chip active" data-filter="">All</button>
+    <button class="filter-chip" data-filter="PAID">Paid</button>
+    <button class="filter-chip" data-filter="PROCESSING">Processing</button>
+    <button class="filter-chip" data-filter="FAILED">Failed</button>
+    <button class="filter-chip" data-filter="CANCELLED">Cancelled</button>
+  </div>
+
+  <div id="loader" class="loader"><div class="spinner"></div></div>
+  <div id="orderList" class="order-list" style="display:none;"></div>
+  <div id="emptyState" class="empty-state" style="display:none;">
+    <i class="bi bi-receipt"></i>
+    <h3>No payments yet</h3>
+    <p>Start by adding money to your wallet.</p>
+    <a href="add-money.html" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Add Money
+    </a>
+  </div>
+  <div id="pagination" class="pagination" style="display:none;"></div>
+</main>
+
+<script>
+  const API_BASE = 'https://api.digitalwallet.dpdns.org/api';
+  let token = null;
+  let currentPage = 1;
+  let currentLimit = 10;
+  let currentFilter = '';
+
+  const loader = document.getElementById('loader');
+  const orderList = document.getElementById('orderList');
+  const emptyState = document.getElementById('emptyState');
+  const pagination = document.getElementById('pagination');
+
+  document.addEventListener('DOMContentLoaded', () => {
+    token = localStorage.getItem('accessToken');
+    if (!token) { window.location.href = '../pages/login.html'; return; }
+
+    fillSidebarUser();
+    attachLogout();
+    attachFilters();
+    loadOrders();
+  });
+
+  function fillSidebarUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.name) return;
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('userEmail').textContent = user.email || '';
+      document.getElementById('userAvatar').textContent =
+        user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2);
+    } catch (e) {}
+  }
+
+  function attachLogout() {
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (e) {}
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '../pages/login.html';
+    });
+  }
+
+  function attachFilters() {
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentFilter = chip.dataset.filter;
+        currentPage = 1;
+        loadOrders();
+      });
+    });
+  }
+
+  async function loadOrders() {
+    loader.style.display = 'flex';
+    orderList.style.display = 'none';
+    emptyState.style.display = 'none';
+    pagination.style.display = 'none';
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/payment/orders?page=${currentPage}&limit=${currentLimit}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.status === 401) {
+        localStorage.clear();
+        window.location.href = '../pages/login.html';
+        return;
+      }
+
+      const data = await res.json();
+      let orders = (data.data?.orders || data.orders || []);
+
+      if (currentFilter) {
+        orders = orders.filter(o => o.status === currentFilter);
+      }
+
+      loader.style.display = 'none';
+
+      if (!orders.length) {
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      renderOrders(orders);
+      renderPagination(data.data || data);
+
+    } catch (err) {
+      console.error(err);
+      loader.style.display = 'none';
+      emptyState.style.display = 'block';
+    }
+  }
+
+  function renderOrders(orders) {
+    orderList.innerHTML = orders.map(o => {
+      const iconClass = (o.status || '').toLowerCase();
+      const iconMap = {
+        paid: 'bi-check-circle-fill',
+        processing: 'bi-hourglass-split',
+        ready: 'bi-shield-check',
+        failed: 'bi-x-circle-fill',
+        cancelled: 'bi-slash-circle-fill',
+        under_review: 'bi-exclamation-triangle-fill',
+        expired: 'bi-clock-fill'
+      };
+      const icon = iconMap[iconClass] || 'bi-circle-fill';
+
+      return `
+        <a class="order-card" href="payment-details.html?id=${o.orderId}">
+          <div class="order-icon ${iconClass}"><i class="bi ${icon}"></i></div>
+          <div class="order-info">
+            <div class="id">${o.orderId}</div>
+            <div class="date">${new Date(o.createdAt).toLocaleString()}</div>
+          </div>
+          <div class="order-amount">
+            <div class="amt">₹${o.walletAmount}</div>
+            <div class="usd">via Paytm</div>
+          </div>
+          <span class="order-status ${o.status}">${o.status}</span>
+        </a>
+      `;
+    }).join('');
+    orderList.style.display = 'flex';
+  }
+
+  function renderPagination(data) {
+    const page = parseInt(data.page || 1);
+    const limit = parseInt(data.limit || 10);
+    const total = parseInt(data.total || 0);
+    const totalPages = Math.ceil(total / limit);
+
+    if (totalPages <= 1) {
+      pagination.style.display = 'none';
+      return;
+    }
+
+    let html = `<button class="page-btn" ${page <= 1 ? 'disabled' : ''} data-page="${page-1}">
+      <i class="bi bi-chevron-left"></i>
+    </button>`;
+
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="page-btn ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+
+    html += `<button class="page-btn" ${page >= totalPages ? 'disabled' : ''} data-page="${page+1}">
+      <i class="bi bi-chevron-right"></i>
+    </button>`;
+
+    pagination.innerHTML = html;
+    pagination.style.display = 'flex';
+
+    pagination.querySelectorAll('.page-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentPage = parseInt(btn.dataset.page);
+        loadOrders();
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
