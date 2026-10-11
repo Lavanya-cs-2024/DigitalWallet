@@ -45,7 +45,7 @@ enum SettlementStatus {
 }
 
 // ============================================================
-// PAYMENT ORDER STATUS — Paytm
+// PAYMENT ORDER STATUS — PhonePe
 // ============================================================
 enum PaymentOrderStatus {
   INITIATED
@@ -73,38 +73,40 @@ enum OTPType {
 // ============================================================
 
 // ============================================================
-// USER
+// USER — OAuth + Local auth (merged from Kavya + Lavanya)
 // ============================================================
 model User {
-  id               Int        @id @default(autoincrement())
-  name             String
-  email            String     @unique
-  mobile           String     @unique
-  passwordHash     String     @map("password_hash")
-  profilePicture   String?    @map("profile_picture")
-  emailVerified    Boolean    @default(false) @map("email_verified")
-  status           UserStatus @default(PENDING_VERIFICATION)
-  alias            String?    @unique
-  state            String?
-  loginCount       Int        @default(0) @map("login_count")
-  createdAt        DateTime   @default(now()) @map("created_at")
-  updatedAt        DateTime   @updatedAt @map("updated_at")
+  id             Int        @id @default(autoincrement())
+  name           String
+  email          String     @unique
+  mobile         String?    @unique               // nullable — OAuth users may not provide
+  state          String?
+  passwordHash   String?    @map("password_hash") // nullable — OAuth users have no password
+  googleId       String?    @unique @map("google_id")
+  authProvider   String     @default("local") @map("auth_provider") // "local" | "google"
+  profilePicture String?    @map("profile_picture")
+  emailVerified  Boolean    @default(false) @map("email_verified")
+  status         UserStatus @default(PENDING_VERIFICATION)
+  alias          String?    @unique               // wallet alias
+  loginCount     Int        @default(0) @map("login_count")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
   // relations
   wallet           Wallet?
-  createdGroups    Group[]         @relation("GroupCreator")
+  createdGroups    Group[]        @relation("GroupCreator")
   groupMemberships GroupMember[]
   paidExpenses     Expense[]
   expenseSplits    ExpenseSplit[]
-  settlementsFrom  Settlement[]    @relation("SettlementFromUser")
-  settlementsTo    Settlement[]    @relation("SettlementToUser")
+  settlementsFrom  Settlement[]   @relation("SettlementFromUser")
+  settlementsTo    Settlement[]   @relation("SettlementToUser")
   paymentOrders    PaymentOrder[]
 
   // auth relations
-  otps             OTP[]
-  twoFA            TwoFA?
-  twoFAAttempts    TwoFAAttempt[]
-  sessions         Session[]
+  otps          OTP[]
+  twoFA         TwoFA?
+  twoFAAttempts TwoFAAttempt[]
+  sessions      Session[]
 
   @@index([alias])
 }
@@ -117,18 +119,18 @@ model User {
 // OTP
 // ============================================================
 model OTP {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @map("user_id")
-  code         String
-  type         OTPType
-  expiresAt    DateTime @map("expires_at")
-  used         Boolean  @default(false)
-  attempts     Int      @default(0)
-  resendCount  Int      @default(0) @map("resend_count")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  code        String
+  type        OTPType
+  expiresAt   DateTime @map("expires_at")
+  used        Boolean  @default(false)
+  attempts    Int      @default(0)
+  resendCount Int      @default(0) @map("resend_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([type])
@@ -139,31 +141,31 @@ model OTP {
 // TWO FACTOR AUTHENTICATION
 // ============================================================
 model TwoFA {
-  id              Int       @id @default(autoincrement())
-  userId          Int       @unique @map("user_id")
-  secret          String?
-  isEnabled       Boolean   @default(false) @map("is_enabled")
-  verifiedAt      DateTime? @map("verified_at")
-  failedAttempts  Int       @default(0) @map("failed_attempts")
-  lockedUntil     DateTime? @map("locked_until")
-  lastVerifiedAt  DateTime? @map("last_verified_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id             Int       @id @default(autoincrement())
+  userId         Int       @unique @map("user_id")
+  secret         String?
+  isEnabled      Boolean   @default(false) @map("is_enabled")
+  verifiedAt     DateTime? @map("verified_at")
+  failedAttempts Int       @default(0) @map("failed_attempts")
+  lockedUntil    DateTime? @map("locked_until")
+  lastVerifiedAt DateTime? @map("last_verified_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ============================================================
 // 2FA ATTEMPT LOG
 // ============================================================
 model TwoFAAttempt {
-  id          Int       @id @default(autoincrement())
-  userId      Int       @map("user_id")
-  success     Boolean
-  ipAddress   String?   @map("ip_address")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  success   Boolean
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([createdAt])
@@ -173,17 +175,17 @@ model TwoFAAttempt {
 // SESSION
 // ============================================================
 model Session {
-  id           String    @id @default(uuid())
-  userId       Int       @map("user_id")
-  refreshToken String    @unique @map("refresh_token")
-  expiresAt    DateTime  @map("expires_at")
-  ipAddress    String?   @map("ip_address")
-  userAgent    String?   @map("user_agent")
-  isValid      Boolean   @default(true) @map("is_valid")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  userId       Int      @map("user_id")
+  refreshToken String   @unique @map("refresh_token")
+  expiresAt    DateTime @map("expires_at")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  isValid      Boolean  @default(true) @map("is_valid")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([refreshToken])
@@ -193,32 +195,32 @@ model Session {
 // WALLET
 // ============================================================
 model Wallet {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @unique @map("user_id")
-  balance      Decimal  @default(0) @db.Decimal(12, 2)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique @map("user_id")
+  balance   Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  transactions   WalletTransaction[]
-  paymentOrders  PaymentOrder[]
+  transactions  WalletTransaction[]
+  paymentOrders PaymentOrder[]
 }
 
 // ============================================================
 // WALLET TRANSACTION
 // ============================================================
 model WalletTransaction {
-  id            Int                    @id @default(autoincrement())
-  walletId      Int                    @map("wallet_id")
+  id            Int                   @id @default(autoincrement())
+  walletId      Int                   @map("wallet_id")
   type          WalletTransactionType
-  amount        Decimal                @db.Decimal(12, 2)
+  amount        Decimal               @db.Decimal(12, 2)
   description   String?
-  referenceType WalletReferenceType    @map("reference_type")
-  referenceId   Int?                   @map("reference_id")
-  createdAt     DateTime               @default(now()) @map("created_at")
+  referenceType WalletReferenceType   @map("reference_type")
+  referenceId   Int?                  @map("reference_id")
+  createdAt     DateTime              @default(now()) @map("created_at")
 
-  wallet        Wallet                 @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
   @@index([walletId])
   @@index([referenceType, referenceId])
@@ -228,35 +230,35 @@ model WalletTransaction {
 // GROUP
 // ============================================================
 model Group {
-  id          Int          @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   name        String
   description String?
-  createdBy   Int          @map("created_by")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
+  createdBy   Int      @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  creator     User         @relation("GroupCreator", fields: [createdBy], references: [id])
+  creator User @relation("GroupCreator", fields: [createdBy], references: [id])
 
-  members     GroupMember[]
-  expenses    Expense[]
+  members  GroupMember[]
+  expenses Expense[]
 }
 
 // ============================================================
 // GROUP MEMBER
 // ============================================================
 model GroupMember {
-  id        Int             @id @default(autoincrement())
-  groupId   Int             @map("group_id")
-  userId    Int             @map("user_id")
-  role      GroupMemberRole @default(MEMBER)
-  joinedAt  DateTime        @default(now()) @map("joined_at")
+  id       Int             @id @default(autoincrement())
+  groupId  Int             @map("group_id")
+  userId   Int             @map("user_id")
+  role     GroupMemberRole @default(MEMBER)
+  joinedAt DateTime        @default(now()) @map("joined_at")
 
-  group     Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([groupId, userId])
   @@index([groupId])
   @@index([userId])
-  @@unique([groupId, userId])
 }
 
 // ============================================================
@@ -273,8 +275,8 @@ model Expense {
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
 
-  group       Group       @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  payer       User        @relation(fields: [paidBy], references: [id])
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  payer User  @relation(fields: [paidBy], references: [id])
 
   splits      ExpenseSplit[]
   settlements Settlement[]
@@ -287,14 +289,14 @@ model Expense {
 // EXPENSE SPLIT
 // ============================================================
 model ExpenseSplit {
-  id         Int       @id @default(autoincrement())
-  expenseId  Int       @map("expense_id")
-  userId     Int       @map("user_id")
-  amount     Decimal   @db.Decimal(12, 2)
-  percentage Decimal?  @db.Decimal(5, 2)
+  id         Int      @id @default(autoincrement())
+  expenseId  Int      @map("expense_id")
+  userId     Int      @map("user_id")
+  amount     Decimal  @db.Decimal(12, 2)
+  percentage Decimal? @db.Decimal(5, 2)
 
-  expense    Expense   @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  user       User      @relation(fields: [userId], references: [id])
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
 
   @@index([expenseId])
   @@index([userId])
@@ -314,9 +316,9 @@ model Settlement {
   createdAt  DateTime         @default(now()) @map("created_at")
   updatedAt  DateTime         @updatedAt @map("updated_at")
 
-  fromUser   User             @relation("SettlementFromUser", fields: [fromUserId], references: [id])
-  toUser     User             @relation("SettlementToUser", fields: [toUserId], references: [id])
-  expense    Expense?         @relation(fields: [expenseId], references: [id])
+  fromUser User     @relation("SettlementFromUser", fields: [fromUserId], references: [id])
+  toUser   User     @relation("SettlementToUser", fields: [toUserId], references: [id])
+  expense  Expense? @relation(fields: [expenseId], references: [id])
 
   @@index([fromUserId])
   @@index([toUserId])
@@ -324,41 +326,43 @@ model Settlement {
 }
 
 // ============================================================
-// PAYMENT ORDER — Paytm
+// PAYMENT ORDER — PhonePe
 // ============================================================
-// Stores Paytm payment orders for wallet funding.
+// Stores PhonePe payment orders for wallet funding.
+// Note: fields are named "paytm*" for historical reasons — they now
+// hold PhonePe's merchantOrderId / transactionId / etc.
 model PaymentOrder {
-  id                Int                @id @default(autoincrement())
-  userId            Int                @map("user_id")
-  walletId          Int                @map("wallet_id")
+  id       Int @id @default(autoincrement())
+  userId   Int @map("user_id")
+  walletId Int @map("wallet_id")
 
   // amounts — INR is BOTH the wallet credit and the provider currency
-  amount            Decimal            @db.Decimal(12, 2)
-  currency          String             @default("INR")
+  amount   Decimal @db.Decimal(12, 2)
+  currency String  @default("INR")
 
   // idempotency
-  idempotencyKey    String             @map("idempotency_key")
+  idempotencyKey String @map("idempotency_key")
 
-  // Paytm linkage
-  paytmOrderId      String             @unique @map("paytm_order_id")     // our orderId sent to Paytm
-  paytmTxnId        String?            @map("paytm_txn_id")               // Paytm's TXNID on success
-  paytmBankTxnId    String?            @map("paytm_bank_txn_id")          // BANKTXNID from Paytm
-  paytmResponseCode String?            @map("paytm_response_code")        // RESPCODE
-  paytmResponseMsg  String?            @map("paytm_response_msg")         // RESPMSG
+  // PhonePe linkage (fields retain "paytm*" names for schema stability)
+  paytmOrderId      String  @unique @map("paytm_order_id") // our merchantOrderId sent to PhonePe
+  paytmTxnId        String? @map("paytm_txn_id") // PhonePe's orderId on success
+  paytmBankTxnId    String? @map("paytm_bank_txn_id") // PhonePe's transactionId
+  paytmResponseCode String? @map("paytm_response_code") // errorCode if failed
+  paytmResponseMsg  String? @map("paytm_response_msg") // detailedErrorCode / message
 
   // state
-  status            PaymentOrderStatus @default(INITIATED)
+  status PaymentOrderStatus @default(INITIATED)
 
   // timestamps
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  paidAt            DateTime?          @map("paid_at")
-  providerPaidAt    DateTime?          @map("provider_paid_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  paidAt         DateTime? @map("paid_at")
+  providerPaidAt DateTime? @map("provider_paid_at")
 
-  user              User               @relation(fields: [userId], references: [id])
-  wallet            Wallet             @relation(fields: [walletId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  wallet Wallet @relation(fields: [walletId], references: [id])
 
-  transactions      PaymentTransaction[]
+  transactions PaymentTransaction[]
 
   @@unique([userId, idempotencyKey])
   @@index([userId])
@@ -368,43 +372,62 @@ model PaymentOrder {
 }
 
 // ============================================================
-// PAYMENT TRANSACTION — Paytm
+// PAYMENT TRANSACTION — PhonePe
 // ============================================================
-// Stores Paytm transaction responses (one per successful payment).
+// Stores PhonePe transaction records (one per successful payment).
 model PaymentTransaction {
-  id                 Int                      @id @default(autoincrement())
-  paymentOrderId     Int                      @map("payment_order_id")
+  id             Int @id @default(autoincrement())
+  paymentOrderId Int @map("payment_order_id")
 
-  // Paytm identifiers (from callback/webhook payload)
-  paytmTxnId         String                   @unique @map("paytm_txn_id")           // TXNID — Paytm's txn id
-  paytmBankTxnId     String?                  @map("paytm_bank_txn_id")              // BANKTXNID
-  paytmBankName      String?                  @map("paytm_bank_name")                // BANKNAME
-  paytmPaymentMode   String?                  @map("paytm_payment_mode")             // PAYMENTMODE (UPI/CC/DC/NB)
+  // PhonePe identifiers (from callback/webhook payload)
+  paytmTxnId       String  @unique @map("paytm_txn_id") // PhonePe's orderId
+  paytmBankTxnId   String? @map("paytm_bank_txn_id") // PhonePe's transactionId
+  paytmBankName    String? @map("paytm_bank_name")
+  paytmPaymentMode String? @map("paytm_payment_mode")
 
   // verification artifact
-  checksum           String?                                                          // raw checksum Paytm sent
+  checksum String?
 
-  status             PaymentTransactionStatus
-  paidAt             DateTime?                @map("paid_at")
-  createdAt          DateTime                 @default(now()) @map("created_at")
+  status    PaymentTransactionStatus
+  paidAt    DateTime?                @map("paid_at")
+  createdAt DateTime                 @default(now()) @map("created_at")
 
-  paymentOrder       PaymentOrder             @relation(fields: [paymentOrderId], references: [id], onDelete: Cascade)
+  paymentOrder PaymentOrder @relation(fields: [paymentOrderId], references: [id], onDelete: Cascade)
 
   @@index([paymentOrderId])
 }
+
 // ============================================================
-// WEBHOOK EVENT — Paytm
+// WEBHOOK EVENT — PhonePe
 // ============================================================
 // Tracks processed webhook events for idempotency.
 // MUST be inserted in the SAME transaction as settlement.
 model WebhookEvent {
   id          Int      @id @default(autoincrement())
-  provider    String   @default("paytm")
-  eventId     String   @map("event_id")               // TXNID (unique per transaction)
-  eventType   String   @map("event_type")             // e.g. "PAYMENT_SUCCESS"
+  provider    String   @default("phonepe")
+  eventId     String   @map("event_id") // PhonePe's orderId (unique per transaction)
+  eventType   String   @map("event_type") // e.g. "PG_ORDER_COMPLETED"
   payload     Json
   processedAt DateTime @default(now()) @map("processed_at")
 
   @@unique([provider, eventId])
   @@index([eventType])
+}
+
+// ============================================================
+// SECURITY EVENT — audit log
+// ============================================================
+model SecurityEvent {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @map("user_id")
+  eventType   String   @map("event_type")
+  description String   @db.Text
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
 }

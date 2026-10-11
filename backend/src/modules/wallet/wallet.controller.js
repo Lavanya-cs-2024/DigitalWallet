@@ -48,6 +48,62 @@ const walletController = {
         }
     },
 
+    createWallet: async (req, res, next) => {
+    try {
+        const { userId } = req.user;
+        const { alias, state, mobile } = req.body;
+
+        const result = await walletService.createWallet(
+            userId,
+            { alias, state, mobile },
+            req
+        );
+
+        res.status(HTTP_STATUS.CREATED).json({
+            success: true,
+            message: 'Wallet created successfully.',
+            data: result
+        });
+    } catch (error) {
+        if (error.code === 'WALLET_ALREADY_EXISTS') {
+            return res.status(HTTP_STATUS.CONFLICT).json({
+                success: false,
+                message: 'You already have a wallet.',
+                code: 'WALLET_ALREADY_EXISTS'
+            });
+        }
+        if (error.code === 'ALIAS_TAKEN') {
+            return res.status(HTTP_STATUS.CONFLICT).json({
+                success: false,
+                message: 'This alias is already taken. Please choose another one.',
+                code: 'ALIAS_TAKEN'
+            });
+        }
+        if (error.code === 'MOBILE_TAKEN') {
+            return res.status(HTTP_STATUS.CONFLICT).json({
+                success: false,
+                message: 'This mobile number is already registered.',
+                code: 'MOBILE_TAKEN'
+            });
+        }
+        if (error.code === 'MOBILE_REQUIRED') {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: 'Mobile number is required.',
+                code: 'MOBILE_REQUIRED'
+            });
+        }
+        if (error.code === 'INVALID_MOBILE') {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+                success: false,
+                message: 'Invalid mobile number format.',
+                code: 'INVALID_MOBILE'
+            });
+        }
+        next(error);
+    }
+},
+
     // ============================================
     // GET WALLET
     // ============================================

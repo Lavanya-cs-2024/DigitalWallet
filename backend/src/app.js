@@ -2,6 +2,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 // Load environment variables
 dotenv.config();
@@ -17,31 +19,62 @@ const paymentRoutes = require('./modules/payment/payment.routes');
 
 // Create Express app
 const app = express();
+app.set('trust proxy', 1);
 
 // ============================================
-// MIDDLEWARE
+// BODY PARSERS — MUST come before routes
 // ============================================
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Enable CORS
+// ============================================
+// CORS — allow multiple origins
+// ============================================
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map(o => o.trim())
+    .filter(Boolean);
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: function (origin, callback) {
+        // Allow requests with no origin (curl, Postman, same-origin)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        console.warn('[CORS] Blocked origin:', origin);
+        return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     credentials: true
 }));
 
-// Parse JSON requests
-app.use(express.json());
-
-// Parse URL-encoded bodies — Paytm callback & webhook use this
-app.use(express.urlencoded({ extended: true }));
-
-// Request logging
+// ============================================
+// LOGGER
+// ============================================
 app.use(logger);
 
 // ============================================
-// ROUTES
+// PASSPORT (Google OAuth)
 // ============================================
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: 'https://api.digitalwallet.dpdns.org/api/auth/google/callback'
+}, async (accessToken, refreshToken, profile, done) => {
+    try {
+        return done(null, profile);
+    } catch (err) {
+        return done(err, null);
+    }
+}));
 
-// Health check
+app.use(passport.initialize());
+
+// ============================================
+// HEALTH CHECK
+// ============================================
 app.get('/health', (req, res) => {
     res.json({
         status: 'OK',
@@ -52,7 +85,9 @@ app.get('/health', (req, res) => {
     });
 });
 
-// API Routes
+// ============================================
+// API ROUTES
+// ============================================
 app.use('/api/auth', authRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/payment', paymentRoutes);
@@ -60,11 +95,7 @@ app.use('/api/payment', paymentRoutes);
 // ============================================
 // ERROR HANDLING
 // ============================================
-
-// 404 handler
 app.use(notFound);
-
-// Global error handler
 app.use(errorHandler);
 
 module.exports = app;

@@ -124,7 +124,7 @@
     verifyBtn.disabled = true;
     verifyBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verifying...';
 
-    fetch('http://localhost:5000/api/auth/verify-email', {
+    fetch('https://api.digitalwallet.dpdns.org/api/auth/verify-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp })
@@ -238,7 +238,7 @@
     link.style.pointerEvents = 'none';
     link.textContent = 'Sending...';
 
-    fetch('http://localhost:5000/api/auth/resend-otp', {
+    fetch('https://api.digitalwallet.dpdns.org/api/auth/resend-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })

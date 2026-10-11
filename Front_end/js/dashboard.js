@@ -3,7 +3,7 @@
 // ============================================ //
 
 // ===== API BASE URL ===== //
-const API_BASE = 'http://localhost:5000/api';                    // backend base URL
+const API_BASE = 'https://api.digitalwallet.dpdns.org/api';                    // backend base URL
 
 // ============================================ //
 // RUN ON PAGE LOAD                              //

@@ -51,7 +51,7 @@ router.get('/', walletController.getWallet);
 router.post(
     '/',
     // rate limit
-    rateLimiter({ windowMs: 15 * 60 * 1000, max: 3 }),
+    rateLimiter({ windowMs: 15 * 60 * 1000, max: 50 }),
     validate(createWalletSchema),
     walletController.createWallet
 );

@@ -26,7 +26,7 @@ async function logSecurityEvent(
                 description,
                 ipAddress,
                 userAgent,
-                metadata: JSON.stringify(metadata)
+                metadata: metadata && Object.keys(metadata).length ? metadata : null
             }
         });
     } catch (error) {

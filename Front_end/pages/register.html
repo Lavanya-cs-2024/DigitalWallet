@@ -593,18 +593,15 @@
    SCRIPTS
 ======================================== -->
 <script>
-  // ========================================
+    // ========================================
   // GOOGLE LOGIN
   // ========================================
   document.getElementById('googleLoginBtn').addEventListener('click', function() {
-    // Store redirect info
-    localStorage.setItem('auth_redirect', window.location.pathname);
-    
-    // In production, redirect to backend
-    // window.location.href = 'http://localhost:5000/auth/google';
-    
-    // For demo: Show success message
-    showAlert('🚀 Google login coming soon! (Backend integration needed)', 'info');
+    // Remember where the user wanted to go after Google sign-in
+    localStorage.setItem('auth_redirect', 'dashboard.html');
+
+    // Send them to the backend OAuth initiation route
+    window.location.href = 'https://api.digitalwallet.dpdns.org/api/auth/google';
   });
 
   // ========================================
@@ -753,7 +750,7 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     registerBtn.disabled = true;
     registerBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating...';
 
-    fetch('http://localhost:5000/api/auth/register', {
+    fetch('https://api.digitalwallet.dpdns.org/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

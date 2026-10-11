@@ -1,64 +1,43 @@
+// src/modules/payment/payment.service.js
 // ============================================
-// PAYMENT SERVICE — Business Logic (Paytm)
-// ============================================
-// TTD alignment:
-//   §12 — settlePayment() is the ONLY money-mover
-//   §13 — REVIEW_REQUIRED written OUTSIDE rollback tx
-//   §14 — ledger invariant preserved
-//   §20 — idempotency per user, same key+body → replay
-//   §21 — all global invariants preserved (except §6, §7, §10 which are N/A for Paytm)
-//   §22 — atomic wallet update; unique constraints enforced by schema
-//
-//   D20 — verified provider success wins over CANCELLED/EXPIRED/FAILED
-//   D21 — PAID is terminal
-//   D22 — create timeout: N/A (no create API call — form is built locally)
-//   D23 — no capture step; PENDING_VERIFICATION reserved for "callback arrived,
-//          awaiting webhook confirmation"
-//   D24 — no Bearer token on webhook; checksum is auth
-//   D25 — WebhookEvent inserted inside settlement tx
-//   D26 — REVIEW_REQUIRED outside rollback tx
+// PAYMENT SERVICE — Business Logic (PhonePe)
 // ============================================
 const prisma = require('../../config/prisma');
-const paytm  = require('../../config/paytm');
+const phonepe = require('../../config/phonepe');
+const { StandardCheckoutPayRequest, MetaInfo } = require('@phonepe-pg/pg-sdk-node');
 const { logSecurityEvent } = require('../../utils/audit');
+
+const MIN_INR = 10.00;
+const MAX_INR = 50000.00;
 
 const paymentService = {
 
     // ============================================
-    // CREATE ORDER (TTD §5)
+    // CREATE ORDER
     // ============================================
     async createOrder(userId, { amount }, idempotencyKey, req = {}) {
-
-        // ---------- amount range check ----------
+        // 1. Amount validation
         const amountNum = parseFloat(amount);
-        if (isNaN(amountNum) || amountNum < paytm.MIN_INR) {
-            const error = new Error(`Amount must be at least ₹${paytm.MIN_INR}.`);
-            error.code = 'AMOUNT_OUT_OF_RANGE';
-            throw error;
-        }
-        if (amountNum > paytm.MAX_INR) {
-            const error = new Error(`Amount must be at most ₹${paytm.MAX_INR}.`);
+        if (isNaN(amountNum) || amountNum < MIN_INR || amountNum > MAX_INR) {
+            const error = new Error(`Amount must be between ₹${MIN_INR} and ₹${MAX_INR}.`);
             error.code = 'AMOUNT_OUT_OF_RANGE';
             throw error;
         }
 
-        // ---------- idempotency replay (TTD §20) ----------
+        // 2. Idempotency check
         const existing = await prisma.paymentOrder.findUnique({
             where: { userId_idempotencyKey: { userId, idempotencyKey } }
         });
         if (existing) {
             if (parseFloat(existing.amount) === amountNum) {
-                // same key + same body → replay (regenerate Paytm form so
-                // the user can re-submit if they closed the tab)
-                const form = await paymentService._buildPaytmForm(existing, userId);
-                return { replayed: true, order: existing, form };
+                return { replayed: true, order: existing, redirectUrl: null };
             }
             const error = new Error('Idempotency key reused with different request.');
             error.code = 'IDEMPOTENCY_KEY_MISMATCH';
             throw error;
         }
 
-        // ---------- wallet must exist (TTD §5 CO-15) ----------
+        // 3. Wallet existence check
         const wallet = await prisma.wallet.findUnique({ where: { userId } });
         if (!wallet) {
             const error = new Error('Wallet not found.');
@@ -66,182 +45,164 @@ const paymentService = {
             throw error;
         }
 
-        // ---------- create local PaymentOrder ----------
-        // paytmOrderId is NOT NULL in schema, so we generate it inline.
-        // We compute it here so we can create the row with the real value
-        // in one write — no temporary placeholder.
-        const tempId = `pending_${userId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
+        // 4. Create local order record (INITIATED)
         const localOrder = await prisma.paymentOrder.create({
             data: {
                 userId,
                 walletId: wallet.id,
-                amount,
+                amount: amount,
                 currency: 'INR',
                 idempotencyKey,
-                paytmOrderId: tempId,
+                paytmOrderId: `pending_${Date.now()}`,
                 status: 'INITIATED'
             }
         });
 
-        // now that we have the DB id, generate the real paytmOrderId
-        const paytmOrderId = paytm.generatePaytmOrderId(localOrder.id);
-
-        const updated = await prisma.paymentOrder.update({
+        // 5. Generate PhonePe merchantOrderId and update local order
+        const merchantOrderId = phonepe.generateMerchantOrderId(localOrder.id);
+        const updatedOrder = await prisma.paymentOrder.update({
             where: { id: localOrder.id },
-            data: {
-                paytmOrderId,
-                status: 'CREATED'
-            }
+            data: { paytmOrderId: merchantOrderId, status: 'CREATED' }
         });
 
-        const form = await paymentService._buildPaytmForm(updated, userId);
+        // 6. Build PhonePe payment request (amount in paisa)
+        const payRequest = StandardCheckoutPayRequest.builder()
+            .merchantOrderId(merchantOrderId)
+            .amount(Math.round(amountNum * 100))
+            .redirectUrl(phonepe.redirectUrl)
+            .metaInfo(MetaInfo.builder().udf1(userId.toString()).build())
+            .build();
 
+        // 7. Call PhonePe → get checkout URL
+        let response;
+        try {
+            response = await phonepe.client.pay(payRequest);
+        } catch (err) {
+            await prisma.paymentOrder.update({
+                where: { id: localOrder.id },
+                data: { status: 'FAILED' }
+            });
+            const error = new Error('PhonePe rejected payment creation.');
+            error.code = 'PAYMENT_PROVIDER_ERROR';
+            throw error;
+        }
+
+        if (!response || response.state !== 'PENDING') {
+            await prisma.paymentOrder.update({
+                where: { id: localOrder.id },
+                data: { status: 'FAILED' }
+            });
+            const error = new Error('PhonePe did not return a valid redirect URL.');
+            error.code = 'PAYMENT_PROVIDER_ERROR';
+            throw error;
+        }
+
+        // 8. Log + return
         await logSecurityEvent(
             userId,
             'PAYMENT_ORDER_CREATED',
-            `Paytm order po_${updated.id} created for ₹${amount}`,
+            `PhonePe order ${merchantOrderId} created for ₹${amount}`,
             req.ip || 'unknown',
             req.headers?.['user-agent'] || 'unknown'
         );
 
-        return { replayed: false, order: updated, form };
-    },
-
-    // ============================================
-    // BUILD PAYTM FORM (params + checksum)
-    // ============================================
-    async _buildPaytmForm(order, userId) {
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { email: true, mobile: true }
-        });
-
-        const params = paytm.buildPaymentParams({
-            orderId: order.paytmOrderId,
-            amount:  order.amount,
-            custId:  userId,
-            email:   user?.email,
-            mobile:  user?.mobile
-        });
-
-        const checksum = await paytm.generateChecksum(params);
-
         return {
-            action: `${paytm.PAYTM_HOST}/theia/processTransaction`,
-            params,
-            checksum
+            replayed: false,
+            order: updatedOrder,
+            redirectUrl: response.redirectUrl
         };
     },
 
     // ============================================
-    // SETTLE PAYMENT — Only money mover (TTD §12)
+    // SETTLE PAYMENT — Only money mover
     // ============================================
-    // Called from BOTH /paytm/callback and /paytm/webhook.
-    // Idempotent — safe to call multiple times for the same order.
-    //
-    // D20: succeeds even if local status is CANCELLED / EXPIRED / FAILED
-    // D21: PAID is terminal — early-exit if already PAID
-    // D26: REVIEW_REQUIRED written OUTSIDE rollback
-    // ============================================
-    async settlePayment(orderId, paytmResponse, webhookEventId = null) {
+    async settlePayment(orderId, phonepePayload, webhookEventId = null) {
+        const {
+            orderId: phonepeOrderId,
+            state,
+            amount: amountInPaisa,
+            transactionId
+        } = phonepePayload;
 
-        // ---------- minimal sanity ----------
-        if (!paytmResponse.TXNID) {
-            const error = new Error('Missing TXNID from Paytm.');
+        if (!phonepeOrderId || state !== 'COMPLETED') {
+            const error = new Error('Payment verification failed: not completed.');
             error.code = 'PAYMENT_VERIFICATION_FAILED';
             throw error;
         }
 
         try {
             return await prisma.$transaction(async (tx) => {
-
-                // conditional update — settle only if not already PAID (D21)
+                // Conditional update — only settle if not already PAID
                 const updated = await tx.paymentOrder.updateMany({
                     where: { id: orderId, status: { not: 'PAID' } },
                     data: {
                         status: 'PAID',
                         paidAt: new Date(),
                         providerPaidAt: new Date(),
-                        paytmTxnId: paytmResponse.TXNID,
-                        paytmBankTxnId: paytmResponse.BANKTXNID || null,
-                        paytmResponseCode: paytmResponse.RESPCODE || null,
-                        paytmResponseMsg: paytmResponse.RESPMSG || null
+                        paytmTxnId: phonepeOrderId,
+                        paytmBankTxnId: transactionId || null
                     }
                 });
 
-                // already settled (concurrent callback/webhook, TTD ST-05..07)
                 if (updated.count === 0) {
-                    const existing = await tx.paymentOrder.findUnique({
-                        where: { id: orderId }
-                    });
+                    const existing = await tx.paymentOrder.findUnique({ where: { id: orderId } });
                     return { alreadySettled: true, order: existing };
                 }
 
-                const order = await tx.paymentOrder.findUnique({
-                    where: { id: orderId }
-                });
+                const order = await tx.paymentOrder.findUnique({ where: { id: orderId } });
 
-                // ---------- verify amount matches stored (TTD §6 CV-07) ----------
-                const storedAmount   = parseFloat(order.amount);
-                const providerAmount = parseFloat(paytmResponse.TXNAMOUNT);
+                // Amount check (PhonePe amount is in paisa)
+                const storedAmount = parseFloat(order.amount);
+                const providerAmount = parseFloat(amountInPaisa) / 100;
 
-                if (!isNaN(providerAmount) && providerAmount !== storedAmount) {
+                if (providerAmount !== storedAmount) {
                     throw Object.assign(new Error('Amount mismatch.'), {
                         code: 'PAYMENT_VERIFICATION_FAILED',
                         mismatch: true
                     });
                 }
 
-                // ---------- insert PaymentTransaction (TTD §12) ----------
+                // Insert PaymentTransaction
                 await tx.paymentTransaction.create({
                     data: {
                         paymentOrderId: order.id,
-                        paytmTxnId: paytmResponse.TXNID,
-                        paytmBankTxnId: paytmResponse.BANKTXNID || null,
-                        paytmBankName: paytmResponse.BANKNAME || null,
-                        paytmPaymentMode: paytmResponse.PAYMENTMODE || null,
-                        checksum: paytmResponse.CHECKSUMHASH || null,
+                        paytmTxnId: phonepeOrderId,
+                        paytmBankTxnId: transactionId || null,
                         status: 'SUCCESS',
                         paidAt: new Date()
                     }
                 });
 
-                // ---------- atomic wallet credit (TTD §22) ----------
+                // Atomic wallet credit
                 await tx.wallet.update({
                     where: { id: order.walletId },
                     data: { balance: { increment: order.amount } }
                 });
 
-                // ---------- insert WalletTransaction (TTD §12) ----------
+                // Insert WalletTransaction
                 await tx.walletTransaction.create({
                     data: {
                         walletId: order.walletId,
                         type: 'CREDIT',
                         amount: order.amount,
-                        description: `Wallet top-up via Paytm (${paytmResponse.TXNID})`,
+                        description: `Wallet top-up via PhonePe (${phonepeOrderId})`,
                         referenceType: 'PAYMENT',
                         referenceId: order.id
                     }
                 });
 
-                // ---------- insert WebhookEvent INSIDE tx (TTD §11) ----------
+                // Insert WebhookEvent inside tx
                 if (webhookEventId) {
                     const existingEvent = await tx.webhookEvent.findUnique({
-                        where: {
-                            provider_eventId: {
-                                provider: 'paytm',
-                                eventId: webhookEventId
-                            }
-                        }
+                        where: { provider_eventId: { provider: 'phonepe', eventId: webhookEventId } }
                     });
                     if (!existingEvent) {
                         await tx.webhookEvent.create({
                             data: {
-                                provider: 'paytm',
+                                provider: 'phonepe',
                                 eventId: webhookEventId,
-                                eventType: 'PAYMENT_SUCCESS',
-                                payload: paytmResponse
+                                eventType: 'PG_ORDER_COMPLETED',
+                                payload: phonepePayload
                             }
                         });
                     }
@@ -250,7 +211,6 @@ const paymentService = {
                 return { settled: true, order };
             });
         } catch (err) {
-            // TTD §13: REVIEW_REQUIRED outside rollback tx
             if (err.mismatch) {
                 await prisma.paymentOrder.update({
                     where: { id: orderId },
@@ -264,20 +224,20 @@ const paymentService = {
     // ============================================
     // MARK FAILED
     // ============================================
-    async markFailed(orderId, paytmResponse) {
+    async markFailed(orderId, phonepePayload) {
         const result = await prisma.paymentOrder.updateMany({
             where: { id: orderId, status: { not: 'PAID' } },
             data: {
                 status: 'FAILED',
-                paytmResponseCode: paytmResponse.RESPCODE || null,
-                paytmResponseMsg: paytmResponse.RESPMSG || null
+                paytmResponseCode: phonepePayload.errorCode || 'PAYMENT_FAILED',
+                paytmResponseMsg: phonepePayload.detailedErrorCode || 'Payment failed'
             }
         });
         return result.count > 0;
     },
 
     // ============================================
-    // VERIFY STATUS (TTD §5, used by frontend polling)
+    // VERIFY STATUS — Queries PhonePe for real status
     // ============================================
     async verifyStatus(userId, orderId) {
         const localId = paymentService._extractLocalId(orderId);
@@ -290,17 +250,67 @@ const paymentService = {
         const order = await prisma.paymentOrder.findFirst({
             where: { id: localId, userId }
         });
+
         if (!order) {
             const error = new Error('Payment not found.');
             error.code = 'PAYMENT_NOT_FOUND';
             throw error;
         }
 
-        return { order: paymentService._formatOrder(order) };
+        // Already settled → return as-is
+        if (order.status === 'PAID') {
+            return { order: paymentService._formatOrder(order) };
+        }
+
+        // Query PhonePe for latest status
+        try {
+            console.log('🔍 [verifyStatus] Querying PhonePe for:', order.paytmOrderId);
+
+            // The SDK exposes order status via `client.getOrderStatus(merchantOrderId)`
+            const statusResponse = await phonepe.client.getOrderStatus(order.paytmOrderId);
+
+            console.log('📥 [verifyStatus] PhonePe raw response:', JSON.stringify(statusResponse));
+
+            // PhonePe may return { state, orderId, amount, transactionId, ... }
+            // or { data: { state, ... } } depending on SDK version
+            const data = statusResponse?.data || statusResponse;
+            const state = data?.state;
+            const paymentDetails = data?.paymentDetails || [];
+            const latestPayment = paymentDetails[0] || data;
+
+            if (state === 'COMPLETED') {
+                const settlePayload = {
+                    orderId: order.paytmOrderId,
+                    state: 'COMPLETED',
+                    amount: latestPayment?.amount || Math.round(parseFloat(order.amount) * 100),
+                    transactionId: latestPayment?.transactionId || data?.transactionId || `PS_${Date.now()}`
+                };
+
+                console.log('💰 [verifyStatus] Settling order with:', JSON.stringify(settlePayload));
+
+                await paymentService.settlePayment(order.id, settlePayload, null);
+
+                const refreshed = await prisma.paymentOrder.findUnique({
+                    where: { id: order.id }
+                });
+                return { order: paymentService._formatOrder(refreshed) };
+            }
+
+            if (state === 'FAILED') {
+                await paymentService.markFailed(order.id, data);
+            }
+
+        } catch (err) {
+            console.warn('⚠️ [verifyStatus] PhonePe query failed:', err.message);
+        }
+
+        // Return the (unchanged) order
+        const refreshed = await prisma.paymentOrder.findUnique({ where: { id: order.id } });
+        return { order: paymentService._formatOrder(refreshed) };
     },
 
     // ============================================
-    // CANCEL ORDER (TTD §8)
+    // CANCEL ORDER
     // ============================================
     async cancelOrder(userId, orderId) {
         const localId = paymentService._extractLocalId(orderId);
@@ -312,11 +322,9 @@ const paymentService = {
             error.code = 'PAYMENT_NOT_FOUND';
             throw error;
         }
-        // CN-03: already cancelled → idempotent
         if (order.status === 'CANCELLED') {
             return { order: paymentService._formatOrder(order) };
         }
-        // CN-01, CN-02: only INITIATED / CREATED can be cancelled
         if (!['INITIATED', 'CREATED'].includes(order.status)) {
             const error = new Error(`Cannot cancel order in state ${order.status}.`);
             error.code = 'INVALID_PAYMENT_STATE';
@@ -331,7 +339,7 @@ const paymentService = {
     },
 
     // ============================================
-    // LIST ORDERS (TTD §16)
+    // LIST ORDERS
     // ============================================
     async getOrders(userId, { page = 1, limit = 10 } = {}) {
         if (!Number.isInteger(page) || page < 1) {
@@ -364,7 +372,7 @@ const paymentService = {
     },
 
     // ============================================
-    // GET SINGLE ORDER (TTD §17)
+    // GET SINGLE ORDER
     // ============================================
     async getOrder(userId, orderId) {
         const localId = paymentService._extractLocalId(orderId);
@@ -393,7 +401,6 @@ const paymentService = {
         return match ? parseInt(match[1], 10) : NaN;
     },
 
-    // TTD §18, §19 — fixed shape, adapted for Paytm
     _formatOrder(o) {
         return {
             orderId: `po_${o.id}`,
@@ -409,7 +416,6 @@ const paymentService = {
         };
     },
 
-    // TTD §18
     _mapStatus(dbStatus) {
         const map = {
             INITIATED: 'PROCESSING',

@@ -336,7 +336,7 @@
 
   <div class="page-title">
     <h1>Add Money</h1>
-    <p>Top up your wallet using Paytm</p>
+    <p>Top up your wallet using PhonePe</p>
   </div>
 
   <div id="loadingState" style="text-align: center; padding: 80px 0;">
@@ -384,7 +384,7 @@
     <div class="info-box">
       <i class="bi bi-info-circle-fill"></i>
       <div>
-        You will be redirected to <strong>Paytm</strong> to complete the payment.
+        You will be redirected to <strong>PhonePe</strong> to complete the payment.
         Your wallet will be credited in INR once payment succeeds.
       </div>
     </div>
@@ -396,7 +396,7 @@
 
     <button class="btn btn-primary" id="createOrderBtn" style="margin-top:20px;">
       <i class="bi bi-credit-card"></i>
-      <span id="createBtnText">Continue to Paytm</span>
+      <span id="createBtnText">Continue to PhonePe</span>
     </button>
   </div>
 </main>
@@ -405,7 +405,7 @@
   // ============================================
   // CONFIG
   // ============================================
-  const API_BASE = 'http://localhost:5000/api';
+  const API_BASE = 'https://api.digitalwallet.dpdns.org/api';
   const MIN_INR = 10.00;
   const MAX_INR = 50000.00;
 
@@ -418,7 +418,6 @@
   const msgBox          = document.getElementById('msgBox');
 
   let token = null;
-  let hasWallet = false;
 
   // ============================================
   // INIT
@@ -478,11 +477,11 @@
       const wallet = data?.data?.wallet;
 
       if (!wallet) {
-        document.getElementById('noWalletState').style.display = 'block';
+        // redirect to create wallet
+        window.location.href = '../wallet/create-wallet.html';
         return;
       }
 
-      hasWallet = true;
       document.getElementById('formState').style.display = 'block';
       attachAmountInput();
       attachQuickButtons();
@@ -580,15 +579,14 @@
       'IDEMPOTENCY_KEY_REQUIRED': 'Internal error. Please refresh the page.',
       'IDEMPOTENCY_KEY_MISMATCH': 'Session conflict. Please refresh and try again.',
       'RATE_LIMIT_EXCEEDED':      'Too many requests. Please wait a moment.',
-      'PAYMENT_PROVIDER_ERROR':   'Paytm could not process this request. Please try again.',
-      'PAYMENT_PROVIDER_TIMEOUT': 'Paytm did not respond. Please try again.',
+      'PAYMENT_PROVIDER_ERROR':   'PhonePe could not process this request. Please try again.',
       'INTERNAL_ERROR':           'Something went wrong. Please try again.'
     };
     return map[code] || fallback || 'Could not create order. Please try again.';
   }
 
   // ============================================
-  // CREATE ORDER
+  // CREATE ORDER — now redirects to PhonePe
   // ============================================
   function attachCreateOrder() {
     createOrderBtn.addEventListener('click', async () => {
@@ -630,36 +628,36 @@
           const message = mapErrorToMessage(data.error, data.message);
           showMsg(message, 'error');
           createOrderBtn.disabled = false;
-          createBtnText.innerHTML = '<i class="bi bi-credit-card"></i> Continue to Paytm';
+          createBtnText.innerHTML = '<i class="bi bi-credit-card"></i> Continue to PhonePe';
           return;
         }
 
-        // Backend returns { order, paytmForm }
+        // NEW: backend returns { order, redirectUrl }
         const responseData = data.data || data;
         const createdOrder = responseData.order || responseData;
-        const paytmForm    = responseData.paytmForm;
+        const redirectUrl  = responseData.redirectUrl;
 
-        if (!paytmForm) {
-          showMsg('Server did not return a Paytm form. Please try again.', 'error');
+        if (!redirectUrl) {
+          showMsg('Server did not return a PhonePe URL. Please try again.', 'error');
           createOrderBtn.disabled = false;
-          createBtnText.innerHTML = '<i class="bi bi-credit-card"></i> Continue to Paytm';
+          createBtnText.innerHTML = '<i class="bi bi-credit-card"></i> Continue to PhonePe';
           return;
         }
 
-        showMsg('Order created. Redirecting to checkout...', 'success');
-
+        // Save the order for the verify page
         sessionStorage.setItem('pendingOrder', JSON.stringify(createdOrder));
-        sessionStorage.setItem('paytmForm', JSON.stringify(paytmForm));
 
-        setTimeout(() => {
-          window.location.href = `checkout.html?orderId=${createdOrder.orderId}`;
-        }, 700);
+        showMsg('Order created. Redirecting to PhonePe...', 'success');
+        createBtnText.innerHTML = '<span class="spinner"></span> Redirecting...';
+
+        // Redirect whole browser to PhonePe's hosted checkout page
+        window.location.href = redirectUrl;
 
       } catch (err) {
         console.error(err);
         showMsg('Cannot reach backend. Please check your connection.', 'error');
         createOrderBtn.disabled = false;
-        createBtnText.innerHTML = '<i class="bi bi-credit-card"></i> Continue to Paytm';
+        createBtnText.innerHTML = '<i class="bi bi-credit-card"></i> Continue to PhonePe';
       }
     });
   }

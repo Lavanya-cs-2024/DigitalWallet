@@ -1,6 +1,7 @@
 // modules/auth/auth.routes.js
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 
 // Controllers
 const authController = require('./auth.controller');
@@ -149,5 +150,37 @@ router.post(
     validate(changePasswordSchema),
     authController.changePassword
 );
+
+// ============================================
+// GOOGLE OAUTH ROUTES
+// ============================================
+
+/**
+ * @route   GET /api/auth/google
+ * @desc    Redirect user to Google consent screen
+ * @access  Public
+ */
+router.get(
+    '/google',
+    passport.authenticate('google', {
+        scope: ['profile', 'email'],
+        session: false
+    })
+);
+
+/**
+ * @route   GET /api/auth/google/callback
+ * @desc    Google redirects here after consent
+ * @access  Public
+ */
+router.get(
+    '/google/callback',
+    passport.authenticate('google', {
+        session: false,
+        failureRedirect: 'https://www.digitalwallet.dpdns.org/pages/login.html?error=google_failed'
+    }),
+    authController.googleCallback
+);
+
 
 module.exports = router;

@@ -1,87 +1,65 @@
-// ============================================
-// PAYMENT WEBHOOK — Paytm Events
-// ============================================
-// TTD alignment:
-//   §9  — webhook is public, checksum-authenticated
-//   §11 — WebhookEvent row inserted INSIDE settlement tx
-//   §13 — REVIEW_REQUIRED written outside rollback tx (in service)
-//   §22 — dedup via unique (provider, eventId)
-//
-//   §10 — NOT APPLICABLE to Paytm. Paytm sends a single final webhook
-//         (TXN_SUCCESS or TXN_FAILURE). There is no "approved but
-//         not yet captured" branch, and no auto-capture. Invariants
-//         I-17 and I-18 are trivially satisfied.
-// ============================================
-const prisma = require('../../config/prisma');
-const paytm  = require('../../config/paytm');
+// src/modules/payment/payment.webhook.js
+const phonepe = require('../../config/phonepe');
 const paymentService = require('./payment.service');
+const prisma = require('../../config/prisma');
 
 const paymentWebhook = {
-
-    // ============================================
-    // HANDLE WEBHOOK (TTD §9)
-    // ============================================
     handleWebhook: async (req, res) => {
+        console.log('🔔 [webhook] Hit');
+        console.log('   auth header:', req.headers.authorization ? 'present' : 'missing');
+        console.log('   body keys:', Object.keys(req.body || {}));
+
         try {
-            // ---------- cheap structure checks first ----------
-            const body = req.body || {};
-            if (!body.ORDERID || !body.TXNID || !body.STATUS) {
+            const authorization = req.headers['authorization'];
+            const responseBody = req.body;
+
+            if (!authorization || !responseBody) {
                 return res.status(400).json({
                     error: 'INVALID_WEBHOOK',
-                    message: 'Missing ORDERID / TXNID / STATUS'
+                    message: 'Missing authorization or body'
                 });
             }
 
-            // ---------- checksum verification (auth) ----------
-            const isValid = await paytm.verifyChecksum(body);
-            if (!isValid) {
-                return res.status(401).json({
-                    error: 'INVALID_WEBHOOK',
-                    message: 'Checksum verification failed'
-                });
+            // Verify signature using PhonePe SDK
+            const callbackResponse = phonepe.client.validateCallback(
+                phonepe.webhookUsername,
+                phonepe.webhookPassword,
+                authorization,
+                JSON.stringify(responseBody)
+            );
+
+            console.log('   ✅ signature verified');
+            console.log('   event type:', callbackResponse.type);
+
+            const { type, payload } = callbackResponse;
+
+            if (type !== 'PG_ORDER_COMPLETED' && type !== 'PG_ORDER_FAILED') {
+                return res.status(200).json({ success: true, message: 'Ignored event type' });
             }
 
-            // ---------- find local order (WH-08) ----------
+            const merchantOrderId = payload.originalMerchantOrderId;
             const order = await prisma.paymentOrder.findUnique({
-                where: { paytmOrderId: body.ORDERID }
+                where: { paytmOrderId: merchantOrderId }
             });
+
             if (!order) {
-                // ack — don't make Paytm retry for unknown orders
-                return res.status(200).json({ success: true, ignored: 'order not found' });
+                console.log('   ⚠️ order not found for:', merchantOrderId);
+                return res.status(200).json({ success: true, message: 'Order not found' });
             }
 
-            // ---------- deduplicate (WH-10, WH-15) ----------
-            const existing = await prisma.webhookEvent.findUnique({
-                where: {
-                    provider_eventId: {
-                        provider: 'paytm',
-                        eventId: body.TXNID
-                    }
-                }
-            });
-            if (existing && order.status === 'PAID') {
-                return res.status(200).json({ success: true, message: 'Duplicate, ignored' });
-            }
+            console.log('   matched order: po_' + order.id);
 
-            // ---------- route by final status ----------
-            if (body.STATUS === 'TXN_SUCCESS') {
-                if (order.status === 'PAID') {
-                    // WH-09
-                    return res.status(200).json({ success: true, message: 'Already settled' });
-                }
-                // D20: settle even if local state is CANCELLED / EXPIRED / FAILED
-                // §11: TXNID passed as webhookEventId → WebhookEvent inserted inside tx
-                await paymentService.settlePayment(order.id, body, body.TXNID);
-            } else if (body.STATUS === 'TXN_FAILURE') {
-                // WH-13: mark failed only for eligible states
-                await paymentService.markFailed(order.id, body);
+            if (type === 'PG_ORDER_COMPLETED') {
+                await paymentService.settlePayment(order.id, payload, payload.orderId);
+                console.log('   ✅ settled');
+            } else if (type === 'PG_ORDER_FAILED') {
+                await paymentService.markFailed(order.id, payload);
+                console.log('   ✅ marked failed');
             }
-            // unknown / pending status → ignore
 
             return res.status(200).json({ success: true });
         } catch (error) {
-            console.error('Webhook error:', error);
-            // WH-20: DB failure → 500 → Paytm retries
+            console.error('❌ [webhook] Error:', error.message);
             return res.status(500).json({
                 error: 'INTERNAL_ERROR',
                 message: error.message

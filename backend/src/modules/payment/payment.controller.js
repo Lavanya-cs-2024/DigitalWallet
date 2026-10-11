@@ -1,21 +1,10 @@
 // ============================================
-// PAYMENT CONTROLLER — HTTP Handling (Paytm)
-// ============================================
-// TTD alignment:
-//   §2  — error codes → HTTP statuses
-//   §5  — create-order
-//   §8  — cancel-order
-//   §9  — callback (browser) + webhook (server-to-server)
-//   §16 — list orders
-//   §17 — get single order
-//
-//   §7 is N/A — Paytm has no capture step.
-//   §10 is N/A — Paytm has no approval webhook.
+// PAYMENT CONTROLLER — HTTP Handling (PhonePe)
 // ============================================
 const paymentService = require('./payment.service');
 const paymentWebhook = require('./payment.webhook');
 const { HTTP_STATUS } = require('../../config/constants');
-const paytm = require('../../config/paytm');
+const phonepe = require('../../config/phonepe');
 const prisma = require('../../config/prisma');
 
 const paymentController = {
@@ -37,7 +26,7 @@ const paymentController = {
                 success: true,
                 data: {
                     order: paymentService._formatOrder(result.order),
-                    paytmForm: result.form   // { action, params, checksum }
+                    redirectUrl: result.redirectUrl
                 }
             };
 
@@ -57,71 +46,79 @@ const paymentController = {
             if (error.code === 'WALLET_NOT_FOUND') {
                 return res.status(404).json({ error: error.code, message: error.message });
             }
+            if (error.code === 'PAYMENT_PROVIDER_ERROR') {
+                return res.status(502).json({ error: error.code, message: error.message });
+            }
             next(error);
         }
     },
 
     // ============================================
-    // PAYTM CALLBACK — browser redirect after payment
+    // PHONEPE CALLBACK — user's browser redirects here
     // ============================================
-    // Paytm POSTs the full transaction result to this endpoint, then
-    // we redirect the user's browser to the frontend verify page.
-    // ============================================
-    paytmCallback: async (req, res) => {
+    phonepeCallback: async (req, res) => {
+        const frontendBase = 'https://www.digitalwallet.dpdns.org';
+
+        console.log('🔔 [phonepeCallback] GET hit');
+        console.log('   query:', JSON.stringify(req.query));
+        console.log('   headers:', JSON.stringify({
+            referer: req.headers.referer,
+            'user-agent': req.headers['user-agent']
+        }));
+
+        let targetUrl;
+
         try {
-            const body = req.body || {};
-            const orderId = body.ORDERID;
+            const merchantOrderId =
+                req.query.merchantOrderId ||
+                req.query.orderId ||
+                null;
 
-            const frontendBase =
-                process.env.FRONTEND_BASE_URL || 'http://localhost:5000';
+            let order = null;
 
-            // verify checksum
-            const isValid = await paytm.verifyChecksum(body);
-            if (!isValid) {
-                return res.redirect(
-                    `${frontendBase}/payment/verify-payment.html?orderId=${orderId || ''}&status=failed`
-                );
-            }
+            if (merchantOrderId) {
+                order = await prisma.paymentOrder.findUnique({
+                    where: { paytmOrderId: merchantOrderId }
+                });
 
-            // find local order
-            const order = await prisma.paymentOrder.findUnique({
-                where: { paytmOrderId: orderId }
-            });
-            if (!order) {
-                return res.redirect(
-                    `${frontendBase}/payment/verify-payment.html?status=notfound`
-                );
-            }
-
-            // final state
-            if (body.STATUS === 'TXN_SUCCESS') {
-                try {
-                    await paymentService.settlePayment(order.id, body, null);
-                } catch (err) {
-                    console.error('Callback settlement error:', err.message);
+                if (order) {
+                    console.log('   matched by merchantOrderId:', `po_${order.id}`);
                 }
-                return res.redirect(
-                    `${frontendBase}/payment/verify-payment.html?orderId=po_${order.id}&status=paid`
-                );
             }
 
-            // failure
-            await paymentService.markFailed(order.id, body);
-            return res.redirect(
-                `${frontendBase}/payment/verify-payment.html?orderId=po_${order.id}&status=failed`
-            );
+            // Fallback: newest order in the last 10 minutes
+            if (!order) {
+                order = await prisma.paymentOrder.findFirst({
+                    where: {
+                        status: { in: ['CREATED', 'PAID'] },
+                        createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) }
+                    },
+                    orderBy: { createdAt: 'desc' }
+                });
+                console.log('   fallback lookup:', order ? `po_${order.id}` : 'none');
+            }
+
+            if (order) {
+                targetUrl = `${frontendBase}/payment/verify-payment.html?orderId=po_${order.id}&status=pending`;
+            } else {
+                targetUrl = `${frontendBase}/payment/verify-payment.html?status=notfound`;
+            }
+
+            console.log('   ✅ redirecting to:', targetUrl);
+            return res.redirect(targetUrl);
+
         } catch (err) {
-            console.error('Paytm callback error:', err);
-            return res.status(500).send('Callback processing error.');
+            console.error('❌ [phonepeCallback] Error:', err);
+            return res.redirect(
+                `${frontendBase}/payment/verify-payment.html?status=error`
+            );
         }
     },
 
     // ============================================
-    // PAYTM WEBHOOK — server-to-server notification
+    // PHONEPE WEBHOOK — server-to-server notification
     // ============================================
-    // Thin wrapper that delegates to payment.webhook.js
-    // ============================================
-    paytmWebhook: async (req, res) => {
+    phonepeWebhook: async (req, res) => {
         return paymentWebhook.handleWebhook(req, res);
     },
 
@@ -166,7 +163,7 @@ const paymentController = {
     },
 
     // ============================================
-    // LIST ORDERS (TTD §16)
+    // LIST ORDERS
     // ============================================
     getOrders: async (req, res, next) => {
         try {
@@ -185,7 +182,7 @@ const paymentController = {
     },
 
     // ============================================
-    // GET SINGLE ORDER (TTD §17)
+    // GET SINGLE ORDER
     // ============================================
     getOrder: async (req, res, next) => {
         try {

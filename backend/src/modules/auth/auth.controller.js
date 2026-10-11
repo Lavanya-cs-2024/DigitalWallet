@@ -341,7 +341,32 @@ forgotPassword: async (req, res, next) => {
         } catch (error) {
             next(error);
         }
+    },
+
+    // =============================================
+    // GOOGLE CALLBACK
+    // =============================================
+// =============================================
+// GOOGLE CALLBACK
+// =============================================
+googleCallback: async (req, res) => {
+    try {
+        const result = await authService.googleLogin(req.user, req);
+
+        const frontendUrl = 'https://www.digitalwallet.dpdns.org';
+        const params = new URLSearchParams({
+            accessToken:  result.accessToken,
+            refreshToken: result.refreshToken,
+            user:   encodeURIComponent(JSON.stringify(result.user)),
+            wallet: result.wallet ? encodeURIComponent(JSON.stringify(result.wallet)) : ''
+        });
+
+        res.redirect(`${frontendUrl}/pages/auth-callback.html?${params.toString()}`);
+    } catch (err) {
+        console.error('❌ googleCallback error:', err);
+        res.redirect('https://www.digitalwallet.dpdns.org/pages/login.html?error=google_failed');
     }
+}
 };
 
 module.exports = authController;

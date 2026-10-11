@@ -1,30 +1,14 @@
-// ============================================
-// PAYMENT CONFIG CONTROLLER — Public Config
-// ============================================
-// TTD alignment:
-//   Exposes only non-secret values. Merchant key never leaves the server.
-//   The frontend no longer builds the payment form itself — it POSTs to
-//   /create-order and receives ready-to-submit Paytm params.
-// ============================================
-const paytm = require('../../config/paytm');
-
+// src/modules/payment/payment.config.controller.js
 const paymentConfigController = {
-
-    // ============================================
-    // GET PAYMENT CONFIG
-    // ============================================
     getPaymentConfig: (req, res) => {
         res.status(200).json({
             success: true,
             data: {
-                provider: 'paytm',
-                environment: paytm.ENV,
-                mode: paytm.IS_PRODUCTION ? 'production' : 'sandbox',
+                provider: 'phonepe',
+                environment: process.env.PHONEPE_ENV || 'sandbox',
                 currency: 'INR',
-                minAmount: paytm.MIN_INR,
-                maxAmount: paytm.MAX_INR,
-                mid: paytm.MID,
-                website: paytm.WEBSITE
+                minAmount: 10.00,
+                maxAmount: 50000.00
             }
         });
     }

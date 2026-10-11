@@ -52,6 +52,9 @@ const authService = {
         const passwordHash = await hashPassword(password);
         
         // Create user (email stored lowercase)
+        // ⚠️ NOTE: NO wallet is created here.
+        // The wallet is created ONLY when the user explicitly calls
+        // POST /api/wallet (i.e., submits the create-wallet.html form).
         const user = await prisma.user.create({
             data: {
                 name,
@@ -202,6 +205,11 @@ const authService = {
         }
 
         // Complete verification
+        // ⚠️ REMOVED: prisma.wallet.create({...})
+        // The wallet is NOT auto-created on email verification.
+        // Users must explicitly create their wallet via create-wallet.html
+        // (which calls POST /api/wallet → wallet.service.createWallet).
+        // This is where state and alias get collected together with the wallet.
         await prisma.$transaction([
             prisma.oTP.update({
                 where: { id: otpRecord.id },
@@ -212,12 +220,6 @@ const authService = {
                 data: {
                     emailVerified: true,
                     status: USER_STATUS.ACTIVE
-                }
-            }),
-            prisma.wallet.create({
-                data: {
-                    userId: user.id,
-                    balance: 0
                 }
             })
         ]);
@@ -681,13 +683,13 @@ const authService = {
         return { success: true };
     },
 
-    // =============================================
+       // =============================================
     // REFRESH TOKEN
     // =============================================
     async refreshToken({ refreshToken }) {
         const { verifyToken } = require('../../utils/jwt');
         const decoded = verifyToken(refreshToken);
-        
+
         if (!decoded) {
             throw new Error('Invalid refresh token.');
         }
@@ -709,7 +711,92 @@ const authService = {
             accessToken,
             refreshToken: newRefreshToken
         };
+    },   // ← comma! (because googleLogin follows)
+
+    // =============================================
+    // GOOGLE LOGIN - Complete Flow
+    // =============================================
+    async googleLogin(profile, req = {}) {
+        const email = profile.emails?.[0]?.value?.toLowerCase().trim();
+        const googleId = profile.id;
+        const name = profile.displayName || email.split('@')[0];
+        const profilePicture = profile.photos?.[0]?.value;
+
+        let user = await prisma.user.findUnique({
+            where: { email },
+            include: { wallet: true }
+        });
+
+        if (!user) {
+            // Brand new Google user — no password, no mobile, no state, no alias
+            user = await prisma.user.create({
+                data: {
+                    name,
+                    email,
+                    googleId,
+                    authProvider: 'google',
+                    profilePicture,
+                    emailVerified: true,
+                    status: USER_STATUS.ACTIVE
+                },
+                include: { wallet: true }
+            });
+
+            await logSecurityEvent(
+                user.id,
+                'USER_REGISTERED_GOOGLE',
+                `Google user ${email} registered`,
+                req.ip || 'unknown',
+                req.headers?.['user-agent'] || 'unknown'
+            );
+        } else if (!user.googleId) {
+            // Existing local user — link the Google account
+            user = await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    googleId,
+                    authProvider: 'google',
+                    profilePicture,
+                    emailVerified: true
+                },
+                include: { wallet: true }
+            });
+        }
+
+        // Bump login count
+        const loginCount = (user.loginCount || 0) + 1;
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { loginCount }
+        });
+
+        // Log security event
+        await logSecurityEvent(
+            user.id,
+            'LOGIN_SUCCESS_GOOGLE',
+            `Google login for ${user.email}`,
+            req.ip || 'unknown',
+            req.headers?.['user-agent'] || 'unknown'
+        );
+
+        // Generate JWT (same shape as email/password login)
+        const { accessToken, refreshToken } = generateTokens({
+            userId: user.id,
+            email: user.email
+        });
+
+        const { passwordHash: _, ...userWithoutPassword } = user;
+
+        return {
+            user: userWithoutPassword,
+            wallet: user.wallet,
+            accessToken,
+            refreshToken,
+            loginCount,
+            isFirstLogin: loginCount === 1
+        };
     }
-};
+
+};   // ← this closes authService
 
 module.exports = authService;

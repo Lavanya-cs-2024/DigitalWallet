@@ -9,78 +9,123 @@ const walletService = {
     // ============================================
     // CREATE WALLET
     // ============================================
-    async createWallet(userId, { alias, state }, req = {}) {
-        // user must exist
-        const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (!user) {
-            const error = new Error('User not found.');
-            error.code = 'USER_NOT_FOUND';
+// ============================================
+// CREATE WALLET
+// ============================================
+async createWallet(userId, { alias, state, mobile }, req = {}) {
+    // 1. user must exist
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        const error = new Error('User not found.');
+        error.code = 'USER_NOT_FOUND';
+        throw error;
+    }
+
+    // 2. one user → one wallet
+    const existingWallet = await prisma.wallet.findUnique({ where: { userId } });
+    if (existingWallet) {
+        const error = new Error('Wallet already exists for this user.');
+        error.code = 'WALLET_ALREADY_EXISTS';
+        throw error;
+    }
+
+    // 3. normalize alias + state
+    const normalizedAlias = alias.toLowerCase().trim();
+    const normalizedState = state.trim();
+
+    // 4. alias must be unique — checked on USER model
+    const aliasTaken = await prisma.user.findUnique({
+        where: { alias: normalizedAlias }
+    });
+    if (aliasTaken) {
+        const error = new Error('This alias is already taken.');
+        error.code = 'ALIAS_TAKEN';
+        throw error;
+    }
+
+    // ============================================
+    // 5. MOBILE HANDLING
+    // ============================================
+    // Rules:
+    //   - user.mobile is null (Google OAuth) → mobile is REQUIRED + must be unique
+    //   - user.mobile is set (email signup)  → mobile is IGNORED (never overwritten)
+    let mobileToSave = user.mobile; // default: keep existing
+
+    if (!user.mobile) {
+        // Google OAuth user needs to provide mobile
+        if (!mobile || !mobile.trim()) {
+            const error = new Error('Mobile number is required.');
+            error.code = 'MOBILE_REQUIRED';
             throw error;
         }
 
-        // one user → one wallet
-        const existingWallet = await prisma.wallet.findUnique({
-            where: { userId }
+        const trimmedMobile = mobile.trim();
+
+        // validate format
+        if (!/^[6-9]\d{9}$/.test(trimmedMobile)) {
+            const error = new Error('Invalid mobile number format.');
+            error.code = 'INVALID_MOBILE';
+            throw error;
+        }
+
+        // ✨ NEW: check mobile uniqueness across all users
+        const mobileTaken = await prisma.user.findUnique({
+            where: { mobile: trimmedMobile }
         });
-        if (existingWallet) {
-            const error = new Error('Wallet already exists for this user.');
-            error.code = 'WALLET_ALREADY_EXISTS';
+        if (mobileTaken && mobileTaken.id !== userId) {
+            const error = new Error('This mobile number is already registered.');
+            error.code = 'MOBILE_TAKEN';
             throw error;
         }
 
-        // normalize alias + state
-        const normalizedAlias = alias.toLowerCase().trim();
-        const normalizedState = state.trim();
+        mobileToSave = trimmedMobile;
+    }
 
-        // alias must be unique — checked on USER model
-        const aliasTaken = await prisma.user.findUnique({
-            where: { alias: normalizedAlias }
-        });
-        if (aliasTaken) {
-            const error = new Error('This alias is already taken.');
-            error.code = 'ALIAS_TAKEN';
-            throw error;
-        }
+    // ============================================
+    // 6. ATOMIC TRANSACTION — wallet + user update
+    // ============================================
+    const userUpdateData = {
+        alias: normalizedAlias,
+        state: normalizedState
+    };
 
-        // atomic transaction — wallet + user updated together
-        const [wallet] = await prisma.$transaction([
-            prisma.wallet.create({
-                data: {
-                    userId,
-                    balance: 0
-                }
-            }),
-            prisma.user.update({
-                where: { id: userId },
-                data: {
-                    alias: normalizedAlias,
-                    state: normalizedState
-                }
-            })
-        ]);
+    // Only update mobile if it's newly provided (not overwriting)
+    if (mobileToSave && mobileToSave !== user.mobile) {
+        userUpdateData.mobile = mobileToSave;
+    }
 
-        // log security event
-        await logSecurityEvent(
-            userId,
-            'WALLET_CREATED',
-            `Wallet created with alias @${normalizedAlias}`,
-            req.ip || 'unknown',
-            req.headers?.['user-agent'] || 'unknown'
-        );
+    const [wallet] = await prisma.$transaction([
+        prisma.wallet.create({
+            data: { userId, balance: 0 }
+        }),
+        prisma.user.update({
+            where: { id: userId },
+            data: userUpdateData
+        })
+    ]);
 
-        return {
-            id: wallet.id,
-            walletId: `wal_${wallet.id}`,
-            alias: normalizedAlias,
-            state: normalizedState,
-            balance: parseFloat(wallet.balance),
-            currency: 'INR',
-            status: 'ACTIVE',
-            createdAt: wallet.createdAt,
-            message: 'Wallet created successfully.'
-        };
-    },
+    // 7. log security event
+    await logSecurityEvent(
+        userId,
+        'WALLET_CREATED',
+        `Wallet created with alias @${normalizedAlias}` +
+            (mobileToSave !== user.mobile ? ' (mobile saved)' : ''),
+        req.ip || 'unknown',
+        req.headers?.['user-agent'] || 'unknown'
+    );
 
+    return {
+        id: wallet.id,
+        walletId: `wal_${wallet.id}`,
+        alias: normalizedAlias,
+        state: normalizedState,
+        balance: parseFloat(wallet.balance),
+        currency: 'INR',
+        status: 'ACTIVE',
+        createdAt: wallet.createdAt,
+        message: 'Wallet created successfully.'
+    };
+},
     // ============================================
     // GET WALLET
     // ============================================

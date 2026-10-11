@@ -284,7 +284,7 @@
 </main>
 
 <script>
-  const API_BASE = 'http://localhost:5000/api';
+  const API_BASE = 'https://api.digitalwallet.dpdns.org/api';
   const POLL_INTERVAL = 3000;
   const POLL_MAX = 20;
 
@@ -294,17 +294,24 @@
   let pollTimer = null;
 
   const msgBox = document.getElementById('msgBox');
-
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     token = localStorage.getItem('accessToken');
-    if (!token) { window.location.href = '../pages/login.html'; return; }
-
-    fillSidebarUser();
-    attachLogout();
 
     const params = new URLSearchParams(window.location.search);
     orderId = params.get('orderId');
     const statusParam = params.get('status');
+
+    // ✅ FIX: If no token, save the order ID and send user to login
+    if (!token) {
+        if (orderId) {
+            localStorage.setItem('pendingVerifyOrderId', orderId);
+        }
+        window.location.href = '../pages/login.html';
+        return;
+    }
+
+    fillSidebarUser();
+    attachLogout();
 
     if (!orderId) {
       showMsg('Missing order ID.', 'error');
@@ -320,7 +327,7 @@
     }
 
     document.getElementById('verifyBtn').addEventListener('click', verifyStatusNow);
-  });
+});
 
   function fillSidebarUser() {
     try {
