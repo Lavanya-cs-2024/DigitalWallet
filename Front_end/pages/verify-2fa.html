@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet — Two-Factor Authentication</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/auth.css">
+
+  <style>
+    /* Add some custom styling for the big OTP input */
+    .otp-input {
+      width: 100%; padding: 16px; text-align: center;
+      font-size: 28px; letter-spacing: 8px; font-family: monospace;
+      background: var(--field-bg); border: 1px solid var(--stroke);
+      border-radius: 12px; color: var(--text-hi); outline: none;
+      transition: 0.2s; margin-bottom: 20px;
+    }
+    .otp-input:focus {
+      border-color: var(--magenta); box-shadow: 0 0 0 3px rgba(230, 60, 194, 0.15);
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-container">
+  <a href="../index.html" class="brand">
+    <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+    SplitWise
+  </a>
+
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="icon-badge"><i class="bi bi-shield-lock-fill"></i></div>
+      <h1>Two-Factor Auth</h1>
+      <p>Enter the 6-digit code from your authenticator app</p>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <form id="verify2FAForm" class="auth-form">
+      <div class="field">
+        <label for="otp">Authentication Code</label>
+        <input type="text" id="otp" class="otp-input" placeholder="000000" maxlength="6" autocomplete="off" autofocus required />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="submitBtn">
+        <i class="bi bi-shield-check"></i> Verify & Login
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <a href="login.html">← Back to Login</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'https://api.digitalwallet.dpdns.org/api';
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const tempToken = params.get('tempToken');
+    const email = params.get('email');
+
+    if (!tempToken) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    document.getElementById('otp').focus();
+
+    document.getElementById('verify2FAForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = document.getElementById('otp').value.trim();
+      const submitBtn = document.getElementById('submitBtn');
+      const alertContainer = document.getElementById('alert-container');
+
+      if (code.length !== 6) {
+        alertContainer.innerHTML = '<div class="alert alert-error">Please enter a 6-digit code.</div>';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verifying...';
+
+      try {
+        const res = await fetch(`${API_BASE}/auth/2fa/login-verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tempToken, code })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          // Success! Store tokens and redirect
+          localStorage.setItem('accessToken', data.data.tokens.accessToken);
+          localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
+          localStorage.setItem('user', JSON.stringify(data.data.user));
+          
+          window.location.href = 'dashboard.html';
+        } else {
+          alertContainer.innerHTML = `<div class="alert alert-error">${data.message || 'Invalid code.'}</div>`;
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="bi bi-shield-check"></i> Verify & Login';
+        }
+      } catch (err) {
+        console.error(err);
+        alertContainer.innerHTML = '<div class="alert alert-error">Network error.</div>';
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-shield-check"></i> Verify & Login';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
