@@ -892,6 +892,76 @@ const authService = {
             tokens: { accessToken, refreshToken },
             user: userWithoutSensitive,
         };
+    },
+        // =============================================
+    // CHANGE PASSWORD - STEP 1: VERIFY CURRENT & SEND OTP
+    // =============================================
+    async requestPasswordChangeOTP(userId) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) throw new Error('User not found');
+
+        // Generate OTP
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + OTP_CONFIG.EXPIRY_MINUTES * 60 * 1000);
+
+        // Invalidate old OTPs for password change
+        await prisma.oTP.updateMany({
+            where: { userId, type: 'PASSWORD_RESET', used: false },
+            data: { used: true }
+        });
+
+        // Store new OTP
+        await prisma.oTP.create({
+            data: {
+                userId,
+                code: otpCode,
+                type: 'PASSWORD_RESET', // Reusing the reset type
+                expiresAt,
+                used: false
+            }
+        });
+
+        // Send email
+        await sendEmail({
+            to: user.email,
+            subject: 'Security Alert: Password Change Requested',
+            html: getPasswordResetTemplate(otpCode, user.name)
+        });
+
+        return { email: user.email };
+    },
+
+    // =============================================
+    // CHANGE PASSWORD - STEP 2: VERIFY OTP & UPDATE
+    // =============================================
+    async confirmPasswordChange(userId, { currentPassword, newPassword, otp }) {
+        const user = await prisma.user.findUnique({ 
+            where: { id: userId },
+            include: { otps: { where: { type: 'PASSWORD_RESET', used: false }, orderBy: { createdAt: 'desc' }, take: 1 } }
+        });
+
+        if (!user) throw new Error('User not found');
+
+        // 1. Verify current password
+        const isValid = await comparePassword(currentPassword, user.passwordHash);
+        if (!isValid) throw new Error('Current password is incorrect');
+
+        // 2. Verify OTP
+        if (user.otps.length === 0) throw new Error('No active OTP found. Please request a new one.');
+        const otpRecord = user.otps[0];
+
+        if (otpRecord.expiresAt < new Date()) throw new Error('OTP has expired');
+        if (otpRecord.code !== otp) throw new Error('Invalid OTP');
+
+        // 3. Update password and mark OTP as used
+        const passwordHash = await hashPassword(newPassword);
+        
+        await prisma.$transaction([
+            prisma.oTP.update({ where: { id: otpRecord.id }, data: { used: true } }),
+            prisma.user.update({ where: { id: userId }, data: { passwordHash } })
+        ]);
+
+        return { success: true };
     }
 
 };   // ← this closes authService

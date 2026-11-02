@@ -213,5 +213,8 @@ router.post(
  */
 router.post('/2fa/login-verify', authController.verify2FALogin);
 
+router.post('/change-password/request-otp', protect, authController.requestPasswordChangeOTP);
+router.post('/change-password/confirm', protect, authController.confirmPasswordChange);
+
 
 module.exports = router;

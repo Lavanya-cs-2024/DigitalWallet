@@ -393,7 +393,7 @@ forgotPassword: async (req, res, next) => {
         }
     },
 
-        verify2FALogin: async (req, res, next) => {
+    verify2FALogin: async (req, res, next) => {
         try {
             const { tempToken, code } = req.body;
             const result = await authService.verify2FALogin(tempToken, code);
@@ -408,7 +408,27 @@ forgotPassword: async (req, res, next) => {
             }
             next(error);
         }
-    }
+    },
+
+    // =============================================
+    // Change Password (Settings)
+    // =============================================
+    requestPasswordChangeOTP: async (req, res, next) => {
+        try {
+            const { userId } = req.user;
+            await authService.requestPasswordChangeOTP(userId);
+            res.status(HTTP_STATUS.OK).json({ success: true, message: 'OTP sent to your email.' });
+        } catch (error) { next(error); }
+    },
+
+    confirmPasswordChange: async (req, res, next) => {
+        try {
+            const { userId } = req.user;
+            const { currentPassword, newPassword, otp } = req.body;
+            await authService.confirmPasswordChange(userId, { currentPassword, newPassword, otp });
+            res.status(HTTP_STATUS.OK).json({ success: true, message: 'Password updated successfully.' });
+        } catch (error) { next(error); }
+    },
 
 };
 

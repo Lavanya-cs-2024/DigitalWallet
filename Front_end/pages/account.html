@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet — My Account</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/wallet.css">
+
+    <style>
+    /* ===== LAYOUT ===== */
+    .account-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ===== PROFILE CARD (Left) ===== */
+    .profile-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--stroke);
+      border-radius: 20px;
+      padding: 36px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 80px;
+      background: linear-gradient(90deg, rgba(124, 58, 237, 0.3), rgba(230, 60, 194, 0.3));
+      z-index: 0;
+    }
+    .profile-avatar {
+      width: 110px; height: 110px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 38px; font-weight: 800; color: #fff;
+      box-shadow: 0 10px 30px -10px rgba(230, 60, 194, 0.6);
+      position: relative;
+      z-index: 1;
+      border: 4px solid #170a24; /* matches background */
+    }
+    .profile-name {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px; font-weight: 700;
+      margin-bottom: 4px;
+      position: relative; z-index: 1;
+    }
+    .profile-email {
+      font-size: 13.5px; color: var(--text-mid);
+      margin-bottom: 20px;
+      position: relative; z-index: 1;
+    }
+    .alias-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(168, 120, 255, 0.1);
+      border: 1px solid var(--stroke-strong);
+      padding: 8px 16px; border-radius: 20px;
+      font-size: 13.5px; font-weight: 600; color: var(--violet-1);
+      position: relative; z-index: 1;
+    }
+    .alias-badge button {
+      background: none; border: none; color: var(--text-mid);
+      cursor: pointer; padding: 0; font-size: 14px; transition: 0.15s;
+    }
+    .alias-badge button:hover { color: var(--text-hi); }
+
+    /* ===== SETTINGS SECTIONS (Right) ===== */
+    .settings-section {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--stroke);
+      border-radius: 20px;
+      padding: 24px 32px;
+      margin-bottom: 24px;
+    }
+    .settings-section h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 18px; font-weight: 700;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
+      color: var(--text-hi);
+    }
+    .settings-section h3 i { color: var(--violet-1); }
+
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px dashed var(--stroke);
+      font-size: 14.5px;
+    }
+    .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .info-label { color: var(--text-low); }
+    .info-value { color: var(--text-hi); font-weight: 500; text-align: right; }
+
+    .badge-success { 
+      background: rgba(94,234,154,0.15); color: var(--success); 
+      padding: 6px 12px; border-radius: 10px; font-size: 11.5px; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+
+    /* ===== TOGGLE SWITCH ===== */
+    .toggle-switch {
+      position: relative; display: inline-block; width: 46px; height: 26px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background-color: rgba(255,255,255,0.1); transition: .4s;
+      border-radius: 26px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 20px; width: 20px;
+      left: 3px; bottom: 3px; background-color: white; transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background: linear-gradient(135deg, var(--violet-1), var(--magenta)); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* ===== MODAL FIXES ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-card {
+      background: linear-gradient(180deg, #1c0f2b, #170a24);
+      border: 1px solid var(--stroke-strong);
+      border-radius: 20px;
+      padding: 28px 32px;
+      width: 100%;
+      box-shadow: 0 30px 80px -20px rgba(70, 10, 120, 0.7);
+      position: relative;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-header h3 { font-family: 'Sora'; font-size: 18px; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--text-mid); cursor: pointer; font-size: 18px; }
+    .modal-close:hover { color: var(--danger); }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-mid); margin-bottom: 6px; }
+    .form-input {
+      width: 100%; padding: 12px 14px;
+      background: var(--field-bg); border: 1px solid var(--stroke);
+      border-radius: 10px; color: var(--text-hi); font-size: 13.5px;
+      outline: none; transition: 0.15s;
+    }
+    .form-input:focus { border-color: var(--magenta); box-shadow: 0 0 0 3px rgba(230, 60, 194, 0.15); }
+
+    @media (max-width: 900px) {
+      .account-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-brand">
+    <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+    <span>DIGITAL WALLET</span>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+    <a href="dashboard.html"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a href="../wallet/wallet.html"><i class="bi bi-wallet2"></i><span>Wallet</span></a>
+    <a href="../wallet/wallet-transactions.html"><i class="bi bi-clock-history"></i><span>Transactions</span></a>
+    <a href="groups.html"><i class="bi bi-people-fill"></i><span>Groups</span></a>
+    <a href="account.html" class="active"><i class="bi bi-person"></i><span>My Account</span></a>
+    <a href="settings.html"><i class="bi bi-gear"></i><span>Settings</span></a>
+    <div class="nav-label" style="margin-top: 12px;">Quick Links</div>
+    <a href="../payment/add-money.html"><i class="bi bi-plus-circle"></i><span>Add Money</span></a>
+    <a href="../payment/payment-history.html"><i class="bi bi-receipt"></i><span>Payment History</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="userAvatar">--</div>
+      <div class="user-info">
+        <div class="name" id="userName">Loading...</div>
+        <div class="email" id="userEmail">loading@example.com</div>
+      </div>
+      <button class="logout-btn" id="logoutBtn"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </div>
+</aside>
+
+<main class="main-content">
+  <div class="page-title" style="margin-bottom: 24px;">
+    <h1>My Account</h1>
+    <p>Manage your personal information and security</p>
+  </div>
+
+  <div class="account-grid">
+    
+    <!-- LEFT: Profile Card -->
+    <div class="profile-card">
+      <div class="profile-avatar" id="profileAvatar">U</div>
+      <div class="profile-name" id="profileName">Loading...</div>
+      <div class="profile-email" id="profileEmail">...</div>
+      
+      <div class="alias-badge">
+        <span id="profileAlias">@loading</span>
+        <button onclick="openAliasModal()" title="Edit Alias"><i class="bi bi-pencil"></i></button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Settings -->
+    <div>
+      <!-- Personal Info -->
+      <div class="settings-section">
+        <h3><i class="bi bi-person-badge"></i> Personal Information</h3>
+        <div class="info-row">
+          <span class="info-label">Full Name</span>
+          <span class="info-value" id="infoName">--</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email Address</span>
+          <span class="info-value" id="infoEmail">--</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Mobile Number</span>
+          <span class="info-value" id="infoMobile">--</span>
+        </div>
+      </div>
+
+      <!-- Security -->
+      <div class="settings-section">
+        <h3><i class="bi bi-shield-lock"></i> Security</h3>
+        
+        <div class="info-row" style="align-items: center;">
+          <div>
+            <div class="info-value" style="text-align: left;">Password</div>
+            <div class="info-label" style="font-size: 12px; margin-top: 4px;">Update your account password</div>
+          </div>
+          <!-- Redirect to the existing page with a query param -->
+          <a href="reset-password.html?from=account" class="btn btn-secondary" style="padding: 6px 14px; font-size: 12px; text-decoration: none;">Change</a>
+        </div>
+
+        <div class="info-row" style="align-items: center;">
+          <div>
+            <div class="info-value" style="text-align: left;">Two-Factor Authentication (2FA)</div>
+            <div class="info-label" style="font-size: 12px; margin-top: 4px;">Secure your account with an authenticator app</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="twoFAToggle" onclick="handle2FAToggle(this)">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="info-row" style="align-items: center;">
+          <div>
+            <div class="info-value" style="text-align: left;">Active Sessions</div>
+            <div class="info-label" style="font-size: 12px; margin-top: 4px;">You are currently logged in on 1 device</div>
+          </div>
+          <span class="badge-success">Current Device</span>
+        </div>
+      </div>
+
+      <!-- Account Status -->
+      <div class="settings-section">
+        <h3><i class="bi bi-info-circle"></i> Account Status</h3>
+        <div class="info-row">
+          <span class="info-label">Email Verification</span>
+          <span class="badge-success"><i class="bi bi-check-circle-fill"></i> Verified</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Wallet Status</span>
+          <span class="info-value" id="infoWalletStatus">--</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Member Since</span>
+          <span class="info-value" id="infoJoined">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="aliasModal">
+  <div class="modal-card" style="max-width: 400px;">
+    <div class="modal-header">
+      <h3>Edit Alias</h3>
+      <button class="modal-close" onclick="document.getElementById('aliasModal').classList.remove('open')"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="form-group">
+      <label>New Alias</label>
+      <input type="text" id="newAlias" class="wallet-input" placeholder="e.g. kavya_2026" style="width: 100%; padding: 12px; background: var(--field-bg); border: 1px solid var(--stroke); border-radius: 8px; color: #fff;">
+      <div id="aliasMsg" style="display: none; font-size: 12px; margin-top: 8px;"></div>
+    </div>
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="btn btn-secondary" onclick="document.getElementById('aliasModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAlias()">Save Alias</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'https://api.digitalwallet.dpdns.org/api';
+  let token = localStorage.getItem('accessToken');
+  let userData = {};
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!token) { window.location.href = 'login.html'; return; }
+    
+    // Load sidebar info
+    fillSidebarUser();
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    // Fetch latest data from backend
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        userData = data.data.user;
+        renderAccount();
+      }
+    } catch (e) { console.error('Failed to load profile', e); }
+  });
+
+  function fillSidebarUser() {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.name) return;
+      document.getElementById('userName').textContent = user.name;
+      document.getElementById('userEmail').textContent = user.email || '';
+      document.getElementById('userAvatar').textContent = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2);
+    } catch (e) {}
+  }
+
+  function renderAccount() {
+    const initials = (userData.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    const joinedDate = new Date(userData.createdAt).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+    
+    // Left Card
+    document.getElementById('profileAvatar').textContent = initials;
+    document.getElementById('profileName').textContent = userData.name;
+    document.getElementById('profileEmail').textContent = userData.email;
+    document.getElementById('profileAlias').textContent = '@' + (userData.alias || 'not_set');
+
+    // Info Rows
+    document.getElementById('infoName').textContent = userData.name;
+    document.getElementById('infoEmail').textContent = userData.email;
+    document.getElementById('infoMobile').textContent = userData.mobile || 'Not linked';
+    document.getElementById('infoWalletStatus').textContent = userData.wallet ? 'Active' : 'Not Created';
+    document.getElementById('infoJoined').textContent = joinedDate;
+
+    // 2FA Toggle
+    const has2FA = userData.twoFA && userData.twoFA.isEnabled;
+    const toggle = document.getElementById('twoFAToggle');
+    toggle.checked = has2FA;
+
+    // Pre-fill alias input
+    document.getElementById('newAlias').value = userData.alias || '';
+  }
+
+  // ============================================
+  // ALIAS UPDATE
+  // ============================================
+  function openAliasModal() {
+    document.getElementById('aliasModal').classList.add('open');
+  }
+
+    async function saveAlias() {
+    const newAlias = document.getElementById('newAlias').value.trim().toLowerCase();
+    const msgBox = document.getElementById('aliasMsg');
+    
+    msgBox.style.display = 'none';
+
+    if (newAlias.length < 6) { 
+      msgBox.textContent = 'Alias must be at least 6 characters';
+      msgBox.style.color = 'var(--danger)';
+      msgBox.style.display = 'block';
+      return; 
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/wallet/alias`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ alias: newAlias })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        // ✅ Show success inline instead of alert
+        msgBox.textContent = '✅ Alias updated successfully!';
+        msgBox.style.color = 'var(--success)';
+        msgBox.style.display = 'block';
+        
+        document.getElementById('profileAlias').textContent = '@' + newAlias;
+        
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        user.alias = newAlias;
+        localStorage.setItem('user', JSON.stringify(user));
+
+        // Hide the modal after 1.5 seconds
+        setTimeout(() => {
+          document.getElementById('aliasModal').classList.remove('open');
+          msgBox.style.display = 'none';
+        }, 1500);
+
+      } else {
+        msgBox.textContent = data.message || 'Failed to update alias';
+        msgBox.style.color = 'var(--danger)';
+        msgBox.style.display = 'block';
+      }
+    } catch (e) { 
+      msgBox.textContent = 'Network error';
+      msgBox.style.color = 'var(--danger)';
+      msgBox.style.display = 'block';
+    }
+  }
+
+  // ============================================
+  // PASSWORD UPDATE
+  // ============================================
+  function openPasswordModal() {
+    document.getElementById('passwordModal').classList.add('open');
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmNewPassword').value = '';
+    document.getElementById('pwdError').style.display = 'none';
+  }
+
+  async function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmNewPassword').value;
+    const errBox = document.getElementById('pwdError');
+
+    if (newPassword !== confirm) {
+      errBox.textContent = 'New passwords do not match';
+      errBox.style.display = 'block';
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      errBox.textContent = 'Password must be at least 8 characters';
+      errBox.style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword: confirm })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        alert('Password changed successfully!');
+        document.getElementById('passwordModal').classList.remove('open');
+      } else {
+        errBox.textContent = data.message || 'Failed to change password';
+        errBox.style.display = 'block';
+      }
+    } catch (e) {
+      errBox.textContent = 'Network error';
+      errBox.style.display = 'block';
+    }
+  }
+
+  // ============================================
+  // 2FA TOGGLE
+  // ============================================
+  function handle2FAToggle(checkbox) {
+    if (checkbox.checked) {
+      // Redirect to setup page
+      window.location.href = 'setup-2fa.html';
+    } else {
+      // If turning off, we would need a backend route for that.
+      // For now, let's just revert the toggle and show a message.
+      alert('To disable 2FA, please contact support.');
+      checkbox.checked = true;
+    }
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+</script>
+</body>
+</html>
