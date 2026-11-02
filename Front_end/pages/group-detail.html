@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet — Group Details</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="../css/groups.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-brand">
+    <span class="brand-mark"><i class="bi bi-wallet2"></i></span>
+    <span>DIGITAL WALLET</span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main Menu</div>
+    <a href="dashboard.html"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a>
+    <a href="../wallet/wallet.html"><i class="bi bi-wallet2"></i><span>Wallet</span></a>
+    <a href="../wallet/wallet-transactions.html"><i class="bi bi-clock-history"></i><span>Transactions</span></a>
+    <a href="groups.html" class="active"><i class="bi bi-people-fill"></i><span>Groups</span></a>
+    <a href="#"><i class="bi bi-person"></i><span>My Account</span></a>
+    <a href="#"><i class="bi bi-gear"></i><span>Settings</span></a>
+
+    <div class="nav-label" style="margin-top: 12px;">Quick Links</div>
+    <a href="../payment/add-money.html"><i class="bi bi-plus-circle"></i><span>Add Money</span></a>
+    <a href="../payment/payment-history.html"><i class="bi bi-receipt"></i><span>Payment History</span></a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="userAvatar">--</div>
+      <div class="user-info">
+        <div class="name" id="userName">Loading...</div>
+        <div class="email" id="userEmail">loading@example.com</div>
+      </div>
+      <button class="logout-btn" id="logoutBtn"><i class="bi bi-box-arrow-right"></i></button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+
+  <div class="back-bar">
+    <a href="groups.html" class="back-btn">
+      <i class="bi bi-arrow-left"></i><span>Back to Groups</span>
+    </a>
+    <nav class="breadcrumb">
+      <a href="dashboard.html">Dashboard</a>
+      <i class="bi bi-chevron-right"></i>
+      <a href="groups.html">Groups</a>
+      <i class="bi bi-chevron-right"></i>
+      <span id="crumbName">Details</span>
+    </nav>
+  </div>
+
+  <div id="loadingState" style="text-align: center; padding: 60px 0;">
+    <div style="width:50px;height:50px;border:3px solid rgba(168,120,255,0.2);border-top-color:var(--magenta);border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
+    <p style="color: var(--text-mid); font-size: 14px;">Loading group...</p>
+  </div>
+
+  <div id="errorState" style="display:none;" class="empty-state">
+    <div class="empty-icon"><i class="bi bi-exclamation-triangle"></i></div>
+    <h3>Could not load group</h3>
+    <p id="errorMessage">Group not found or you don't have access.</p>
+    <a href="groups.html" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back to Groups</a>
+  </div>
+
+  <div id="groupContent" style="display: none;">
+
+    <!-- Group info card -->
+    <div class="group-info-card">
+      <div class="info-content">
+        <h1>
+          <span id="groupNameText">—</span>
+          <span class="role-badge" id="myRoleBadge">MEMBER</span>
+        </h1>
+        <p id="groupDescText">No description</p>
+        <div class="info-meta">
+          <span><i class="bi bi-person-fill"></i> <span id="memberCountText">0</span> members</span>
+          <span><i class="bi bi-receipt"></i> <span id="expenseCountText">0</span> expenses</span>
+          <span><i class="bi bi-calendar"></i> Created <span id="createdAtText">—</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions row -->
+    <div style="display: flex; gap: 10px; margin-bottom: 22px; flex-wrap: wrap;">
+        <button class="btn btn-primary" id="addExpenseBtn" style="background: linear-gradient(135deg, var(--magenta), var(--gold)); border-color: transparent;">
+            <i class="bi bi-receipt"></i> Add Expense
+        </button>
+        <button class="btn btn-primary" id="addMemberBtn" style="display:none;">
+            <i class="bi bi-person-plus-fill"></i> Add Member
+        </button>
+        <button class="btn btn-secondary" id="editGroupBtn" style="display:none;">
+            <i class="bi bi-pencil"></i> Edit Group
+        </button>
+        <button class="btn btn-secondary" id="leaveGroupBtn" style="display:none;">
+            <i class="bi bi-box-arrow-right"></i> Leave Group
+        </button>
+        <button class="btn btn-secondary" id="deleteGroupBtn" style="display:none; color: var(--danger); border-color: rgba(248,113,113,0.3);">
+            <i class="bi bi-trash"></i> Delete Group
+        </button>
+    </div>
+
+    <!-- Members -->
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="bi bi-people-fill"></i> Members</h3>
+        <span class="badge" id="memberCountBadge">0</span>
+      </div>
+      <div class="member-list" id="memberList"></div>
+    </div>
+
+        <!-- Expenses -->
+    <div class="card" style="margin-top: 22px;">
+      <div class="card-header">
+        <h3><i class="bi bi-cash-stack"></i> Group Expenses</h3>
+        <span class="badge" id="expenseCountBadge">0</span>
+      </div>
+      <div class="expense-list" id="expenseList">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- ============================================ -->
+<!-- ADD MEMBER MODAL                              -->
+<!-- ============================================ -->
+<div class="modal-overlay" id="addMemberModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="bi bi-person-plus-fill"></i> Add Member</h3>
+      <button class="modal-close" onclick="document.getElementById('addMemberModal').classList.remove('open')">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="form-group">
+      <label>Search users by name, email, or alias</label>
+      <div class="user-search-box">
+        <div class="input-wrap">
+          <i class="bi bi-search leading" style="position:absolute;left:13px;color:var(--text-low);font-size:15px;"></i>
+          <input type="text" id="userSearchInput" placeholder="Type at least 2 characters..." style="padding-left:38px;" autocomplete="off" />
+        </div>
+        <div class="search-results" id="searchResults"></div>
+      </div>
+    </div>
+
+    <div id="addMemberError" style="display:none; padding: 10px 14px; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); border-radius: 10px; font-size: 12.5px; color: var(--danger);"></div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('addMemberModal').classList.remove('open')">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- EDIT GROUP MODAL                              -->
+<!-- ============================================ -->
+<div class="modal-overlay" id="editGroupModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="bi bi-pencil"></i> Edit Group</h3>
+      <button class="modal-close" onclick="document.getElementById('editGroupModal').classList.remove('open')">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form id="editForm">
+      <div class="form-group">
+        <label for="editName">Group Name <span class="required">*</span></label>
+        <input type="text" id="editName" maxlength="100" required style="width:100%; padding: 11px 14px; background: var(--field-bg); border: 1px solid var(--stroke); border-radius: 11px; color: var(--text-hi); font-size: 13.5px; font-family: 'Inter', sans-serif; outline: none;" />
+      </div>
+
+      <div class="form-group">
+        <label for="editDescription">Description</label>
+        <textarea id="editDescription" maxlength="500"></textarea>
+      </div>
+
+      <div id="editError" style="display:none; padding: 10px 14px; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); border-radius: 10px; font-size: 12.5px; color: var(--danger); margin-bottom: 16px;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('editGroupModal').classList.remove('open')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="submitEditBtn">
+          <i class="bi bi-check-circle"></i> Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- ADD EXPENSE MODAL                             -->
+<!-- ============================================ -->
+<div class="modal-overlay" id="addExpenseModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3><i class="bi bi-receipt"></i> Add Expense</h3>
+      <button class="modal-close" onclick="document.getElementById('addExpenseModal').classList.remove('open')">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form id="expenseForm">
+  <div class="form-group">
+    <input type="text" id="expenseDesc" placeholder="What's this for?" maxlength="255" required style="width:100%; padding:14px; background:var(--field-bg); border:1px solid var(--stroke); border-radius:12px; color:var(--text-hi); font-size:15px;" />
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div class="form-group">
+      <select id="expenseCategory" style="width:100%; padding:12px; background:var(--field-bg); border:1px solid var(--stroke); border-radius:12px; color:var(--text-hi); font-size:13.5px;">
+        <option value="FOOD">🍔 Food</option>
+        <option value="TRAVEL">✈️ Travel</option>
+        <option value="SHOPPING">🛍️ Shopping</option>
+        <option value="ENTERTAINMENT">🎬 Entertainment</option>
+        <option value="OTHER">📦 Other</option>
+      </select>
+    </div>
+    <div class="form-group" style="position: relative;">
+      <span style="position:absolute; left:14px; top:14px; color:var(--text-low); font-size:16px; font-weight:700;">₹</span>
+      <input type="number" id="expenseAmount" placeholder="0.00" min="1" step="0.01" required style="width:100%; padding:14px 14px 14px 32px; background:var(--field-bg); border:1px solid var(--stroke); border-radius:12px; color:var(--text-hi); font-size:18px; font-family:'Sora',sans-serif; font-weight:700;" />
+    </div>
+  </div>
+
+  <div class="form-group" style="margin-top: 10px;">
+    <div class="split-method-tabs">
+      <button type="button" class="split-method-tab active" data-method="EQUAL"><i class="bi bi-people-fill"></i> Equally</button>
+      <button type="button" class="split-method-tab" data-method="EXACT"><i class="bi bi-123"></i> Exact</button>
+      <button type="button" class="split-method-tab" data-method="PERCENT"><i class="bi bi-percent"></i> %</button>
+      <button type="button" class="split-method-tab" data-method="SHARES"><i class="bi bi-pie-chart-fill"></i> Shares</button>
+    </div>
+  </div>
+
+  <div class="participant-list" id="participantsList"></div>
+  
+  <div class="split-footer" id="splitFooter">
+    <span>Total</span>
+    <span id="splitFooterAmount">₹0.00</span>
+  </div>
+
+  <div id="expenseError" style="display:none; padding: 10px; background: rgba(248,113,113,0.1); border-radius: 8px; font-size: 12px; color: var(--danger); margin-top: 12px;"></div>
+
+  <div class="modal-actions" style="margin-top: 20px;">
+    <button type="button" class="btn btn-secondary" onclick="document.getElementById('addExpenseModal').classList.remove('open')">Cancel</button>
+    <button type="submit" class="btn btn-primary" id="submitExpenseBtn">Save Expense</button>
+  </div>
+</form>
+  </div>
+</div>
+
+<!-- EXPENSE DETAILS MODAL -->
+<!-- EXPENSE DETAILS MODAL -->
+<div class="modal-overlay" id="expenseDetailsModal">
+  <div class="modal-card" style="max-width: 450px; background: #170a24;">
+    
+    <!-- Header area -->
+    <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid var(--stroke); margin-bottom: 20px; position: relative;">
+      <button class="modal-close" onclick="document.getElementById('expenseDetailsModal').classList.remove('open')" style="position: absolute; top: 0; right: 0;">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--gold); color: #fff; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;" id="edMainAvatar">
+        K
+      </div>
+      
+      <h2 style="font-family: 'Sora'; font-size: 22px; margin-bottom: 4px;" id="edTitle">Expense Name</h2>
+      
+      <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;" id="edStatusPill">
+        <i class="bi bi-check-circle-fill" style="color: var(--success);"></i> Completed
+      </div>
+    </div>
+
+    <!-- List area -->
+    <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-low); margin-bottom: 16px;">
+      <span id="edProgressCount">0 of 0 paid</span>
+      <span id="edTotal">Total: ₹0.00</span>
+    </div>
+
+    <div id="edList" style="display: flex; flex-direction: column; gap: 4px;"></div>
+    
+    <div id="edPayContainer" style="margin-top: 24px;"></div>
+  </div>
+</div>
+
+<script>
+// ============================================
+// CONFIG
+// ============================================
+const API_BASE = 'https://api.digitalwallet.dpdns.org/api';
+let token = null;
+let groupId = null;
+let currentGroup = null;
+let searchTimer = null;
+let currentSplitMethod = 'EQUAL';
+let expenseMembers = [];
+
+// ============================================
+// INIT
+// ============================================
+document.addEventListener('DOMContentLoaded', async () => {
+  token = localStorage.getItem('accessToken');
+  if (!token) { window.location.href = 'login.html'; return; }
+
+  const params = new URLSearchParams(window.location.search);
+  groupId = parseInt(params.get('id'));
+
+  if (!groupId) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+    document.getElementById('errorMessage').textContent = 'Missing group ID.';
+    return;
+  }
+
+  fillSidebarUser();
+  attachLogout();
+  attachAddMemberModal();
+  attachEditModal();
+  attachDeleteGroup();
+  attachLeaveGroup();
+  attachExpenseModal();
+  
+  await loadGroup();
+});
+
+// ============================================
+// SIDEBAR & NAV
+// ============================================
+function fillSidebarUser() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!user.name) return;
+    document.getElementById('userName').textContent = user.name;
+    document.getElementById('userEmail').textContent = user.email || '';
+    document.getElementById('userAvatar').textContent =
+      user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  } catch (e) {}
+}
+
+function attachLogout() {
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try { await fetch(`${API_BASE}/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } }); } catch (e) {}
+    localStorage.clear(); window.location.href = 'login.html';
+  });
+}
+
+// ============================================
+// LOAD GROUP & EXPENSES
+// ============================================
+async function loadGroup() {
+  try {
+    const res = await fetch(`${API_BASE}/groups/${groupId}`, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.status === 401) { localStorage.clear(); window.location.href = 'login.html'; return; }
+    if (!res.ok) throw new Error();
+
+    const data = await res.json();
+    currentGroup = data.data;
+    
+    // Sort members: Admin first
+    currentGroup.members.sort((a, b) => {
+      if (a.role === 'ADMIN' && b.role !== 'ADMIN') return -1;
+      if (b.role === 'ADMIN' && a.role !== 'ADMIN') return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    renderGroup(currentGroup);
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('groupContent').style.display = 'block';
+
+    await loadExpenses();
+  } catch (err) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+  }
+}
+
+async function loadBalances() {
+  const listEl = document.getElementById('balanceList');
+  const currentUserId = myUserId();
+  
+  try {
+    const res = await fetch(`${API_BASE}/groups/${groupId}/balances`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const { balances, suggestions } = data.data;
+
+    if (!balances || balances.length === 0) {
+      listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-low);">No balances yet.</div>';
+      return;
+    }
+
+    // Find my balance and suggestions
+    const myBalance = balances.find(b => b.userId === currentUserId)?.netBalance || 0;
+    
+    // Filter suggestions where I am the payer
+    const myDues = suggestions.filter(s => s.fromUserId === currentUserId);
+
+    let html = '';
+
+    // Show my overall status
+    if (myBalance > 0) {
+      html += `<div class="split-footer ok" style="margin-bottom: 16px;">You will receive ₹${myBalance.toFixed(2)}</div>`;
+    } else if (myBalance < 0) {
+      html += `<div class="split-footer error" style="margin-bottom: 16px;">You owe ₹${Math.abs(myBalance).toFixed(2)}</div>`;
+    } else {
+      html += `<div class="split-footer" style="margin-bottom: 16px; color: var(--success);">You are settled up!</div>`;
+    }
+
+    // Show who I owe and the settle button
+    if (myDues.length > 0) {
+      html += `<h4 style="font-size: 13px; color: var(--text-mid); margin-bottom: 10px;">You owe:</h4>`;
+      myDues.forEach(due => {
+        const payee = currentGroup.members.find(m => m.id === due.toUserId);
+        html += `
+          <div class="expense-item" style="margin-bottom: 8px;">
+            <div class="expense-info">
+              <div class="expense-desc">Pay ${escapeHtml(payee.name)}</div>
+              <div class="expense-meta">Wallet Transfer</div>
+            </div>
+            <div class="expense-amount">
+              <div class="total" style="color: var(--magenta);">₹${due.amount.toFixed(2)}</div>
+              <button class="btn btn-primary" style="padding: 4px 12px; font-size: 11px; margin-top: 4px;" onclick="settleUp(${due.toUserId}, ${due.amount})">Settle Up</button>
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      html += `<p style="font-size: 13px; color: var(--text-low);">You have no pending payments.</p>`;
+    }
+
+    listEl.innerHTML = html;
+
+  } catch (err) {
+    console.error(err);
+    listEl.innerHTML = '<div style="color: var(--danger);">Failed to load balances.</div>';
+  }
+}
+
+async function settleUp(toUserId, amount) {
+  if (!confirm(`Transfer ₹${amount.toFixed(2)} from your wallet?`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/groups/${groupId}/settle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ toUserId, amount })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.message || 'Settlement failed');
+      return;
+    }
+
+    alert('Payment successful!');
+    await loadBalances(); // Refresh balances
+    // Optional: reload wallet balance in local storage if you cache it
+  } catch (err) {
+    alert('Network error');
+  }
+}
+
+function renderGroup(g) {
+  document.getElementById('crumbName').textContent = g.name;
+  document.getElementById('groupNameText').textContent = g.name;
+  document.getElementById('groupDescText').textContent = g.description || 'No description';
+  document.getElementById('memberCountText').textContent = g.memberCount;
+  document.getElementById('expenseCountText').textContent = g.expenseCount;
+  document.getElementById('createdAtText').textContent = new Date(g.createdAt).toLocaleDateString();
+  document.getElementById('memberCountBadge').textContent = g.memberCount;
+
+  const isAdmin = g.myRole === 'ADMIN';
+  const roleBadge = document.getElementById('myRoleBadge');
+  roleBadge.textContent = g.myRole;
+  roleBadge.className = `role-badge ${g.myRole.toLowerCase()}`;
+
+  document.getElementById('addMemberBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('editGroupBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('deleteGroupBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('leaveGroupBtn').style.display = !isAdmin ? 'inline-flex' : 'none';
+
+  const list = document.getElementById('memberList');
+  list.innerHTML = g.members.map(m => {
+    const initials = (m.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    const isSelf = JSON.parse(localStorage.getItem('user') || '{}').id === m.id;
+    const canRemove = isAdmin && !isSelf;
+
+    return `
+      <div class="member-item">
+        <div class="member-avatar">${initials}</div>
+        <div class="member-info">
+          <div class="member-name">
+            ${escapeHtml(m.name)} ${isSelf ? '<span style="font-size:10px;color:var(--text-low);">(You)</span>' : ''}
+            <span class="role-badge ${m.role.toLowerCase()}">${m.role}</span>
+          </div>
+          <div class="member-sub">${m.alias ? '@' + escapeHtml(m.alias) + ' · ' : ''}${escapeHtml(m.email)}</div>
+        </div>
+        ${canRemove ? `
+          <div class="member-actions">
+            <button class="btn-icon danger" onclick="removeMember(${m.id}, '${escapeHtml(m.name).replace(/'/g, "\\'")}')"><i class="bi bi-person-x"></i></button>
+          </div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+async function loadExpenses() {
+  const listEl = document.getElementById('expenseList');
+  try {
+    const res = await fetch(`${API_BASE}/groups/${groupId}/expenses`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    const expenses = data?.data?.expenses || [];
+
+    document.getElementById('expenseCountBadge').textContent = expenses.length;
+    document.getElementById('expenseCountText').textContent = expenses.length;
+
+    if (!expenses.length) {
+      listEl.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-low);"><i class="bi bi-receipt" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4;"></i>No expenses yet.</div>';
+      return;
+    }
+
+    listEl.innerHTML = expenses.map(e => {
+      const catIcon = { FOOD: 'bi-egg-fried', TRAVEL: 'bi-airplane', SHOPPING: 'bi-bag', ENTERTAINMENT: 'bi-film', OTHER: 'bi-box' }[e.category] || 'bi-box';
+      return `
+        <div class="expense-item" onclick="openExpenseDetails(${e.id})" style="cursor: pointer;">
+          <div class="expense-icon ${e.category}"><i class="bi ${catIcon}"></i></div>
+          <div class="expense-info">
+            <div class="expense-desc">${escapeHtml(e.description)}</div>
+            <div class="expense-meta">
+              <span><i class="bi bi-person"></i> ${escapeHtml(e.paidBy)}</span>
+              <span><i class="bi bi-calendar"></i> ${new Date(e.date).toLocaleDateString()}</span>
+            </div>
+          </div>
+          <div class="expense-amount">
+            <div class="total">₹${e.totalAmount.toFixed(2)}</div>
+            <div class="my-share">You: ₹${e.myShare.toFixed(2)}</div>
+          </div>
+          <i class="bi bi-chevron-right" style="color: var(--text-low); margin-left: 10px;"></i>
+        </div>
+      `;
+    }).join('');
+  } catch (err) { console.error(err); }
+}
+
+// ============================================
+// ADD MEMBER & EDIT GROUP
+// ============================================
+function attachAddMemberModal() {
+  const modal = document.getElementById('addMemberModal');
+  const openBtn = document.getElementById('addMemberBtn');
+  const input = document.getElementById('userSearchInput');
+  const results = document.getElementById('searchResults');
+
+  openBtn.addEventListener('click', () => {
+    modal.classList.add('open'); input.value = ''; results.classList.remove('open'); input.focus();
+  });
+  input.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = input.value.trim();
+    if (q.length < 2) { results.classList.remove('open'); return; }
+    searchTimer = setTimeout(() => performSearch(q), 300);
+  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.user-search-box')) results.classList.remove('open'); });
+}
+
+async function performSearch(q) {
+  const results = document.getElementById('searchResults');
+  try {
+    const res = await fetch(`${API_BASE}/users/search?q=${encodeURIComponent(q)}&excludeGroupId=${groupId}`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    const users = data?.data?.users || [];
+    results.classList.add('open');
+    if (!users.length) { results.innerHTML = '<div class="search-empty">No users found</div>'; return; }
+    results.innerHTML = users.map(u => `
+      <div class="search-result-item" onclick='addMember(${u.id}, ${JSON.stringify(u.name)})'>
+        <div class="result-avatar">${(u.name||'U').split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2)}</div>
+        <div class="result-info"><div class="result-name">${escapeHtml(u.name)}</div><div class="result-sub">${u.alias ? '@'+escapeHtml(u.alias)+' · ' : ''}${escapeHtml(u.email)}</div></div>
+        <i class="bi bi-plus-circle" style="color:var(--violet-1); font-size:18px;"></i>
+      </div>`).join('');
+  } catch (err) { console.error(err); }
+}
+
+async function addMember(userId, name) {
+  try {
+    const res = await fetch(`${API_BASE}/groups/${groupId}/members`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ userId }) });
+    if (!res.ok) { alert((await res.json()).message); return; }
+    document.getElementById('addMemberModal').classList.remove('open'); await loadGroup();
+  } catch (err) { alert('Network error'); }
+}
+
+async function removeMember(userId, name) {
+  if (!confirm(`Remove ${name}?`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/groups/${groupId}/members/${userId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) { alert((await res.json()).message); return; }
+    await loadGroup();
+  } catch (err) { alert('Network error'); }
+}
+
+function attachEditModal() {
+  const modal = document.getElementById('editGroupModal');
+  document.getElementById('editGroupBtn').addEventListener('click', () => {
+    modal.classList.add('open');
+    document.getElementById('editName').value = currentGroup.name;
+    document.getElementById('editDescription').value = currentGroup.description || '';
+  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
+  document.getElementById('editForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('editName').value.trim();
+    const desc = document.getElementById('editDescription').value.trim();
+    if(!name) return;
+    try {
+      const res = await fetch(`${API_BASE}/groups/${groupId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ name, description: desc || null }) });
+      if (!res.ok) { alert((await res.json()).message); return; }
+      modal.classList.remove('open'); await loadGroup();
+    } catch (err) { alert('Network error'); }
+  });
+}
+
+function attachLeaveGroup() {
+  document.getElementById('leaveGroupBtn').addEventListener('click', async () => {
+    if (!confirm('Leave this group?')) return;
+    try {
+      const res = await fetch(`${API_BASE}/groups/${groupId}/leave`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) { alert((await res.json()).message); return; }
+      window.location.href = 'groups.html';
+    } catch (err) { alert('Network error'); }
+  });
+}
+
+function attachDeleteGroup() {
+  document.getElementById('deleteGroupBtn').addEventListener('click', async () => {
+    if (!confirm('Delete this group?')) return;
+    try {
+      const res = await fetch(`${API_BASE}/groups/${groupId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) { alert((await res.json()).message); return; }
+      window.location.href = 'groups.html';
+    } catch (err) { alert('Network error'); }
+  });
+}
+
+// ============================================
+// EXPENSE ENGINE
+// ============================================
+function attachExpenseModal() {
+  document.getElementById('addExpenseBtn').addEventListener('click', openExpenseModal);
+
+  document.querySelectorAll('.split-method-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.split-method-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentSplitMethod = tab.dataset.method;
+      expenseMembers.forEach(m => { m.val = ''; m.shares = 1; m.isManual = false; });
+      renderSplitUI();
+    });
+  });
+
+  document.getElementById('expenseAmount').addEventListener('input', () => {
+    validateAndUpdateUI();
+    if (currentSplitMethod === 'EXACT' || currentSplitMethod === 'PERCENT') {
+      recalculateAndDistribute();
+    }
+  });
+
+  document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitExpenseBtn');
+    const errEl = document.getElementById('expenseError');
+    validateAndUpdateUI();
+    if (document.getElementById('submitExpenseBtn').disabled) {
+      return; // Stop submission if validation failed
+    }
+    errEl.style.display = 'none';
+
+    const total = parseFloat(document.getElementById('expenseAmount').value);
+    if (!total || total <= 0) { errEl.textContent = 'Enter a valid amount'; errEl.style.display = 'block'; return; }
+
+    const activeMembers = expenseMembers.filter(m => m.checked);
+    if (!activeMembers.length) { errEl.textContent = 'Select at least 1 member'; errEl.style.display = 'block'; return; }
+
+    if (currentSplitMethod === 'EXACT') {
+      const sum = activeMembers.reduce((s, m) => s + (parseFloat(m.val) || 0), 0);
+      if (Math.abs(sum - total) > 0.05) { errEl.textContent = `Amounts (₹${sum.toFixed(2)}) must equal total (₹${total.toFixed(2)})`; errEl.style.display = 'block'; return; }
+    } else if (currentSplitMethod === 'PERCENT') {
+      const sum = activeMembers.reduce((s, m) => s + (parseFloat(m.val) || 0), 0);
+      if (Math.abs(sum - 100) > 0.05) { errEl.textContent = 'Percentages must equal 100%'; errEl.style.display = 'block'; return; }
+    }
+
+    const participants = activeMembers.map(m => {
+      const p = { userId: m.id };
+      if (currentSplitMethod === 'PERCENT') p.percentage = parseFloat(m.val || 0);
+      if (currentSplitMethod === 'EXACT') p.amount = parseFloat(m.val || 0);
+      if (currentSplitMethod === 'SHARES') p.shares = parseInt(m.shares || 1);
+      return p;
+    });
+
+    btn.disabled = true; btn.textContent = 'Saving...';
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    try {
+      const res = await fetch(`${API_BASE}/groups/${groupId}/expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          description: document.getElementById('expenseDesc').value.trim(),
+          category: document.getElementById('expenseCategory').value,
+          totalAmount: total,
+          paidBy: user.id,
+          splitMethod: currentSplitMethod,
+          participants
+        })
+      });
+      
+      if (!res.ok) { errEl.textContent = (await res.json()).message || 'Error saving'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Save Expense'; return; }
+      
+      document.getElementById('addExpenseModal').classList.remove('open');
+      btn.disabled = false; btn.textContent = 'Save Expense';
+      await loadGroup();
+    } catch (err) {
+      errEl.textContent = 'Network error'; errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Save Expense';
+    }
+  });
+}
+
+function openExpenseModal() {
+  document.getElementById('addExpenseModal').classList.add('open');
+  document.getElementById('expenseError').style.display = 'none';
+  document.getElementById('expenseForm').reset();
+  
+  currentSplitMethod = 'EQUAL';
+  document.querySelectorAll('.split-method-tab').forEach(t => t.classList.toggle('active', t.dataset.method === 'EQUAL'));
+  
+  // Initialize with `isManual: false` and empty values
+  expenseMembers = currentGroup.members.map(m => ({ 
+    ...m, 
+    checked: true, 
+    val: '', 
+    shares: 1,
+    isManual: false 
+  }));
+  
+  renderSplitUI();
+}
+
+function renderSplitUI() {
+  const container = document.getElementById('participantsList');
+  
+  container.innerHTML = expenseMembers.map((m, i) => {
+    const initials = m.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2);
+    const isChecked = m.checked;
+    
+    // Check if this is the ONLY member selected
+    const activeMembers = expenseMembers.filter(x => x.checked);
+    const isOnlyOne = activeMembers.length === 1;
+
+    let inputUI = '';
+    let displayUI = '';
+
+    if (currentSplitMethod === 'EQUAL') {
+      displayUI = `<div class="split-display-amount" id="display-${i}">₹0.00</div>`;
+    } 
+    else if (currentSplitMethod === 'EXACT') {
+      // Disable if unchecked OR if it's the only person selected
+      inputUI = `<div class="participant-input-wrap">
+                   <span>₹</span>
+                   <input type="number" data-idx="${i}" value="${m.val}" placeholder="0.00" min="0" step="0.01" 
+                          ${!isChecked || isOnlyOne ? 'disabled' : ''} 
+                          onfocus="this.select()" 
+                          onblur="handleBlur(${i})" />
+                 </div>`;
+    } 
+    else if (currentSplitMethod === 'PERCENT') {
+      inputUI = `<div class="participant-input-wrap">
+                   <input type="number" data-idx="${i}" value="${m.val}" placeholder="0.00" min="0" max="100" 
+                          ${!isChecked || isOnlyOne ? 'disabled' : ''} 
+                          onfocus="this.select()" 
+                          onblur="handleBlur(${i})" />
+                   <span>%</span>
+                 </div>`;
+      displayUI = `<div class="split-display-amount" id="display-${i}">₹0.00</div>`;
+    } 
+    else if (currentSplitMethod === 'SHARES') {
+      inputUI = `<div class="share-stepper">
+                   <button type="button" class="share-btn" onclick="updateShares(${i}, -1)" ${!isChecked || m.shares <= 1 ? 'disabled' : ''}>−</button>
+                   <span class="share-val">${m.shares || 1}</span>
+                   <button type="button" class="share-btn" onclick="updateShares(${i}, 1)" ${!isChecked ? 'disabled' : ''}>+</button>
+                 </div>`;
+      displayUI = `<div class="split-display-amount" id="display-${i}">₹0.00</div>`;
+    }
+
+    return `
+      <div class="participant-row ${isChecked ? '' : 'unchecked'}" data-idx="${i}">
+        <input type="checkbox" class="participant-check" data-idx="${i}" ${isChecked ? 'checked' : ''} onchange="toggleMember(${i})" />
+        <div class="participant-avatar">${initials}</div>
+        <div class="participant-name">${escapeHtml(m.name)} ${m.id === myUserId() ? '(You)' : ''}</div>
+        ${inputUI}
+        ${displayUI}
+      </div>
+    `;
+  }).join('');
+
+    container.querySelectorAll('input[type="number"]').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const idx = parseInt(e.target.dataset.idx);
+      expenseMembers[idx].val = e.target.value;
+      expenseMembers[idx].isManual = true; // Lock this value from being auto-overwritten
+      
+      if (currentSplitMethod === 'PERCENT') {
+        updatePercentDisplaysOnly(); 
+      }
+    });
+  });
+
+  validateAndUpdateUI();
+}
+
+// Fires when user clicks out of an input box
+function handleBlur(idx) {
+  if (currentSplitMethod === 'EXACT' || currentSplitMethod === 'PERCENT') {
+    expenseMembers[idx].isManual = true; 
+    recalculateAndDistribute();
+  }
+}
+
+// Fires when checkbox is toggled
+function toggleMember(idx) {
+  const member = expenseMembers[idx];
+  member.checked = !member.checked;
+  
+  const activeMembers = expenseMembers.filter(m => m.checked);
+  const target = currentSplitMethod === 'EXACT' ? parseFloat(document.getElementById('expenseAmount').value || 0) : 100;
+
+  // CASE 1: Only one member is currently selected
+  if (activeMembers.length === 1) {
+    const single = activeMembers[0];
+    single.val = target.toFixed(2);
+    // We DO NOT set isManual: true here. 
+    // We leave it false so if they select someone else, it recalculates.
+    single.isManual = false; 
+    renderSplitUI();
+    return;
+  }
+
+  // CASE 2: Multiple members are selected
+  if (activeMembers.length > 1) {
+    // If we are transitioning from 1 member to multiple, 
+    // we MUST reset the previous member's state so they get recalculated.
+    activeMembers.forEach(m => {
+        // If their value was the full total, it means they were just the "only one selected"
+        const fullValue = currentSplitMethod === 'EXACT' ? parseFloat(m.val) === target : parseFloat(m.val) === 100;
+        
+        // If they have the full value, they are not manual. They need to be auto-split.
+        if (fullValue) {
+            m.isManual = false;
+        }
+    });
+
+    // Now check if anyone actually has a manual input
+    const hasAnyManual = activeMembers.some(m => m.isManual);
+    
+    if (hasAnyManual) {
+      // If the newly checked member has the full amount from when they were the only one, reset it
+      if (member.checked && parseFloat(member.val) === target) {
+          member.isManual = false;
+      }
+      recalculateAndDistribute();
+    } else {
+      // No one has typed anything yet. Keep all fields blank.
+      activeMembers.forEach(m => m.val = '');
+      renderSplitUI();
+    }
+  } else {
+    // 0 members selected
+    renderSplitUI();
+  }
+}
+
+// The engine that balances the math
+function recalculateAndDistribute() {
+  const total = parseFloat(document.getElementById('expenseAmount').value || 0);
+  const activeMembers = expenseMembers.filter(m => m.checked);
+  
+  // If 1 or 0 members, we don't need to distribute
+  if (activeMembers.length <= 1) return; 
+
+  let sumManual = 0;
+  const manualMembers = activeMembers.filter(m => m.isManual);
+  // Anyone who is checked but NOT manual is eligible for auto-calculation
+  const autoMembers = activeMembers.filter(m => !m.isManual);
+  
+  const target = currentSplitMethod === 'EXACT' ? total : 100;
+
+  // Sum up only the manual entries
+  manualMembers.forEach(m => {
+    sumManual += parseFloat(m.val || 0);
+  });
+
+  const remainder = target - sumManual;
+  
+  // If over-budget, trigger error state
+  if (remainder < 0) {
+    validateAndUpdateUI();
+    return;
+  }
+
+  // Distribute the remainder among auto members
+  if (autoMembers.length > 0) {
+    const perPerson = remainder / autoMembers.length;
+    autoMembers.forEach(m => {
+      m.val = perPerson.toFixed(2);
+    });
+  }
+
+  // Clear any invalid states and re-render
+  document.querySelectorAll('.participant-input-wrap').forEach(el => el.classList.remove('invalid'));
+  renderSplitUI();
+}
+
+// Updates the ₹ amounts next to the % inputs in real-time
+function updatePercentDisplaysOnly() {
+  const total = parseFloat(document.getElementById('expenseAmount').value || 0);
+  expenseMembers.forEach((m, i) => {
+    if (m.checked && currentSplitMethod === 'PERCENT') {
+      const displayEl = document.getElementById(`display-${i}`);
+      if (displayEl) displayEl.textContent = `₹${(total * ((parseFloat(m.val) || 0) / 100)).toFixed(2)}`;
+    }
+  });
+}
+
+// Validates the math and updates the footer UI
+function validateAndUpdateUI() {
+  const total = parseFloat(document.getElementById('expenseAmount').value || 0);
+  const activeMembers = expenseMembers.filter(m => m.checked);
+  const footer = document.getElementById('splitFooter');
+  const footerAmt = document.getElementById('splitFooterAmount');
+  const submitBtn = document.getElementById('submitExpenseBtn');
+  const errorBox = document.getElementById('expenseError');
+  errorBox.style.display = 'none';
+
+  if (activeMembers.length === 0) {
+    footer.className = 'split-footer error';
+    footerAmt.textContent = `Select members`;
+    submitBtn.disabled = true;
+    return;
+  }
+
+  if (currentSplitMethod === 'EQUAL') {
+    const perPerson = total / activeMembers.length;
+    expenseMembers.forEach((m, i) => {
+      const displayEl = document.getElementById(`display-${i}`);
+      if (displayEl) displayEl.textContent = m.checked ? `₹${perPerson.toFixed(2)}` : '';
+    });
+    footer.className = 'split-footer ok';
+    footerAmt.textContent = `₹${perPerson.toFixed(2)} per person`;
+    submitBtn.disabled = false;
+  } 
+  else if (currentSplitMethod === 'SHARES') {
+    const totalShares = activeMembers.reduce((s, m) => s + (parseInt(m.shares) || 1), 0);
+    expenseMembers.forEach((m, i) => {
+      const displayEl = document.getElementById(`display-${i}`);
+      if (displayEl) {
+        const sharePct = (parseInt(m.shares) || 1) / totalShares;
+        displayEl.textContent = m.checked ? `₹${(total * sharePct).toFixed(2)}` : '';
+      }
+    });
+    footer.className = 'split-footer ok';
+    footerAmt.textContent = `${totalShares} total shares`;
+    submitBtn.disabled = false;
+  } 
+  else {
+    // EXACT or PERCENT Validation
+    let sum = activeMembers.reduce((s, m) => s + (parseFloat(m.val) || 0), 0);
+    let target = currentSplitMethod === 'EXACT' ? total : 100;
+    let diff = Math.abs(sum - target);
+    let isOk = diff < 0.05; 
+    
+    if (currentSplitMethod === 'EXACT') {
+       footerAmt.textContent = `₹${sum.toFixed(2)} / ₹${total.toFixed(2)}`;
+    } else {
+       footerAmt.textContent = `${sum.toFixed(1)}% / 100%`;
+       updatePercentDisplaysOnly();
+    }
+
+    if (!isOk) {
+      footer.className = 'split-footer error';
+      submitBtn.disabled = true;
+      
+      // Set specific error messages based on the mismatch
+      if (sum > target) {
+        errorBox.textContent = currentSplitMethod === 'EXACT' 
+          ? `Entered amounts exceed the total expense.` 
+          : `Entered percentages exceed 100%.`;
+      } else {
+        errorBox.textContent = currentSplitMethod === 'EXACT' 
+          ? `Assigned amounts must equal the total expense of ₹${total.toFixed(2)}.` 
+          : `Percentages must add up to 100%.`;
+      }
+      errorBox.style.display = 'block';
+    } else {
+      footer.className = 'split-footer ok';
+      submitBtn.disabled = false;
+    }
+  }
+}
+
+function updateCalculations(changedIdx = null) {
+  const total = parseFloat(document.getElementById('expenseAmount').value || 0);
+  const activeMembers = expenseMembers.filter(m => m.checked);
+  
+  if (!activeMembers.length) {
+    document.getElementById('splitFooter').className = 'split-footer error';
+    document.getElementById('splitFooterAmount').textContent = `Select members`;
+    return;
+  }
+
+  // Auto-fill for Exact & Percent
+  if (changedIdx !== null && (currentSplitMethod === 'EXACT' || currentSplitMethod === 'PERCENT')) {
+    let currentSum = 0;
+    let unfilled = [];
+
+    // Calculate the sum of everything entered so far
+    activeMembers.forEach((m, i) => {
+      if (m.dirty || expenseMembers.indexOf(m) === changedIdx) {
+        currentSum += parseFloat(m.val || 0);
+      } else {
+        unfilled.push(m);
+      }
+    });
+
+    let remainder = 0;
+    const target = currentSplitMethod === 'EXACT' ? total : 100;
+    remainder = target - currentSum;
+
+    // If the user typed too much, show error on that input
+    if (remainder < 0) {
+      const currentInp = document.querySelector(`input[data-idx="${changedIdx}"]`);
+      if (currentInp) currentInp.parentElement.classList.add('invalid');
+    } 
+    // Otherwise, distribute the remaining amount among unfilled fields
+    else if (unfilled.length > 0) {
+      // Clear any previous error states
+      document.querySelectorAll('.participant-input-wrap').forEach(el => el.classList.remove('invalid'));
+      
+      const perPerson = remainder / unfilled.length;
+      unfilled.forEach(m => {
+        m.val = perPerson.toFixed(2);
+        const inp = document.querySelector(`input[data-idx="${expenseMembers.indexOf(m)}"]`);
+        if (inp) inp.value = m.val;
+      });
+    }
+  }
+
+  // Update calculated amounts (₹) next to inputs
+  if (currentSplitMethod === 'EQUAL') {
+    const perPerson = total / activeMembers.length;
+    expenseMembers.forEach((m, i) => {
+      const displayEl = document.getElementById(`display-${i}`);
+      if (displayEl) displayEl.textContent = m.checked ? `₹${perPerson.toFixed(2)}` : '';
+    });
+  } 
+  else if (currentSplitMethod === 'PERCENT') {
+    activeMembers.forEach(m => {
+      const idx = expenseMembers.indexOf(m);
+      const displayEl = document.getElementById(`display-${idx}`);
+      if (displayEl) displayEl.textContent = `₹${(total * ((parseFloat(m.val) || 0) / 100)).toFixed(2)}`;
+    });
+  } 
+  else if (currentSplitMethod === 'SHARES') {
+    const totalShares = activeMembers.reduce((s, m) => s + (parseInt(m.shares) || 1), 0);
+    expenseMembers.forEach((m, i) => {
+      const displayEl = document.getElementById(`display-${i}`);
+      if (displayEl) {
+        if (m.checked) {
+          const sharePct = (parseInt(m.shares) || 1) / totalShares;
+          displayEl.textContent = `₹${(total * sharePct).toFixed(2)}`;
+        } else {
+          displayEl.textContent = '';
+        }
+      }
+    });
+  }
+
+  // Update Footer Status
+  const footer = document.getElementById('splitFooter');
+  const footerAmt = document.getElementById('splitFooterAmount');
+  
+  if (currentSplitMethod === 'EQUAL') {
+    footer.className = 'split-footer ok';
+    footerAmt.textContent = `₹${(total / activeMembers.length).toFixed(2)} per person`;
+  } else if (currentSplitMethod === 'SHARES') {
+    const totalShares = activeMembers.reduce((s, m) => s + (parseInt(m.shares) || 1), 0);
+    footer.className = 'split-footer ok';
+    footerAmt.textContent = `${totalShares} total shares`;
+  } else {
+    let sum = activeMembers.reduce((s, m) => s + (parseFloat(m.val) || 0), 0);
+    
+    // The precision check: EXACT must equal total, PERCENT must equal 100
+    let diff = currentSplitMethod === 'PERCENT' ? Math.abs(sum - 100) : Math.abs(sum - total);
+    let isOk = diff < 0.05; // Allow tiny rounding differences (e.g. 99.99 is ok)
+    
+    footer.className = `split-footer ${isOk ? 'ok' : 'error'}`;
+    
+    if (currentSplitMethod === 'PERCENT') {
+      footerAmt.textContent = `${sum.toFixed(1)}% / 100%`;
+    } else {
+      footerAmt.textContent = `₹${sum.toFixed(2)} / ₹${total.toFixed(2)}`;
+    }
+  }
+}
+
+function updateShares(idx, delta) {
+  const m = expenseMembers[idx];
+  if (!m.checked) return;
+  m.shares = Math.max(1, (m.shares || 1) + delta);
+  renderSplitUI(); 
+}
+
+// Global to track current expense
+let currentExpenseId = null;
+
+async function openExpenseDetails(expenseId) {
+  currentExpenseId = expenseId;
+  document.getElementById('expenseDetailsModal').classList.add('open');
+  document.getElementById('edList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-low);">Loading...</div>';
+  document.getElementById('edPayContainer').innerHTML = '';
+  
+  try {
+    const res = await fetch(`${API_BASE}/groups/expenses/${expenseId}/settlements`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (!res.ok) throw new Error('Failed to load');
+    const data = await res.json();
+    const { expense, debtors } = data.data;
+
+    const me = myUserId();
+    const isPayer = expense.paidBy === me;
+
+    // 1. Setup Header
+    document.getElementById('edTitle').textContent = `Total: ₹${parseFloat(expense.totalAmount).toFixed(2)}`;
+    document.getElementById('edMainAvatar').textContent = expense.payerName.charAt(0).toUpperCase();
+    
+    const totalPeople = debtors.length + 1; // Debtors + Payer
+    const paidPeople = debtors.filter(d => d.status === 'PAID').length;
+    
+    // If everyone paid, show "Completed"
+    const isComplete = paidPeople === debtors.length;
+    document.getElementById('edProgressCount').textContent = `${paidPeople + 1} of ${totalPeople} paid`;
+    document.getElementById('edTotal').textContent = `Total: ₹${parseFloat(expense.totalAmount).toFixed(2)}`;
+
+    let html = '';
+
+    if (isPayer) {
+      // ==========================================
+      // ADMIN VIEW (Pic 1)
+      // ==========================================
+      document.getElementById('edStatusPill').innerHTML = isComplete 
+        ? `<i class="bi bi-check-circle-fill" style="color: var(--success);"></i> Completed`
+        : `<i class="bi bi-hourglass-split" style="color: var(--gold);"></i> Pending`;
+
+      // Show Payer first (You)
+      html += `
+        <div class="screenshot-member-row">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="screenshot-avatar-wrap">
+              <div class="screenshot-avatar" style="background: var(--violet-1);">${expense.payerName.charAt(0)}</div>
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 500;">You</div>
+              <div class="screenshot-request-text">Sent this request</div>
+            </div>
+          </div>
+          <div style="font-weight: 600;">₹${parseFloat(expense.totalAmount).toFixed(2)}</div>
+        </div>
+      `;
+
+      // Show Debtors
+      debtors.forEach(d => {
+        const isPaid = d.status === 'PAID';
+        html += `
+          <div class="screenshot-member-row">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="screenshot-avatar-wrap">
+                <div class="screenshot-avatar">${d.userName.charAt(0)}</div>
+                <div class="screenshot-badge ${isPaid ? 'paid' : 'unpaid'}">
+                  <i class="bi ${isPaid ? 'bi-check-lg' : 'bi-dash-lg'}"></i>
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">${escapeHtml(d.userName)}</div>
+                <div class="screenshot-request-text" style="color: ${isPaid ? 'var(--success)' : 'var(--text-low)'};">${isPaid ? 'Paid' : 'Pending'}</div>
+              </div>
+            </div>
+            <div style="font-weight: 600;">₹${d.owedAmount.toFixed(2)}</div>
+          </div>
+        `;
+      });
+
+    } else {
+      // ==========================================
+      // MEMBER VIEW (Pic 2)
+      // ==========================================
+      const myData = debtors.find(d => d.userId === me);
+      const myStatus = myData ? myData.status : 'PAID';
+
+      document.getElementById('edStatusPill').innerHTML = myStatus === 'PAID'
+        ? `<i class="bi bi-check-circle-fill" style="color: var(--success);"></i> You paid`
+        : `<i class="bi bi-exclamation-circle-fill" style="color: var(--gold);"></i> You owe ₹${myData.remaining.toFixed(2)}`;
+
+      // Show Payer
+      html += `
+        <div class="screenshot-member-row">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="screenshot-avatar-wrap">
+              <div class="screenshot-avatar" style="background: var(--violet-1);">${expense.payerName.charAt(0)}</div>
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 500;">${escapeHtml(expense.payerName)}</div>
+              <div class="screenshot-request-text">Sent this request</div>
+            </div>
+          </div>
+          <div style="font-weight: 600;">₹${parseFloat(expense.totalAmount).toFixed(2)}</div>
+        </div>
+      `;
+
+      // Show Everyone's SHARE (but hide their payment status!)
+      debtors.forEach(d => {
+        const isMe = d.userId === me;
+        let badgeHtml = '';
+        
+        // Only show MY checkmark. Others get no badge.
+        if (isMe) {
+           badgeHtml = `<div class="screenshot-badge ${d.status === 'PAID' ? 'paid' : 'unpaid'}">
+                          <i class="bi ${d.status === 'PAID' ? 'bi-check-lg' : 'bi-dash-lg'}"></i>
+                        </div>`;
+        }
+
+        html += `
+          <div class="screenshot-member-row">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="screenshot-avatar-wrap">
+                <div class="screenshot-avatar" style="${isMe ? 'background: var(--gold);' : ''}">${d.userName.charAt(0)}</div>
+                ${badgeHtml}
+              </div>
+              <div>
+                <div style="font-size: 14px; font-weight: 500;">${isMe ? 'You' : escapeHtml(d.userName)}</div>
+              </div>
+            </div>
+            <div style="font-weight: 600;">₹${d.owedAmount.toFixed(2)}</div>
+          </div>
+        `;
+      });
+
+      // Pay Button Logic
+      if (myData && myData.remaining > 0) {
+        document.getElementById('edPayContainer').innerHTML = `
+          <button class="btn btn-primary" style="width: 100%; border-radius: 20px; padding: 14px;" onclick="settleExpense(${myData.remaining})">
+            Pay ₹${myData.remaining.toFixed(2)}
+          </button>
+        `;
+      }
+    }
+
+    document.getElementById('edList').innerHTML = html;
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('edList').innerHTML = '<div style="color: var(--danger); text-align:center;">Failed to load details.</div>';
+  }
+}
+
+async function settleExpense(amount) {
+  if (!confirm(`Transfer ₹${amount.toFixed(2)} from your wallet?`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/groups/expenses/${currentExpenseId}/settle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ amount })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.message || 'Payment failed');
+      return;
+    }
+
+    alert('Payment successful!');
+    document.getElementById('expenseDetailsModal').classList.remove('open');
+    
+    // Refresh group (updates balances and expenses)
+    await loadGroup(); 
+  } catch (err) {
+    alert('Network error');
+  }
+}
+
+// Opens the payment confirmation (you can reuse the logic from the main wallet)
+async function openSettlePayment(amount) {
+  if (!confirm(`Transfer ₹${amount.toFixed(2)} from your wallet?`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/groups/expenses/${currentExpenseId}/settle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ amount })
+    });
+    
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.message || 'Payment failed');
+      return;
+    }
+
+    alert('Payment successful!');
+    document.getElementById('expenseDetailsModal').classList.remove('open');
+    await loadGroup(); // Refresh balances and expenses
+    
+  } catch (err) {
+    alert('Network error');
+  }
+}
+
+function myUserId() {
+  try { return JSON.parse(localStorage.getItem('user') || '{}').id; }
+  catch { return null; }
+}
+
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+</script>
+
+<style>
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+      .screenshot-member-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+    }
+    .screenshot-avatar-wrap {
+      position: relative;
+      width: 42px; height: 42px;
+      flex-shrink: 0;
+    }
+    .screenshot-avatar {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet-1), var(--magenta));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 700; font-size: 16px;
+    }
+    .screenshot-badge {
+      position: absolute; bottom: -2px; right: -2px;
+      width: 16px; height: 16px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; border: 2px solid #1a0f24; /* matches modal bg */
+    }
+    .screenshot-badge.paid { background: var(--success); color: #000; }
+    .screenshot-badge.unpaid { background: var(--danger); color: #fff; }
+    
+    .screenshot-request-text {
+      font-size: 11.5px; color: var(--text-low); margin-top: 2px;
+    }
+</style>
+
+</body>
+</html>
