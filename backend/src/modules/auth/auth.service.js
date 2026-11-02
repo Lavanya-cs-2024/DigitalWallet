@@ -1,5 +1,7 @@
 // modules/auth/auth.service.js
 const prisma = require('../../config/prisma');
+const speakeasy = require('speakeasy');
+const qrcode = require('qrcode');
 const { hashPassword, comparePassword } = require('../../utils/password');
 const { generateTokens } = require('../../utils/jwt');
 const { sendEmail, getOTPEmailTemplate, getPasswordResetTemplate, getWelcomeTemplate } = require('../../utils/email');
@@ -794,6 +796,101 @@ const authService = {
             refreshToken,
             loginCount,
             isFirstLogin: loginCount === 1
+        };
+    },
+
+    // =============================================
+    // 2FA - GENERATE SECRET & QR CODE
+    // =============================================
+    async generate2FA(userId) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) throw new Error('User not found');
+
+        // Generate a unique secret for this user
+        const secret = speakeasy.generateSecret({
+            name: `Digital Wallet (${user.email})`
+        });
+
+        // Save the secret (but keep isEnabled false until they verify)
+        await prisma.twoFA.upsert({
+            where: { userId },
+            update: { secret: secret.base32, isEnabled: false },
+            create: { userId, secret: secret.base32, isEnabled: false }
+        });
+
+        // Generate QR code image URL
+        const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
+
+        return { secret: secret.base32, qrCodeUrl };
+    },
+
+    // =============================================
+    // 2FA - VERIFY & ENABLE
+    // =============================================
+    async verifyAndEnable2FA(userId, code) {
+        const twoFA = await prisma.twoFA.findUnique({ where: { userId } });
+        if (!twoFA || !twoFA.secret) throw new Error('2FA setup not initiated');
+
+        // Verify the 6-digit code against the secret
+        const verified = speakeasy.totp.verify({
+            secret: twoFA.secret,
+            encoding: 'base32',
+            token: code,
+            window: 1 // Allow 1 step before/after for time drift
+        });
+
+        if (!verified) {
+            const error = new Error('Invalid authenticator code. Please try again.');
+            error.code = 'INVALID_2FA_CODE';
+            throw error;
+        }
+
+        // Code is valid! Turn on 2FA
+        await prisma.twoFA.update({
+            where: { userId },
+            data: { isEnabled: true, verifiedAt: new Date() }
+        });
+
+        return { success: true, message: '2FA enabled successfully' };
+    },
+
+        async verify2FALogin(tempToken, code) {
+        // 1. Verify the JWT tempToken
+        const { verifyToken, generateTokens } = require('../../utils/jwt');
+        const decoded = verifyToken(tempToken);
+        if (!decoded) throw Object.assign(new Error('Session expired'), { code: 'TOKEN_INVALID' });
+
+        const user = await prisma.user.findUnique({ 
+            where: { id: decoded.userId },
+            include: { wallet: true, twoFA: true }
+        });
+
+        if (!user || !user.twoFA || !user.twoFA.isEnabled) {
+            throw new Error('2FA not configured');
+        }
+
+        // 2. Verify the code
+        const speakeasy = require('speakeasy');
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFA.secret,
+            encoding: 'base32',
+            token: code,
+            window: 1
+        });
+
+        if (!verified) throw Object.assign(new Error('Invalid authenticator code.'), { code: 'INVALID_2FA_CODE' });
+
+        // 3. Generate real tokens
+        const { accessToken, refreshToken } = generateTokens({
+            userId: user.id,
+            email: user.email
+        });
+
+        const { passwordHash: _, twoFA: __, ...userWithoutSensitive } = user;
+
+        return {
+            tokens: { accessToken, refreshToken },
+            user: userWithoutSensitive,
         };
     }
 

@@ -258,6 +258,35 @@
     @media (max-width: 480px) {
       .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
     }
+        /* Modal Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open, .modal-overlay[style*="display: flex"] {
+      display: flex !important;
+    }
+    .modal-card {
+      background: linear-gradient(180deg, #1c0f2b, #170a24);
+      border: 1px solid var(--stroke-strong);
+      border-radius: 20px;
+      padding: 28px 32px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 30px 80px -20px rgba(70, 10, 120, 0.7);
+      position: relative;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-card { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
   </style>
 </head>
 <body>
@@ -511,6 +540,23 @@
 
 </main>
 
-<script src="../js/dashboard.js"></script>
+<!-- 2FA PROMPT MODAL -->
+<div class="modal-overlay" id="twoFAModal" style="display: none;">
+  <div class="modal-card" style="max-width: 400px; text-align: center;">
+    <div style="width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; background: rgba(230,60,194,0.1); border: 1px solid var(--magenta); display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--magenta);">
+      <i class="bi bi-shield-lock-fill"></i>
+    </div>
+    <h3 style="font-family: 'Sora'; font-size: 20px; margin-bottom: 8px;">Secure your account</h3>
+    <p style="font-size: 13px; color: var(--text-mid); margin-bottom: 24px; line-height: 1.5;">
+      Enhance the security of your wallet by enabling Two-Factor Authentication. You'll need an authenticator app like Google Authenticator.
+    </p>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn btn-secondary" onclick="dismiss2FA()" style="flex: 1;">Later</button>
+      <button class="btn btn-primary" onclick="start2FASetup()" style="flex: 1;">Enable Now</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/dashboard.js"></script>  
 </body>
 </html>

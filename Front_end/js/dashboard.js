@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async function () { // wait for DO
   fillWelcomeNames();                                             // fill "Welcome, <name>" spans
   attachLogoutHandler(token);                                     // wire logout button
   await loadDashboard(token);                                     // load wallet state
+  check2FAPrompt(); 
 });
 
 // ============================================ //
@@ -206,4 +207,29 @@ function showToast(message, type = 'info') {
   }
 
   console.log(`[${type.toUpperCase()}] ${message}`);              // fallback: console
+}
+
+// ============================================
+// 2FA PROMPT LOGIC
+// ============================================
+function check2FAPrompt() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const dismissed = localStorage.getItem('dismissed2FA_' + user.id);
+  
+  // Show if: loginCount is 3 or less, 2FA is not enabled, and they haven't dismissed it
+  if (user.loginCount <= 3 && !user.twoFAEnabled && !dismissed) {
+    const modal = document.getElementById('twoFAModal');
+    if (modal) modal.style.display = 'flex';
+  }
+}
+
+function dismiss2FA() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  localStorage.setItem('dismissed2FA_' + user.id, 'true');
+  const modal = document.getElementById('twoFAModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function start2FASetup() {
+  window.location.href = 'setup-2fa.html';
 }

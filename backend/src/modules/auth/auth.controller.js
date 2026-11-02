@@ -169,7 +169,9 @@ const authController = {
                         mobile: result.user.mobile,
                         status: result.user.status,
                         emailVerified: result.user.emailVerified,
-                        profilePicture: result.user.profilePicture
+                        profilePicture: result.user.profilePicture,
+                        loginCount: result.loginCount, 
+                        twoFAEnabled: result.user.twoFA ? result.user.twoFA.isEnabled : false
                     },
                     tokens: {
                         accessToken: result.accessToken,
@@ -346,27 +348,68 @@ forgotPassword: async (req, res, next) => {
     // =============================================
     // GOOGLE CALLBACK
     // =============================================
-// =============================================
-// GOOGLE CALLBACK
-// =============================================
-googleCallback: async (req, res) => {
-    try {
-        const result = await authService.googleLogin(req.user, req);
+    googleCallback: async (req, res) => {
+        try {
+            const result = await authService.googleLogin(req.user, req);
 
-        const frontendUrl = 'https://www.digitalwallet.dpdns.org';
-        const params = new URLSearchParams({
-            accessToken:  result.accessToken,
-            refreshToken: result.refreshToken,
-            user:   encodeURIComponent(JSON.stringify(result.user)),
-            wallet: result.wallet ? encodeURIComponent(JSON.stringify(result.wallet)) : ''
-        });
+            const frontendUrl = 'https://www.digitalwallet.dpdns.org';
+            const params = new URLSearchParams({
+                accessToken:  result.accessToken,
+                refreshToken: result.refreshToken,
+                user:   encodeURIComponent(JSON.stringify(result.user)),
+                wallet: result.wallet ? encodeURIComponent(JSON.stringify(result.wallet)) : ''
+            });
 
-        res.redirect(`${frontendUrl}/pages/auth-callback.html?${params.toString()}`);
-    } catch (err) {
-        console.error('❌ googleCallback error:', err);
-        res.redirect('https://www.digitalwallet.dpdns.org/pages/login.html?error=google_failed');
+            res.redirect(`${frontendUrl}/pages/auth-callback.html?${params.toString()}`);
+        } catch (err) {
+            console.error('❌ googleCallback error:', err);
+            res.redirect('https://www.digitalwallet.dpdns.org/pages/login.html?error=google_failed');
+        }
+    },
+
+    
+    // =============================================
+    // 2FA Authentication
+    // =============================================
+    setup2FA: async (req, res, next) => {
+        try {
+            const { userId } = req.user;
+            const result = await authService.generate2FA(userId);
+            res.status(HTTP_STATUS.OK).json({ success: true, data: result });
+        } catch (error) { next(error); }
+    },
+
+    verify2FA: async (req, res, next) => {
+        try {
+            const { userId } = req.user;
+            const { code } = req.body;
+            const result = await authService.verifyAndEnable2FA(userId, code);
+            res.status(HTTP_STATUS.OK).json({ success: true, ...result });
+        } catch (error) {
+            if (error.code === 'INVALID_2FA_CODE') {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
+            }
+            next(error);
+        }
+    },
+
+        verify2FALogin: async (req, res, next) => {
+        try {
+            const { tempToken, code } = req.body;
+            const result = await authService.verify2FALogin(tempToken, code);
+            res.status(HTTP_STATUS.OK).json({
+                success: true,
+                message: '2FA verified successfully',
+                data: result
+            });
+        } catch (error) {
+            if (error.code === 'INVALID_2FA_CODE' || error.code === 'TOKEN_INVALID') {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: error.message });
+            }
+            next(error);
+        }
     }
-}
+
 };
 
 module.exports = authController;

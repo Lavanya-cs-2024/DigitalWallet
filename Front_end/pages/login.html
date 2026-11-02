@@ -184,6 +184,11 @@ document.getElementById('googleLoginBtn').addEventListener('click', function() {
         if (data.data?.user) {
           localStorage.setItem('user', JSON.stringify(data.data.user));
         }
+        if (data.data?.require2FA) {
+            // Redirect to 2FA verification page (we'll need to create this)
+            window.location.href = `verify-2fa.html?tempToken=${data.data.tempToken}&email=${encodeURIComponent(email)}`;
+            return;
+        }
         if (data.data?.wallet) {
           localStorage.setItem('wallet', JSON.stringify(data.data.wallet));
         }

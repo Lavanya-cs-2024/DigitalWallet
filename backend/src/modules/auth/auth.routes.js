@@ -10,6 +10,7 @@ const authController = require('./auth.controller');
 const { protect } = require('../../middleware/auth.middleware');
 const { rateLimiter } = require('../../middleware/rateLimiter');
 const { validate } = require('../../middleware/validation.middleware');
+const { verify2FASchema } = require('./auth.validation');
 
 // Validation schemas
 const {
@@ -181,6 +182,36 @@ router.get(
     }),
     authController.googleCallback
 );
+
+/**
+ * @route   POST /api/auth/2fa/setup
+ * @desc    Generate a 2FA secret and QR code
+ * @access  Private
+ */
+router.post(
+    '/2fa/setup',
+    protect,
+    authController.setup2FA
+);
+
+/**
+ * @route   POST /api/auth/2fa/verify
+ * @desc    Verify 6-digit code and enable 2FA
+ * @access  Private
+ */
+router.post(
+    '/2fa/verify',
+    protect,
+    validate(verify2FASchema),
+    authController.verify2FA
+);
+
+/**
+ * @route   POST /api/auth/2fa/login-verify
+ * @desc    Verify 6-digit code after password login
+ * @access  Public
+ */
+router.post('/2fa/login-verify', authController.verify2FALogin);
 
 
 module.exports = router;
