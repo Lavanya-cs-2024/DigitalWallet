@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `expense` ADD COLUMN `category` VARCHAR(191) NOT NULL DEFAULT 'OTHER';

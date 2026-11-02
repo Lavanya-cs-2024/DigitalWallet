@@ -91,7 +91,16 @@ module.exports = {
         TOKEN_INVALID: 'TOKEN_INVALID',
         USER_NOT_FOUND: 'USER_NOT_FOUND',
         EMAIL_EXISTS: 'EMAIL_EXISTS',
-        MOBILE_EXISTS: 'MOBILE_EXISTS'
+        MOBILE_EXISTS: 'MOBILE_EXISTS',
+        GROUP_NOT_FOUND: 'GROUP_NOT_FOUND',
+        NOT_GROUP_MEMBER: 'NOT_GROUP_MEMBER',
+        NOT_ADMIN: 'NOT_ADMIN',
+        ALREADY_MEMBER: 'ALREADY_MEMBER',
+        ADMIN_CANNOT_LEAVE: 'ADMIN_CANNOT_LEAVE',
+        CANNOT_REMOVE_SELF: 'CANNOT_REMOVE_SELF',
+        HAS_EXPENSES: 'HAS_EXPENSES',
+        MEMBER_HAS_EXPENSES: 'MEMBER_HAS_EXPENSES',
+        INVALID_SEARCH_QUERY: 'INVALID_SEARCH_QUERY'
     },
 
     // ============================================
@@ -104,7 +113,10 @@ module.exports = {
         RESEND_OTP: { windowMs: 30 * 1000, max: 3 },
         FORGOT_PASSWORD: { windowMs: 15 * 60 * 1000, max: 3 },
         RESET_PASSWORD: { windowMs: 60 * 1000, max: 3 },
-        TWOFA_VERIFY: { windowMs: 60 * 1000, max: 5 }
+        TWOFA_VERIFY: { windowMs: 60 * 1000, max: 5 },
+        GROUP_CREATE: { windowMs: 60 * 1000, max: 20 },
+        GROUP_ADD_MEMBER: { windowMs: 60 * 1000, max: 20 },
+        USER_SEARCH: { windowMs: 60 * 1000, max: 30 }
     },
 
     // ============================================
