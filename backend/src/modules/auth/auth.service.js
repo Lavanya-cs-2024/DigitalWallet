@@ -962,7 +962,65 @@ const authService = {
         ]);
 
         return { success: true };
-    }
+    },
+
+    // =============================================
+    // DELETE ACCOUNT
+    // =============================================
+    async deleteAccount(userId) {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) throw new Error('User not found');
+
+        await prisma.$transaction(async (tx) => {
+            // 1. Delete Payment Transactions
+            await tx.paymentTransaction.deleteMany({
+                where: { paymentOrder: { userId } }
+            });
+
+            // 2. Delete Payment Orders (This was blocking the Wallet deletion)
+            await tx.paymentOrder.deleteMany({ where: { userId } });
+
+            // 3. Delete Wallet Transactions
+            await tx.walletTransaction.deleteMany({
+                where: { wallet: { userId } }
+            });
+
+            // 4. Delete Wallet
+            await tx.wallet.deleteMany({ where: { userId } });
+
+            // 5. Handle Groups created by this user
+            // (This will cascade delete all expenses/settlements inside those groups)
+            await tx.group.deleteMany({ where: { createdBy: userId } });
+
+            // 6. Delete Group Memberships (for groups they joined but didn't create)
+            await tx.groupMember.deleteMany({ where: { userId } });
+
+            // 7. Delete Settlements
+            await tx.settlement.deleteMany({
+                where: { OR: [{ fromUserId: userId }, { toUserId: userId }] }
+            });
+
+            // 8. Delete Expenses paid by user
+            await tx.expense.deleteMany({ where: { paidBy: userId } });
+
+            // 9. Delete Expense Splits
+            await tx.expenseSplit.deleteMany({ where: { userId } });
+
+            // 10. Delete Auth related (OTPs, Sessions, 2FA)
+            await tx.oTP.deleteMany({ where: { userId } });
+            await tx.session.deleteMany({ where: { userId } });
+            await tx.twoFA.deleteMany({ where: { userId } });
+            await tx.twoFAAttempt.deleteMany({ where: { userId } });
+
+            // 11. Delete Security Events
+            await tx.securityEvent.deleteMany({ where: { userId } });
+
+            // 12. Finally, delete the User
+            await tx.user.delete({ where: { id: userId } });
+        });
+        
+        return { success: true, message: 'Account deleted permanently.' };
+    },
 
 };   // ← this closes authService
 

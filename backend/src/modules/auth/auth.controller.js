@@ -430,6 +430,17 @@ forgotPassword: async (req, res, next) => {
         } catch (error) { next(error); }
     },
 
+    deleteAccount: async (req, res, next) => {
+        try {
+            const { userId } = req.user;
+            await authService.deleteAccount(userId);
+            res.status(HTTP_STATUS.OK).json({ success: true, message: 'Account deleted.' });
+        } catch (error) {
+            console.error('Delete account error:', error);
+            next(error);
+        }
+    }
+
 };
 
 module.exports = authController;
