@@ -216,5 +216,12 @@ router.post('/2fa/login-verify', authController.verify2FALogin);
 router.post('/change-password/request-otp', protect, authController.requestPasswordChangeOTP);
 router.post('/change-password/confirm', protect, authController.confirmPasswordChange);
 
+/**
+ * @route   DELETE /api/auth/account
+ * @desc    Permanently delete user account
+ * @access  Private
+ */
+router.delete('/account', protect, authController.deleteAccount);
+
 
 module.exports = router;
